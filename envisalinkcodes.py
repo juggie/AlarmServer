@@ -62,7 +62,7 @@ evl_ResponseTypes = {
     806 : {'name' : 'System Bell Trouble', 'description' : 'An open circuit has been detected across the bell terminals.' , 'loglevel' : 1},
     807 : {'name' : 'System Bell Trouble Restoral', 'description' : 'The bell trouble has been restored.' , 'loglevel' : 1},
     814 : {'name' : 'FTC Trouble', 'description' : 'The panel has failed to communicate successfully to the monitoring.' , 'loglevel' : 1},
-    816 : {'name' : 'Battery Near Full', 'description' : 'Sent when the panel''s Event Buffer is 75% full from when it was last uploaded to DLS.' , 'loglevel' : 1},
+    816 : {'name' : 'Buffer Near Full', 'description' : 'Sent when the panel''s Event Buffer is 75% full from when it was last uploaded to DLS.' , 'loglevel' : 1},
     829 : {'name' : 'General System Tamper', 'description' : 'A tamper has occurred with one of the following modules: Zone Expander, PC5132, PC5204, PC5208, PC5400, PC59XX, LINKS 2X50, PC5108L, PC5100, PC5200.' , 'loglevel' : 1},
     830 : {'name' : 'General System Tamper Restore', 'description' : 'A general system Tamper has been restored.' , 'loglevel' : 1},
     840 : {'name' : 'Partition {0} Trouble LED ON', 'description' : 'This command shows the general trouble status that the trouble LED on a keypad normally shows. When ON, it means there is a trouble on this partition. This command when the LED transitions from OFF, to ON.' , 'loglevel' : 1, 'handler' : 'partition', 'parameters' : 1, 'status' : 'trouble', 'status_val' : True},
