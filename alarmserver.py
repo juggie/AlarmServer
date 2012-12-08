@@ -12,6 +12,7 @@ import StringIO, mimetools
 import json
 import hashlib
 import time
+import pystache
 
 from envisalinkcodes import evl_ResponseTypes
 
@@ -133,14 +134,26 @@ class HTTPChannel(asynchat.async_chat):
 		self.push(content)
 
 	def pushgui(self):
-		self.pushok("<A HREF=""/api/alarm/arm"">Arm Alarm</A><BR><A HREF=""/api/alarm/stayarm"">Stay Arm Alarm</A><BR><A HREF=""/api/alarm/disarm"">Disarm Alarm</A><BR><A HREF=""/api"">API/JSON</A><BR><BR>")
-		for partition in ALARMSTATE['partition']:
-			self.push('Partition: '+str(partition)+' = '+ str(ALARMSTATE['partition'][partition]['status'])+'<BR>')
+		data = {}
+		data["version"] = ALARMSTATE["version"]
+		zones = []
+		partitions = []
+		for key, value in ALARMSTATE["zones"].iteritems():
+			temp = value
+			temp["id"] = key
+			zones.append(temp)
+		data["zones"] = zones
 		
-		self.push('<BR><BR>')
-		
-		for zone in ALARMSTATE['zones']:
-			self.push('Zone '+ str(zone) + ': ' + str(ALARMSTATE['zones'][zone]['status']) + '<BR>')
+		for key, value in ALARMSTATE["partition"].iteritems():
+			temp = value
+			temp["id"] = key
+			partitions.append(temp)
+		data["partitions"] = partitions
+
+		content = pystache.render(self.server._template, data)
+
+		self.pushok(content.encode('ascii', 'ignore'))
+
 			
 
 class EnvisalinkClient(asynchat.async_chat):
@@ -298,6 +311,8 @@ class AlarmServer(asyncore.dispatcher):
 		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.bind(("", config.HTTPPORT))
 		self.listen(5)
+
+		self._template = open("index.mustache","r").read()
 
 	def handle_accept(self):
 		# Accept the connection
