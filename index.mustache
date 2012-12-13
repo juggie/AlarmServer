@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Alarm Server {{version}}</title>
+	<style type="text/css">
+	li{ 
+		list-style-type:none; 
+	} 
+	</style>
+</head>
+<body>
+	<a href="/api/alarm/arm">Arm Alarm</a> <BR>
+	<a href="/api/alarm/stayarm">Stay Arm Alarm</a> <BR>
+	<a href="/api/alarm/disarm">Disarm Alarm</a> <BR>
+	<a href="/api">API/JSON</a> <BR>
+	<ul>
+		{{#partitions}}
+		<li>
+			Partition {{id}}: {{status}}
+		</li>
+		{{/partitions}}
+	</ul>
+	<ul>
+		{{#zones}}
+		<li>
+			Zone {{id}}: {{status}}
+		</li>
+		{{/zones}}
+	</ul>
+</body>
+</html>
