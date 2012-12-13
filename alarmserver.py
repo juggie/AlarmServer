@@ -7,19 +7,26 @@
 import asyncore, asynchat
 import ConfigParser
 import datetime
-import os, socket, string, sys, httplib, urllib
+import os, socket, string, sys, httplib, urllib, urlparse
 import StringIO, mimetools
 import json
 import hashlib
 import time
-import pystache
 
-from envisalinkcodes import evl_ResponseTypes
+from envisalinkdefs import evl_ResponseTypes
+from envisalinkdefs import evl_Defaults 
 
 class CodeError(Exception): pass
 
 ALARMSTATE={'version' : 0.1}
+MAXPARTITIONS=16
+MAXZONES=128
 CONNECTEDCLIENTS={}
+
+def dict_merge(a, b):
+	c = a.copy()
+	c.update(b)
+	return c
 
 def getMessageType(code):
 	return evl_ResponseTypes[code]
@@ -67,12 +74,21 @@ class AlarmServerConfig():
 		self.PUSHOVER_USERTOKEN = self.read_config_var('pushover', 'enable', False, 'bool')
 		self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
 		
+		self.PARTITIONNAMES={}
+		for i in range(1, MAXPARTITIONS+1):
+			self.PARTITIONNAMES[i]=self.read_config_var('alarmserver', 'partition'+str(i), False, 'str', True)
+
+		self.ZONENAMES={}
+		for i in range(1, MAXZONES+1):
+			self.ZONENAMES[i]=self.read_config_var('alarmserver', 'zone'+str(i), False, 'str', True)
+		
 		if self.PUSHOVER_USERTOKEN == False and self.PUSHOVER_ENABLE == True: self.PUSHOVER_ENABLE = False
 		
-	def defaulting(self, section, variable, default):
-		alarmserver_logger('C:'+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
+	def defaulting(self, section, variable, default, quiet = False):
+		if quiet == False:
+			alarmserver_logger('C:'+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
 		
-	def read_config_var(self, section, variable, default, type = 'str'):
+	def read_config_var(self, section, variable, default, type = 'str', quiet = False):
 		try:
 			if type == 'str':
 				return self._config.get(section,variable)
@@ -81,7 +97,7 @@ class AlarmServerConfig():
 			elif type == 'int':
 				return int(self._config.get(section,variable))
 		except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
-			self.defaulting(section, variable, default)
+			self.defaulting(section, variable, default, quiet)
 			return default 
 
 class HTTPChannel(asynchat.async_chat):
@@ -132,28 +148,22 @@ class HTTPChannel(asynchat.async_chat):
 		self.push('Pragma: no-cache\r\n' )
 		self.push('\r\n')
 		self.push(content)
+		
+	def pushfile(self, file):
+		self.pushstatus(200, "OK")
+		self.push("Content-type: text/html\r\n")
+		self.push("\r\n")
+		self.push_with_producer(push_FileProducer(file))
 
 	def pushgui(self):
-		data = {}
-		data["version"] = ALARMSTATE["version"]
-		zones = []
-		partitions = []
-		for key, value in ALARMSTATE["zones"].iteritems():
-			temp = value
-			temp["id"] = key
-			zones.append(temp)
-		data["zones"] = zones
+		self.pushok("<A HREF=""/api/alarm/arm"">Arm Alarm</A><BR><A HREF=""/api/alarm/stayarm"">Stay Arm Alarm</A><BR><A HREF=""/api/alarm/disarm"">Disarm Alarm</A><BR><A HREF=""/api"">API/JSON</A><BR><BR>")
+		for partition in ALARMSTATE['partition']:
+			self.push('Partition: '+str(partition)+' = '+ str(ALARMSTATE['partition'][partition])+'<BR>')
 		
-		for key, value in ALARMSTATE["partition"].iteritems():
-			temp = value
-			temp["id"] = key
-			partitions.append(temp)
-		data["partitions"] = partitions
-
-		content = pystache.render(self.server._template, data)
-
-		self.pushok(content.encode('ascii', 'ignore'))
-
+		self.push('<BR><BR>')
+		
+		for zone in ALARMSTATE['zone']:
+			self.push('Zone '+ str(zone) + ': ' + str(ALARMSTATE['zone'][zone]) + '<BR>')
 			
 
 class EnvisalinkClient(asynchat.async_chat):
@@ -164,9 +174,6 @@ class EnvisalinkClient(asynchat.async_chat):
 		# Define some private instance variables
 		self._buffer = []
 		
-		# define a box to hold zone status
-		self.zones = {}
-
 		# Are we logged in?
 		self._loggedin = False
 		
@@ -210,7 +217,7 @@ class EnvisalinkClient(asynchat.async_chat):
 		alarmserver_logger("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
 		self.do_connect(True)
 
-	def handle_error(self):
+	def handle_eerror(self):
 		self._loggedin = False
 		self.close()
 		alarmserver_logger("Error, disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
@@ -232,22 +239,15 @@ class EnvisalinkClient(asynchat.async_chat):
 				
 			code=int(input[:3])
 			parameters=input[3:][:-2]
-			event = getMessageType(int(code))
-			if 'parameters' in event:
-				if event['parameters'] == 1:  
-					message = event['name'].format(str(parameters))
-				else:
-					message=event['name']+' P: '+ str(parameters)
-			else:
-				message=event['name']+' P: '+ str(parameters)
-			
+			event = getMessageType(int(code)) 
+			message = self.format_event(event, parameters)			
 			alarmserver_logger('RX < ' +str(code)+' - '+message)
 			
 			try:
 				handler = "handle_%s" % evl_ResponseTypes[code]['handler']
 			except KeyError:
-				#raise CodeError("Code doesn't exist, or handler isn't defined")
-				#alarmserver_logger("Code doesn't exist, or handler isn't defined")
+				#call general event handler
+				self.handle_event(code, parameters, event, message)
 				return
 
 			try:
@@ -256,6 +256,20 @@ class EnvisalinkClient(asynchat.async_chat):
 				raise CodeError("Handler function doesn't exist")
 
 			func(code, parameters, event, message)
+
+	def format_event(self, event, parameters):
+		if 'type' in event:
+			if event['type'] in ('partition', 'zone'):
+				if event['type'] == 'partition':
+					if int(parameters) in self._config.PARTITIONNAMES:
+						if self._config.PARTITIONNAMES[int(parameters)]!=False:
+							return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters)]))
+				elif event['type'] == 'zone':						
+					if int(parameters) in self._config.ZONENAMES:
+						if self._config.ZONENAMES[int(parameters)]!=False:
+							return event['name'].format(str(self._config.ZONENAMES[int(parameters)]))
+			
+		return event['name'].format(str(parameters))
 
 	#envisalink event handlers, some events are unhandeled.
 	def handle_login(self, code, parameters, event, message):
@@ -268,33 +282,57 @@ class EnvisalinkClient(asynchat.async_chat):
 			alarmserver_logger('Incorrect envisalink password')
 			sys.exit(0)
 
-	def handle_smoke(self, code, parameters, event, message):
-		if code == 631:
-			alarmserver_logger('SMOKE ALARM!')
-		elif code == 632:
-			alarmserver_logger('SMOKE ALARM STOPPED!')
+	def handle_event(self, code, parameters, event, message):
+		if 'type' in event:
+			if not event['type'] in ALARMSTATE: ALARMSTATE[event['type']]={}
 
-	def handle_event(self, eventtype, code, parameters, event, message):
-		if not eventtype in ALARMSTATE: ALARMSTATE[eventtype]={}
-		if not int(parameters) in ALARMSTATE[eventtype]: ALARMSTATE[eventtype][int(parameters)] = {}
-		if not 'lastevents' in ALARMSTATE[eventtype][int(parameters)]: ALARMSTATE[eventtype][int(parameters)]['lastevents'] = []
-		if not 'status' in ALARMSTATE[eventtype][int(parameters)]: ALARMSTATE[eventtype][int(parameters)]['status'] = {}
+			if event['type'] in ('partition', 'zone'):
+				if event['type'] == 'zone':
+					if int(parameters) in self._config.ZONENAMES:
+						if not int(parameters) in ALARMSTATE[event['type']]: ALARMSTATE[event['type']][int(parameters)] = {'name' : self._config.ZONENAMES[int(parameters)]}
+					else:
+						if not int(parameters) in ALARMSTATE[event['type']]: ALARMSTATE[event['type']][int(parameters)] = {}
+				elif event['type'] == 'partition':						
+					if int(parameters) in self._config.PARTITIONNAMES:
+						if not int(parameters) in ALARMSTATE[event['type']]: ALARMSTATE[event['type']][int(parameters)] = {'name' : self._config.PARTITIONNAMES[int(parameters)]}
+					else:
+						if not int(parameters) in ALARMSTATE[event['type']]: ALARMSTATE[event['type']][int(parameters)] = {}
+			else:
+				if not int(parameters) in ALARMSTATE[event['type']]: ALARMSTATE[event['type']][int(parameters)] = {} 
 
-		if 'status' in event:
-			ALARMSTATE[eventtype][int(parameters)]['status'][event['status']]=event['status_val']
+			if not 'lastevents' in ALARMSTATE[event['type']][int(parameters)]: ALARMSTATE[event['type']][int(parameters)]['lastevents'] = []
+			if not 'status' in ALARMSTATE[event['type']][int(parameters)]:
+				if not 'type' in event:
+					ALARMSTATE[event['type']][int(parameters)]['status'] = {}
+				else:
+					ALARMSTATE[event['type']][int(parameters)]['status'] = evl_Defaults[event['type']]
 		
-		if len(ALARMSTATE[eventtype][int(parameters)]['lastevents']) > self._config.MAXEVENTS:
-			ALARMSTATE[eventtype][int(parameters)]['lastevents'].pop()
-		ALARMSTATE[eventtype][int(parameters)]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+			if 'status' in event:
+				ALARMSTATE[event['type']][int(parameters)]['status']=dict_merge(ALARMSTATE[event['type']][int(parameters)]['status'], event['status'])
+			
+			if len(ALARMSTATE[event['type']][int(parameters)]['lastevents']) > self._config.MAXEVENTS:
+				ALARMSTATE[event['type']][int(parameters)]['lastevents'].pop()
+			ALARMSTATE[event['type']][int(parameters)]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
 
 	def handle_zone(self, code, parameters, event, message):
-		self.handle_event('zones', code, parameters, event, message)
-
-	def handle_zone_problem(self, code, parameters, event, message):
-		self.handle_event('zones', code, parameters[1:4], event, message)
-
+		self.handle_event(code, parameters[1:], event, message)
+	
 	def handle_partition(self, code, parameters, event, message):
-		self.handle_event('partition', code, parameters[0], event, message)
+		self.handle_event(code, parameters[0], event, message)
+
+class push_FileProducer:
+	# a producer which reads data from a file object
+
+	def __init__(self, file):
+		self.file = open(file, "r")
+
+	def more(self):
+		if self.file:
+			data = self.file.read(2048)
+			if data:
+				return data
+			self.file = None
+		return ""
 
 class AlarmServer(asyncore.dispatcher):
 	def __init__(self, config):
@@ -312,36 +350,60 @@ class AlarmServer(asyncore.dispatcher):
 		self.bind(("", config.HTTPPORT))
 		self.listen(5)
 
-		self._template = open("index.mustache","r").read()
-
 	def handle_accept(self):
 		# Accept the connection
 		conn, addr = self.accept()
 		alarmserver_logger('Incoming web connection from %s' % repr(addr))
 		HTTPChannel(self, conn, addr)
 	
-	def handle_request(self, channel, method, path, header):
-		alarmserver_logger('Web request: '+str(method)+' '+str(path))
+	def handle_request(self, channel, method, request, header):
+		alarmserver_logger('Web request: '+str(method)+' '+str(request))
 		
-		if path == '/':
+		query = urlparse.urlparse(request)
+		query_array = urlparse.parse_qs(query.query, True)
+
+		if query.path == '/':
 			channel.pushgui()
-		elif path == '/api':
+		elif query.path == '/api':
 			channel.pushok(json.dumps(ALARMSTATE))
-		elif path == '/api/alarm/arm':
+		elif query.path == '/api/alarm/arm':
 			channel.pushok(json.dumps({'response' : 'Request to arm received'}))
 			self._envisalinkclient.send_command('030', '1')
-		elif path == '/api/alarm/stayarm':
+		elif query.path == '/api/alarm/stayarm':
 			channel.pushok(json.dumps({'response' : 'Request to arm in stay received'}))
 			self._envisalinkclient.send_command('031', '1')
-		elif path == '/api/alarm/disarm':
+		elif query.path == '/api/alarm/disarm':
 			channel.pushok(json.dumps({'response' : 'Request to disarm received'}))
-			self._envisalinkclient.send_command('040', '1' + str(self._config.ALARMCODE))
-		elif path == '/api/refresh':
+			if 'alarmcode' in query_array:
+				self._envisalinkclient.send_command('040', '1' + str(query_array['alarmcode'][0]))
+			else:
+				self._envisalinkclient.send_command('040', '1' + str(self._config.ALARMCODE))
+		elif query.path == '/api/refresh':
 			channel.pushok(json.dumps({'response' : 'Request to refresh data received'}))
 			self._envisalinkclient.send_command('001', '')
+		elif query.path == '/favicon.ico':
+			channel.pushfile('ext\\favicon.ico')
+		elif query.path.split('/')[1] == 'ext':
+			if len(query.path.split('/')) == 3:
+				try:
+					with open('ext\\' + query.path.split('/')[2]) as f: 
+						f.close()
+						channel.pushfile('ext\\' + query.path.split('/')[2])
+				except IOError as e:
+					channel.pushstatus(404, "Not found")
+					channel.push("Content-type: text/html\r\n")
+					channel.push("File not found")
+					channel.push("\r\n")
+			else:
+				alarmserver_logger("Subdirectories in ext/ not supported")
+				channel.pushstatus(404, "Not found")
+				channel.push("Content-type: text/html\r\n")
+				channel.push("Subdirectories in ext/ not supported")
+				channel.push("\r\n")				 
 		else:
 			channel.pushstatus(404, "Not found")
 			channel.push("Content-type: text/html\r\n")
+			channel.push("Invalid Request")
 			channel.push("\r\n")
 
 class ProxyChannel(asynchat.async_chat):
