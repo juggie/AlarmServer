@@ -151,19 +151,41 @@ class HTTPChannel(asynchat.async_chat):
 		
 	def pushfile(self, file):
 		self.pushstatus(200, "OK")
-		self.push("Content-type: text/html\r\n")
+		extension = os.path.splitext(file)[1]
+		if extension == ".html":
+			self.push("Content-type: text/html\r\n")
+		elif extension == ".js":
+			self.push("Content-type: text/javascript\r\n")
 		self.push("\r\n")
 		self.push_with_producer(push_FileProducer(file))
 
 	def pushgui(self):
-		self.pushok("<A HREF=""/api/alarm/arm"">Arm Alarm</A><BR><A HREF=""/api/alarm/stayarm"">Stay Arm Alarm</A><BR><A HREF=""/api/alarm/disarm"">Disarm Alarm</A><BR><A HREF=""/api"">API/JSON</A><BR><BR>")
-		for partition in ALARMSTATE['partition']:
-			self.push('Partition: '+str(partition)+' = '+ str(ALARMSTATE['partition'][partition])+'<BR>')
+		self.pushok("""<!DOCTYPE html>
+					<head>
+						<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+						<title>Alarm Server</title>
+						<style type="text/css">
+							li{ 
+								list-style-type:none; 
+							} 
+						</style>
+						<script src="ext/jquery.js"></script>
+						<script src="ext/alarmserver.js"></script>
+					</head><body>
+			        <A HREF="/api/alarm/arm">Arm Alarm</A><BR><A HREF="/api/alarm/stayarm">Stay Arm Alarm</A><BR><A HREF="/api/alarm/disarm">Disarm Alarm</A><BR><A HREF="/api">API/JSON</A><BR><BR>
+					<div id="partitions"></div>
+					<div id="zones"></div>
+			        </body></html>
+			        """)
+#		for partition in ALARMSTATE['partition']:
+#			self.push('Partition: '+str(partition)+' = '+ str(ALARMSTATE['partition'][partition])+'<BR>')
 		
-		self.push('<BR><BR>')
+#		self.push('<BR><BR>')
 		
-		for zone in ALARMSTATE['zone']:
-			self.push('Zone '+ str(zone) + ': ' + str(ALARMSTATE['zone'][zone]) + '<BR>')
+#		for zone in ALARMSTATE['zone']:
+#			self.push('Zone '+ str(zone) + ': ' + str(ALARMSTATE['zone'][zone]) + '<BR>')
+
+#			self.push("</body></html>")
 			
 
 class EnvisalinkClient(asynchat.async_chat):
@@ -382,14 +404,15 @@ class AlarmServer(asyncore.dispatcher):
 			channel.pushok(json.dumps({'response' : 'Request to refresh data received'}))
 			self._envisalinkclient.send_command('001', '')
 		elif query.path == '/favicon.ico':
-			channel.pushfile('ext\\favicon.ico')
+			channel.pushfile('ext' + os.sep + 'favicon.ico')
 		elif query.path.split('/')[1] == 'ext':
 			if len(query.path.split('/')) == 3:
 				try:
-					with open('ext\\' + query.path.split('/')[2]) as f: 
+					with open('ext' + os.sep + query.path.split('/')[2]) as f: 
 						f.close()
-						channel.pushfile('ext\\' + query.path.split('/')[2])
+						channel.pushfile('ext' + os.sep + query.path.split('/')[2])
 				except IOError as e:
+					print "I/O error({0}): {1}".format(e.errno, e.strerror)
 					channel.pushstatus(404, "Not found")
 					channel.push("Content-type: text/html\r\n")
 					channel.push("File not found")
