@@ -156,6 +156,10 @@ class HTTPChannel(asynchat.async_chat):
 			self.push("Content-type: text/html\r\n")
 		elif extension == ".js":
 			self.push("Content-type: text/javascript\r\n")
+		elif extension == ".png":
+			self.push("Content-type: image/png\r\n")
+		elif extension == ".css":
+			self.push("Content-type: text/css\r\n")
 		self.push("\r\n")
 		self.push_with_producer(push_FileProducer(file))
 
@@ -164,28 +168,56 @@ class HTTPChannel(asynchat.async_chat):
 					<head>
 						<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 						<title>Alarm Server</title>
-						<style type="text/css">
-							li{ 
-								list-style-type:none; 
-							} 
+					    <link href="ext/bootstrap.min.css" rel="stylesheet" media="screen">
+					    <style type="text/css">
+					      body {
+					        padding-top: 20px;
+					        padding-bottom: 40px;
+					      }
+
+					      .container-narrow {
+					        margin: 0 auto;
+					        max-width: 900px;
+					      }
+					      .container-narrow > hr {
+					        margin: 30px 0;
+					      }
+							.popover {
+							    width:600px;
+							}
+							.popover-inner {
+							width: 600px;
+						}
 						</style>
+					</head><body>
 						<script src="ext/jquery.js"></script>
 						<script src="ext/alarmserver.js"></script>
-					</head><body>
-			        <A HREF="/api/alarm/arm">Arm Alarm</A><BR><A HREF="/api/alarm/stayarm">Stay Arm Alarm</A><BR><A HREF="/api/alarm/disarm">Disarm Alarm</A><BR><A HREF="/api">API/JSON</A><BR><BR>
-					<div id="partitions"></div>
-					<div id="zones"></div>
+						<script src="ext/bootstrap.min.js"></script>
+						<script src="ext/bootbox.min.js"></script>
+						<div class="container-narrow">
+							<div class="masthead">
+								<ul class="nav nav-pills pull-right">
+								  <li class="active"><a href="#">Home</a></li>
+								  <li><a href="/api">API/JSON</a></li>
+								  <li><a href="https://github.com/juggie/AlarmServer">About</a></li>
+								</ul>
+								<h3 class="muted">Alarm Server</h3>
+							</div>
+							 <hr>
+
+							 <div>
+								<div id="partitions"></div>
+								<div class="btn-toolbar">
+									<div id="actions">
+									</div>
+								</div>
+								<div id="status" class=""></div>
+							</div>
+							 <hr>
+							<div id="zones"></div>
+						</div>
 			        </body></html>
 			        """)
-#		for partition in ALARMSTATE['partition']:
-#			self.push('Partition: '+str(partition)+' = '+ str(ALARMSTATE['partition'][partition])+'<BR>')
-		
-#		self.push('<BR><BR>')
-		
-#		for zone in ALARMSTATE['zone']:
-#			self.push('Zone '+ str(zone) + ': ' + str(ALARMSTATE['zone'][zone]) + '<BR>')
-
-#			self.push("</body></html>")
 			
 
 class EnvisalinkClient(asynchat.async_chat):
@@ -403,6 +435,8 @@ class AlarmServer(asyncore.dispatcher):
 		elif query.path == '/api/refresh':
 			channel.pushok(json.dumps({'response' : 'Request to refresh data received'}))
 			self._envisalinkclient.send_command('001', '')
+		elif query.path == '/img/glyphicons-halflings-white.png':
+			channel.pushfile('ext' + os.sep + 'glyphicons-halflings-white.png')
 		elif query.path == '/favicon.ico':
 			channel.pushfile('ext' + os.sep + 'favicon.ico')
 		elif query.path.split('/')[1] == 'ext':
