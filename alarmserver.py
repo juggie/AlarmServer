@@ -7,7 +7,7 @@
 import asyncore, asynchat
 import ConfigParser
 import datetime
-import os, socket, string, sys, httplib, urllib, urlparse
+import os, socket, string, sys, httplib, urllib, urlparse, ssl
 import StringIO, mimetools
 import json
 import hashlib
@@ -62,7 +62,7 @@ class AlarmServerConfig():
 		self._config = ConfigParser.ConfigParser()
 		self._config.read(configfile)
 
-		self.HTTPPORT = self.read_config_var('alarmserver', 'httpport', 8111, 'int')
+		self.HTTPSPORT = self.read_config_var('alarmserver', 'httpsport', 8111, 'int')
 		self.MAXEVENTS = self.read_config_var('alarmserver', 'maxevents', 10, 'int')
 		self.ENVISALINKHOST = self.read_config_var('envisalink', 'host', 'envisalink', 'str')
 		self.ENVISALINKPORT = self.read_config_var('envisalink', 'port', 4025, 'int')
@@ -401,14 +401,18 @@ class AlarmServer(asyncore.dispatcher):
 
 		# Create socket and listen on it
 		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.bind(("", config.HTTPPORT))
+		self.bind(("", config.HTTPSPORT))
 		self.listen(5)
 
 	def handle_accept(self):
 		# Accept the connection
 		conn, addr = self.accept()
 		alarmserver_logger('Incoming web connection from %s' % repr(addr))
-		HTTPChannel(self, conn, addr)
+
+		try:
+			HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile="server.crt", keyfile="server.key", ssl_version=ssl.PROTOCOL_SSLv3), addr)
+		except ssl.SSLError:
+			return
 	
 	def handle_request(self, channel, method, request, header):
 		alarmserver_logger('Web request: '+str(method)+' '+str(request))
