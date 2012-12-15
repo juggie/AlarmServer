@@ -1,3 +1,6 @@
+var activeZone = null;
+var activePartition = null;
+
 function zones(obj) {
     var str = '<ul id="zonetabs" class="nav nav-list bs-docs-sidenav">';
     for (var i = 1; i < 65; i++) {
@@ -141,6 +144,18 @@ function refresh() {
             $('#actions').html(actions(res)).fadeIn();
             $('#zonetabs').tab();
             $('#partitiondetails').tab();
+            $('#zonetabs a[data-toggle="tab"]').on('shown', function (e) {
+                activeZone = e.target.hash;
+            });
+            if (activeZone) {
+                $('#zonetabs a[href="' + activeZone + '"]').tab('show');
+            }
+            $('#partitiontabs a[data-toggle="tab"]').on('shown', function (e) {
+                activePartition = e.target.hash;
+            });
+            if (activePartition) {
+                $('#partitiontabs a[href="' + activePartition + '"]').tab('show');
+            }
         }
     });
 }
@@ -152,4 +167,4 @@ $(document).ready(function() {
 
 setInterval(function() {
     refresh();
-}, 60000);
+}, 5000);
