@@ -35,7 +35,7 @@ function zonedetails(obj) {
 
                 str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
                 for (var j = 0; j < zone.lastevents.length; j++) {
-                   str += '<tr> <td>' + zone.lastevents[zone.lastevents.length - j - 1].message + '</td> <td>' + zone.lastevents[zone.lastevents.length - j - 1].datetime + '</td> </tr>'
+                   str += '<tr> <td>' + zone.lastevents[zone.lastevents.length - j - 1].message + '</td> <td>' + jQuery.timeago(zone.lastevents[zone.lastevents.length - j - 1].datetime) + '</td> </tr>'
                 }
                 str += '</tbody> </table>';
                 str += '</div>';
@@ -83,7 +83,7 @@ function partitiondetails(obj) {
 
                 str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
                 for (var j = 0; j < partition.lastevents.length; j++) {
-                   str += '<tr> <td>' + partition.lastevents[partition.lastevents.length - j - 1].message + '</td> <td>' + partition.lastevents[partition.lastevents.length - j - 1].datetime + '</td> </tr>'
+                   str += '<tr> <td>' + partition.lastevents[partition.lastevents.length - j - 1].message + '</td> <td>' + jQuery.timeago(partition.lastevents[partition.lastevents.length - j - 1].datetime) + '</td> </tr>'
                 }
                 str += '</tbody> </table>';
                 str += '</div>';
