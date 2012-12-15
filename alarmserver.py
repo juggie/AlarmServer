@@ -163,63 +163,6 @@ class HTTPChannel(asynchat.async_chat):
 		self.push("\r\n")
 		self.push_with_producer(push_FileProducer(file))
 
-	def pushgui(self):
-		self.pushok("""<!DOCTYPE html>
-					<head>
-						<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-						<title>Alarm Server</title>
-					    <link href="ext/bootstrap.min.css" rel="stylesheet" media="screen">
-					    <style type="text/css">
-					      body {
-					        padding-top: 20px;
-					        padding-bottom: 40px;
-					      }
-
-					      .container-narrow {
-					        margin: 0 auto;
-					        max-width: 900px;
-					      }
-					      .container-narrow > hr {
-					        margin: 30px 0;
-					      }
-							.popover {
-							    width:600px;
-							}
-							.popover-inner {
-							width: 600px;
-						}
-						</style>
-					</head><body>
-						<script src="ext/jquery.js"></script>
-						<script src="ext/alarmserver.js"></script>
-						<script src="ext/bootstrap.min.js"></script>
-						<script src="ext/bootbox.min.js"></script>
-						<div class="container-narrow">
-							<div class="masthead">
-								<ul class="nav nav-pills pull-right">
-								  <li class="active"><a href="#">Home</a></li>
-								  <li><a href="/api">API/JSON</a></li>
-								  <li><a href="https://github.com/juggie/AlarmServer">About</a></li>
-								</ul>
-								<h3 class="muted">Alarm Server</h3>
-							</div>
-							 <hr>
-
-							 <div>
-								<div id="partitions"></div>
-								<div class="btn-toolbar">
-									<div id="actions">
-									</div>
-								</div>
-								<div id="status" class=""></div>
-							</div>
-							 <hr>
-							<div id="zones"></div>
-						</div>
-			        </body></html>
-			        """)
-			
-
 class EnvisalinkClient(asynchat.async_chat):
 	def __init__(self, config):
 		# Call parent class's __init__ method
@@ -421,7 +364,7 @@ class AlarmServer(asyncore.dispatcher):
 		query_array = urlparse.parse_qs(query.query, True)
 
 		if query.path == '/':
-			channel.pushgui()
+			channel.pushfile('index.html');
 		elif query.path == '/api':
 			channel.pushok(json.dumps(ALARMSTATE))
 		elif query.path == '/api/alarm/arm':
@@ -439,6 +382,8 @@ class AlarmServer(asyncore.dispatcher):
 		elif query.path == '/api/refresh':
 			channel.pushok(json.dumps({'response' : 'Request to refresh data received'}))
 			self._envisalinkclient.send_command('001', '')
+		elif query.path == '/img/glyphicons-halflings.png':
+			channel.pushfile('ext' + os.sep + 'glyphicons-halflings.png')
 		elif query.path == '/img/glyphicons-halflings-white.png':
 			channel.pushfile('ext' + os.sep + 'glyphicons-halflings-white.png')
 		elif query.path == '/favicon.ico':
