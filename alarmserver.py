@@ -64,6 +64,7 @@ class AlarmServerConfig():
 
 		self.HTTPSPORT = self.read_config_var('alarmserver', 'httpsport', 8111, 'int')
 		self.MAXEVENTS = self.read_config_var('alarmserver', 'maxevents', 10, 'int')
+		self.MAXALLEVENTS = self.read_config_var('alarmserver', 'maxallevents', 100, 'int')
 		self.ENVISALINKHOST = self.read_config_var('envisalink', 'host', 'envisalink', 'str')
 		self.ENVISALINKPORT = self.read_config_var('envisalink', 'port', 4025, 'int')
 		self.ENVISALINKPASS = self.read_config_var('envisalink', 'pass', 'user', 'str')
@@ -282,7 +283,7 @@ class EnvisalinkClient(asynchat.async_chat):
 
 	def handle_event(self, code, parameters, event, message):
 		if 'type' in event:
-			if not event['type'] in ALARMSTATE: ALARMSTATE[event['type']]={}
+			if not event['type'] in ALARMSTATE: ALARMSTATE[event['type']]={'lastevents' : []}
 
 			if event['type'] in ('partition', 'zone'):
 				if event['type'] == 'zone':
@@ -311,6 +312,10 @@ class EnvisalinkClient(asynchat.async_chat):
 			if len(ALARMSTATE[event['type']][int(parameters)]['lastevents']) > self._config.MAXEVENTS:
 				ALARMSTATE[event['type']][int(parameters)]['lastevents'].pop(0)
 			ALARMSTATE[event['type']][int(parameters)]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+			
+			if len(ALARMSTATE[event['type']]['lastevents']) > self._config.MAXALLEVENTS:
+				ALARMSTATE[event['type']]['lastevents'].pop(0)
+			ALARMSTATE[event['type']]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
 
 	def handle_zone(self, code, parameters, event, message):
 		self.handle_event(code, parameters[1:], event, message)
