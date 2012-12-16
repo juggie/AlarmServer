@@ -308,7 +308,7 @@ class EnvisalinkClient(asynchat.async_chat):
 				ALARMSTATE[event['type']][int(parameters)]['status']=dict_merge(ALARMSTATE[event['type']][int(parameters)]['status'], event['status'])
 			
 			if len(ALARMSTATE[event['type']][int(parameters)]['lastevents']) > self._config.MAXEVENTS:
-				ALARMSTATE[event['type']][int(parameters)]['lastevents'].pop()
+				ALARMSTATE[event['type']][int(parameters)]['lastevents'].pop(0)
 			ALARMSTATE[event['type']][int(parameters)]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
 
 	def handle_zone(self, code, parameters, event, message):
