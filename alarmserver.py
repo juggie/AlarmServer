@@ -73,6 +73,7 @@ class AlarmServerConfig():
 		self.PUSHOVER_ENABLE = self.read_config_var('pushover', 'enable', False, 'bool')
 		self.PUSHOVER_USERTOKEN = self.read_config_var('pushover', 'enable', False, 'bool')
 		self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
+		self.EVENTTIMEAGO = self.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
 		
 		self.PARTITIONNAMES={}
 		for i in range(1, MAXPARTITIONS+1):
@@ -383,6 +384,8 @@ class AlarmServer(asyncore.dispatcher):
 		elif query.path == '/api/refresh':
 			channel.pushok(json.dumps({'response' : 'Request to refresh data received'}))
 			self._envisalinkclient.send_command('001', '')
+		elif query.path == '/api/config/eventtimeago':
+			channel.pushok(json.dumps({'eventtimeago' : str(self._config.EVENTTIMEAGO)}))
 		elif query.path == '/img/glyphicons-halflings.png':
 			channel.pushfile('glyphicons-halflings.png')
 		elif query.path == '/img/glyphicons-halflings-white.png':
