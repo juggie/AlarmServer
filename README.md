@@ -9,3 +9,7 @@ as well.
 
 As with any project documentation is key, there is plenty more to go in here and
 it will hopefully be soon!
+
+Config:
+Please see the alarmserver-example.cfg and rename to alarmserver.cfg and
+customize to requirements.
