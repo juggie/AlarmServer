@@ -410,8 +410,9 @@ class AlarmServer(asyncore.dispatcher):
 		alarmserver_logger('Incoming web connection from %s' % repr(addr))
 
 		try:
-			HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile="server.crt", keyfile="server.key", ssl_version=ssl.PROTOCOL_SSLv3), addr)
+			HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile="server.crt", keyfile="server.key", ssl_version=ssl.PROTOCOL_TLSv1), addr)
 		except ssl.SSLError:
+			alarmserver_logger('Failed https connection, attempted with http')
 			return
 	
 	def handle_request(self, channel, method, request, header):
