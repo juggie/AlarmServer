@@ -35,7 +35,8 @@ function zonedetails(obj) {
 
                 str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
                 for (var j = 0; j < zone.lastevents.length; j++) {
-                   str += '<tr> <td>' + zone.lastevents[zone.lastevents.length - j - 1].message + '</td> <td>' + jQuery.timeago(zone.lastevents[zone.lastevents.length - j - 1].datetime) + '</td> </tr>'
+                    var ev =  zone.lastevents[zone.lastevents.length - j - 1];
+                    str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + ev.datetime + '">' + jQuery.timeago(ev.datetime) + '</a></td> </tr>'
                 }
                 str += '</tbody> </table>';
                 str += '</div>';
@@ -83,7 +84,8 @@ function partitiondetails(obj) {
 
                 str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
                 for (var j = 0; j < partition.lastevents.length; j++) {
-                   str += '<tr> <td>' + partition.lastevents[partition.lastevents.length - j - 1].message + '</td> <td>' + jQuery.timeago(partition.lastevents[partition.lastevents.length - j - 1].datetime) + '</td> </tr>'
+                    var ev =  partition.lastevents[partition.lastevents.length - j - 1];
+                    str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + ev.datetime + '">' + jQuery.timeago(ev.datetime) + '</a></td> </tr>'
                 }
                 str += '</tbody> </table>';
                 str += '</div>';
@@ -102,7 +104,7 @@ function actions(obj) {
     var exit = obj.partition["1"].status.exit_delay;
 
     if (armed) {
-        str += '<a id="myLink" class="btn" href="#" onclick="doAction(\'disarm\');return false;">Disarm</a>';
+        str += '<a id="myLink" class="btn" href="#" onclick="disarm();return false;">Disarm</a>';
     } else {
         str += '<a id="myLink" class="btn" href="#" onclick="doAction(\'arm\');return false;">Arm</a>';
         str += '<a id="myLink" class="btn" href="#" onclick="doAction(\'stayarm\');return false;">Stay</a>';
@@ -112,6 +114,23 @@ function actions(obj) {
     }
 
     return str;
+}
+
+function disarm() {
+    bootbox.prompt("What is your code?", function(result) {
+        $.ajax({
+            type: "GET",
+            url: "/api/alarm/disarm?code" + result,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            data: "{}",
+            success: function(res) {
+                bootbox.alert(res.response, function() {
+                    refresh();
+                });
+            }
+        });
+    });
 }
 
 function doAction(action) {
@@ -156,6 +175,7 @@ function refresh() {
             if (activePartition) {
                 $('#partitiontabs a[href="' + activePartition + '"]').tab('show');
             }
+            $("[rel=tooltip]").tooltip();
         }
     });
 }
