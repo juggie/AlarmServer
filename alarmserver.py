@@ -161,7 +161,7 @@ class HTTPChannel(asynchat.async_chat):
 		elif extension == ".css":
 			self.push("Content-type: text/css\r\n")
 		self.push("\r\n")
-		self.push_with_producer(push_FileProducer(file))
+		self.push_with_producer(push_FileProducer('ext' + os.sep + file))
 
 class EnvisalinkClient(asynchat.async_chat):
 	def __init__(self, config):
@@ -384,17 +384,17 @@ class AlarmServer(asyncore.dispatcher):
 			channel.pushok(json.dumps({'response' : 'Request to refresh data received'}))
 			self._envisalinkclient.send_command('001', '')
 		elif query.path == '/img/glyphicons-halflings.png':
-			channel.pushfile('ext' + os.sep + 'glyphicons-halflings.png')
+			channel.pushfile('glyphicons-halflings.png')
 		elif query.path == '/img/glyphicons-halflings-white.png':
-			channel.pushfile('ext' + os.sep + 'glyphicons-halflings-white.png')
+			channel.pushfile('glyphicons-halflings-white.png')
 		elif query.path == '/favicon.ico':
-			channel.pushfile('ext' + os.sep + 'favicon.ico')
-		elif query.path.split('/')[1] == 'ext':
-			if len(query.path.split('/')) == 3:
+			channel.pushfile('favicon.ico')
+		else:
+			if len(query.path.split('/')) == 2:
 				try:
-					with open('ext' + os.sep + query.path.split('/')[2]) as f: 
+					with open('ext' + os.sep + query.path.split('/')[1]) as f: 
 						f.close()
-						channel.pushfile('ext' + os.sep + query.path.split('/')[2])
+						channel.pushfile(query.path.split('/')[1])
 				except IOError as e:
 					print "I/O error({0}): {1}".format(e.errno, e.strerror)
 					channel.pushstatus(404, "Not found")
@@ -402,16 +402,10 @@ class AlarmServer(asyncore.dispatcher):
 					channel.push("File not found")
 					channel.push("\r\n")
 			else:
-				alarmserver_logger("Subdirectories in ext/ not supported")
+				alarmserver_logger("Invalid file requested")
 				channel.pushstatus(404, "Not found")
 				channel.push("Content-type: text/html\r\n")
-				channel.push("Subdirectories in ext/ not supported")
-				channel.push("\r\n")				 
-		else:
-			channel.pushstatus(404, "Not found")
-			channel.push("Content-type: text/html\r\n")
-			channel.push("Invalid Request")
-			channel.push("\r\n")
+				channel.push("\r\n")
 
 class ProxyChannel(asynchat.async_chat):
 	def __init__(self, server, proxypass, sock, addr):
