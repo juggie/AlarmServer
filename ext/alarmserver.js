@@ -1,5 +1,4 @@
-var activeZone = null;
-var activePartition = null;
+var activeTab = null;
 var timeago = true;
 
 $.ajax({
@@ -30,10 +29,26 @@ function createEvents(list) {
 	return str;
 }
 
-function zones(obj) {
-    var str = '<ul id="zonetabs" class="nav nav-list bs-docs-sidenav">';
-    str += '<li><a href="#zoneall" data-toggle="tab">All<i class="icon-chevron-right"></i></a></li>'
+function tabs(obj) {
+    var str = '<ul id="tabs" class="nav nav-list bs-docs-sidenav">';
+    str += partitions(obj);
+    str += zones(obj);
+    str += '</ul>';
     
+    return str;
+}
+
+function details(obj) {
+	var str = '';
+	str += partitiondetails(obj);
+	str += zonedetails(obj);
+	return str;
+}
+
+function zones(obj) {
+	var str = '<li class="nav-header">Zones</li>';
+    str += '<li><a href="#zoneall" data-toggle="tab">All<i class="icon-chevron-right"></i></a></li>'
+  
     for (var i = 1; i < 65; i++) {
         var zone = obj.zone[i + ''];
         if (zone) {
@@ -47,7 +62,6 @@ function zones(obj) {
             }
         }
     }
-    str += '</ul>';
 
     return str;
 }
@@ -78,7 +92,8 @@ function zonedetails(obj) {
 
 
 function partitions(obj) {
-    var str = '<ul id="partitiontabs" class="nav nav-list bs-docs-sidenav">';
+    var str = '<li class="nav-header">Partitions</li>';
+
     str += '<li><a href="#partitionall" data-toggle="tab">All<i class="icon-chevron-right"></i></a></li>'
 
     for (var i = 1; i < 65; i++) {
@@ -94,7 +109,6 @@ function partitions(obj) {
             }
         }
     }
-    str += '</ul>';
 
     return str;
 }
@@ -193,25 +207,18 @@ function refresh() {
         dataType: "json",
         data: "{}",
         success: function(res) {
-            $('#zones').html(zones(res)).fadeIn();
-            $('#zonedetails').html(zonedetails(res)).fadeIn();
-            $('#partitions').html(partitions(res)).fadeIn();
-            $('#partitiondetails').html(partitiondetails(res)).fadeIn();
+            $('#tabcontainer').html(tabs(res)).fadeIn();
+            $('#details').html(details(res)).fadeIn();
             $('#actions').html(actions(res)).fadeIn();
-            $('#zonetabs').tab();
-            $('#partitiondetails').tab();
-            $('#zonetabs a[data-toggle="tab"]').on('shown', function (e) {
-                activeZone = e.target.hash;
+            $('#tabs').tab();
+            
+            $('#tabs a[data-toggle="tab"]').on('shown', function (e) {
+                activeTab = e.target.hash;
             });
-            if (activeZone) {
-                $('#zonetabs a[href="' + activeZone + '"]').tab('show');
+            if (activeTab) {
+                $('#tabs a[href="' + activeTab + '"]').tab('show');
             }
-            $('#partitiontabs a[data-toggle="tab"]').on('shown', function (e) {
-                activePartition = e.target.hash;
-            });
-            if (activePartition) {
-                $('#partitiontabs a[href="' + activePartition + '"]').tab('show');
-            }
+           
             $("[rel=tooltip]").tooltip();
             $(".alert").alert();
         }
