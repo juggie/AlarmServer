@@ -13,8 +13,27 @@ $.ajax({
     }
 });
 
+function createEvents(list) {
+	var str = '';
+    str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
+               
+	for (var j = 0; j < list.length; j++) {
+	    var ev = list[list.length - j - 1];
+	    var time = ev.datetime;
+	    var tooltip = jQuery.timeago(ev.datetime);
+	    
+	    str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + (timeago ? time : tooltip) + '">' + (timeago ? tooltip : time) + '</a></td> </tr>';
+	}
+	
+	str += '</tbody> </table>';
+   
+	return str;
+}
+
 function zones(obj) {
     var str = '<ul id="zonetabs" class="nav nav-list bs-docs-sidenav">';
+    str += '<li><a href="#zoneall" data-toggle="tab">All<i class="icon-chevron-right"></i></a></li>'
+    
     for (var i = 1; i < 65; i++) {
         var zone = obj.zone[i + ''];
         if (zone) {
@@ -34,7 +53,9 @@ function zones(obj) {
 }
 
 function zonedetails(obj) {
-    var str = '';
+	var str = '';
+	str += '<div class="tab-pane" id="zoneall">' + createEvents(obj.zone.lastevents) + '</div>';
+    
     for (var i = 1; i < 65; i++) {
         var zone = obj.zone[i + ''];
         if (zone) {
@@ -45,16 +66,7 @@ function zonedetails(obj) {
 
                 str += '<div class="tab-pane" id="zone' + i + '">';
 
-                str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
-               for (var j = 0; j < zone.lastevents.length; j++) {
-                    var ev =  zone.lastevents[zone.lastevents.length - j - 1];
-                    var time = ev.datetime;
-	                var tooltip = jQuery.timeago(ev.datetime);
-	                
-	                str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + (timeago ? time : tooltip) + '">' + (timeago ? tooltip : time) + '</a></td> </tr>'
-                    
-                }
-                str += '</tbody> </table>';
+                str += createEvents(zone.lastevents);
                 str += '</div>';
             }
         }
@@ -67,6 +79,8 @@ function zonedetails(obj) {
 
 function partitions(obj) {
     var str = '<ul id="partitiontabs" class="nav nav-list bs-docs-sidenav">';
+    str += '<li><a href="#partitionall" data-toggle="tab">All<i class="icon-chevron-right"></i></a></li>'
+
     for (var i = 1; i < 65; i++) {
         var partition = obj.partition[i + ''];
         if (partition) {
@@ -88,6 +102,7 @@ function partitions(obj) {
 
 function partitiondetails(obj) {
     var str = '';
+    str += '<div class="tab-pane" id="partitionall">' + createEvents(obj.partition.lastevents) + '</div>';
     for (var i = 1; i < 65; i++) {
         var partition = obj.partition[i + ''];
         if (partition) {
@@ -98,17 +113,7 @@ function partitiondetails(obj) {
 
                 str += '<div class="tab-pane" id="partition' + i + '">';
 
-                str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
-                
-                for (var j = 0; j < partition.lastevents.length; j++) {
-                    var ev =  partition.lastevents[partition.lastevents.length - j - 1];
-                    
-	                var time = ev.datetime;
-	                var tooltip = jQuery.timeago(ev.datetime);
-
-                    str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + (timeago ? time : tooltip) + '">' + (timeago ? tooltip : time) + '</a></td> </tr>'
-                }
-                str += '</tbody> </table>';
+                str += createEvents(partition.lastevents);                
                 str += '</div>';
             }
         }
