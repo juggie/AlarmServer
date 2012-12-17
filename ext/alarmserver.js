@@ -120,7 +120,6 @@ function partitiondetails(obj) {
     }
 
     return str;
-
 }
 
 
@@ -128,6 +127,7 @@ function actions(obj) {
     var str = '';
     var armed = obj.partition["1"].status.armed;
     var exit = obj.partition["1"].status.exit_delay;
+	var entry = obj.partition["1"].status.entry_delay;
 
     if (armed) {
         str += '<a id="myLink" class="btn" href="#" onclick="disarm();return false;">Disarm</a>';
@@ -137,6 +137,11 @@ function actions(obj) {
     }
     if (exit) {
         str += '<a id="myLink" class="btn" href="#" onclick="doAction(\'disarm\');return false;">Cancel</a>';
+        message('Exit delay');
+    }
+    
+    if (entry) {
+    	message('Entry delay');
     }
 
     return str;
@@ -174,6 +179,12 @@ function doAction(action) {
     });
 }
 
+function message(msg) {
+	var str = '<div class="alert alert-block">' + msg + '</div>';
+
+	$('#message').html(str).fadeIn();
+}
+
 function refresh() {
     $.ajax({
         type: "GET",
@@ -202,6 +213,7 @@ function refresh() {
                 $('#partitiontabs a[href="' + activePartition + '"]').tab('show');
             }
             $("[rel=tooltip]").tooltip();
+            $(".alert").alert();
         }
     });
 }
