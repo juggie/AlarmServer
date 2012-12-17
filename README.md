@@ -14,6 +14,6 @@ Config:
 Please see the alarmserver-example.cfg and rename to alarmserver.cfg and
 customize to requirements.
 
-Depedancies:
+Dependencies:
 On windows, pyOpenSSL is required.
 http://pypi.python.org/pypi/pyOpenSSL
