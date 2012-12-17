@@ -1,5 +1,17 @@
 var activeZone = null;
 var activePartition = null;
+var timeago = true;
+
+$.ajax({
+    type: "GET",
+    url: "/api/config/eventtimeago",
+    contentType: "application/json; charset=utf-8",
+    dataType: "json",
+    data: "{}",
+    success: function(res) {
+    	timeago = res.eventtimeago.toLowerCase() == "true";  
+    }
+});
 
 function zones(obj) {
     var str = '<ul id="zonetabs" class="nav nav-list bs-docs-sidenav">';
@@ -34,9 +46,13 @@ function zonedetails(obj) {
                 str += '<div class="tab-pane" id="zone' + i + '">';
 
                 str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
-                for (var j = 0; j < zone.lastevents.length; j++) {
+               for (var j = 0; j < zone.lastevents.length; j++) {
                     var ev =  zone.lastevents[zone.lastevents.length - j - 1];
-                    str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + ev.datetime + '">' + jQuery.timeago(ev.datetime) + '</a></td> </tr>'
+                    var time = ev.datetime;
+	                var tooltip = jQuery.timeago(ev.datetime);
+	                
+	                str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + (timeago ? time : tooltip) + '">' + (timeago ? tooltip : time) + '</a></td> </tr>'
+                    
                 }
                 str += '</tbody> </table>';
                 str += '</div>';
@@ -83,9 +99,14 @@ function partitiondetails(obj) {
                 str += '<div class="tab-pane" id="partition' + i + '">';
 
                 str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
+                
                 for (var j = 0; j < partition.lastevents.length; j++) {
                     var ev =  partition.lastevents[partition.lastevents.length - j - 1];
-                    str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + ev.datetime + '">' + jQuery.timeago(ev.datetime) + '</a></td> </tr>'
+                    
+	                var time = ev.datetime;
+	                var tooltip = jQuery.timeago(ev.datetime);
+
+                    str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + (timeago ? time : tooltip) + '">' + (timeago ? tooltip : time) + '</a></td> </tr>'
                 }
                 str += '</tbody> </table>';
                 str += '</div>';
