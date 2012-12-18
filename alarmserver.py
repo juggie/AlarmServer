@@ -327,7 +327,7 @@ class push_FileProducer:
 	# a producer which reads data from a file object
 
 	def __init__(self, file):
-		self.file = open(file, "r")
+		self.file = open(file, "rb")
 
 	def more(self):
 		if self.file:
