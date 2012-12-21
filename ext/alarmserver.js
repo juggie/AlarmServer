@@ -30,10 +30,10 @@ function createEvents(list) {
 }
 
 function tabs(obj) {
-    var str = '<ul id="tabs" class="nav nav-list bs-docs-sidenav">';
+    var str = '<div class="tabbable tabs-left"> <ul id="tabs" class="nav nav-tabs">';
     str += partitions(obj);
     str += zones(obj);
-    str += '</ul>';
+    str += '</ul></div>';
     
     return str;
 }
@@ -47,8 +47,7 @@ function details(obj) {
 
 function zones(obj) {
 	var str = '<li class="nav-header">Zones</li>';
-    str += '<li><a href="#zoneall" data-toggle="tab">All<i class="icon-chevron-right"></i></a></li>'
-  
+    str += '<li><a href="#zoneall" data-toggle="tab">All</a></li>'
     for (var i = 1; i < 65; i++) {
         var zone = obj.zone[i + ''];
         if (zone) {
@@ -58,7 +57,7 @@ function zones(obj) {
                 var name = obj.zone[i + ''].name;
 
 
-                str += '<li><a href="#zone' + i + '" data-toggle="tab"> <i class="' + icon + '"></i>    ' + name + ' <i class="icon-chevron-right"></i></a></li>'
+                str += '<li><a href="#zone' + i + '" data-toggle="tab"> <span class="badge ' + cls + '"> <i class="' + icon + ' icon-white"></i></span>    ' + name + ' </a></li>'
             }
         }
     }
@@ -94,7 +93,7 @@ function zonedetails(obj) {
 function partitions(obj) {
     var str = '<li class="nav-header">Partitions</li>';
 
-    str += '<li><a href="#partitionall" data-toggle="tab">All<i class="icon-chevron-right"></i></a></li>'
+    str += '<li><a href="#partitionall" data-toggle="tab">All</a></li>'
 
     for (var i = 1; i < 65; i++) {
         var partition = obj.partition[i + ''];
@@ -105,7 +104,7 @@ function partitions(obj) {
                 var name = obj.partition[i + ''].name;
 
 
-                str += '<li><a href="#partition' + i + '" data-toggle="tab"> <i class="' + icon + '"></i>    ' + name + ' <i class="icon-chevron-right"></i></a></li>'
+                str += '<li><a href="#partition' + i + '" data-toggle="tab"> <span class="badge ' + cls + '"> <i class="' + icon + ' icon-white"></i></span>    ' + name + ' </a></li>'
             }
         }
     }
