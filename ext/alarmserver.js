@@ -155,19 +155,16 @@ function actions(obj) {
 }
 
 function disarm() {
-	bootbox.prompt("What is your code?", function (result) {
-		$.ajax({
-			type:"GET",
-			url:"/api/alarm/disarm?code" + result,
-			contentType:"application/json; charset=utf-8",
-			dataType:"json",
-			data:"{}",
-			success:function (res) {
-				bootbox.alert(res.response, function () {
-					refresh();
-				});
-			}
-		});
+	var code = prompt("What is your code?", "");
+	$.ajax({
+		type:"GET",
+		url:"/api/alarm/disarm?code" + code,
+		contentType:"application/json; charset=utf-8",
+		dataType:"json",
+		data:"{}",
+		success:function (res) {
+			$.scojs_message(res.response, $.scojs_message.TYPE_OK);
+		}
 	});
 }
 
@@ -179,9 +176,7 @@ function doAction(action) {
 		dataType:"json",
 		data:"{}",
 		success:function (res) {
-			bootbox.alert(res.response, function () {
-				refresh();
-			});
+			$.scojs_message(res.response, $.scojs_message.TYPE_OK);
 		}
 	});
 }
