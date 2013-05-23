@@ -56,6 +56,7 @@ evl_ResponseTypes = {
     672 : {'type' : 'partition', 'name' : 'Partition {0} Failure to Arm', 'description' : 'An attempt was made to arm the partition and it failed.'},
     673 : {'type' : 'partition', 'name' : 'Partition {0} is Busy', 'description' : 'The partition is busy (another keypad is programming or an installer is programming).'},
     674 : {'type' : 'partition', 'name' : 'Partition {0} System Arming in Progress', 'description' : 'This system is auto-arming and is in arm warning delay.'},
+    680 : {'name' : 'System in installers mode', 'description' : 'System has entered installers mode'},
     700 : {'type' : 'partition', 'name' : 'Partition {0[0]} User {0[1]}{0[2]}{0[3]}{0[4]} Closing', 'description' : 'A partition has been armed by a user - sent at the end of exit delay.', 'handler' : 'partition', 'status' : {'armed' : True, 'exit_delay' : False}},
     701 : {'type' : 'partition', 'name' : 'Partition {0} Special Closing', 'description' : 'A partition has been armed by one of the following methods: Quick Arm, Auto Arm, Keyswitch, DLS software, Wireless Key.', 'status' : {'armed' : True, 'exit_delay' : False}},
     702 : {'type' : 'partition', 'name' : 'Partition {0} Partial Closing', 'description' : 'A partition has been armed but one or more zones have been bypassed.', 'status' : {'armed' : True, 'exit_delay' : False}},
