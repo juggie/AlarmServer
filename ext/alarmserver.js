@@ -158,7 +158,7 @@ function disarm() {
 	var code = prompt("What is your code?", "");
 	$.ajax({
 		type:"GET",
-		url:"/api/alarm/disarm?code" + code,
+		url:"/api/alarm/disarm?alarmcode=" + code,
 		contentType:"application/json; charset=utf-8",
 		dataType:"json",
 		data:"{}",
