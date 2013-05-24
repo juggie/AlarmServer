@@ -140,10 +140,13 @@ function actions(obj) {
 	var str = '';
 	var armed = obj.partition["1"].status.armed;
 	var exit = obj.partition["1"].status.exit_delay;
+	var pgm_output = obj.partition["1"].status.pgm_output;
 
 	if (armed) {
 		str += '<a class="btn" href="#" onclick="disarm();return false;">Disarm</a>';
-	} else if (!exit) {
+	} else if (pgm_output) {
+		str += '<a class="btn" href="#" onclick="return false;">PGM Output status:</a>';
+        } else if (!exit) {
 		str += '<a class="btn" href="#" onclick="doAction(\'arm\');return false;">Arm</a>';
 		str += '<a class="btn" href="#" onclick="armwithcode();return false;">Arm W/Code</a>';
 		str += '<a class="btn" href="#" onclick="doAction(\'stayarm\');return false;">Stay</a>';
@@ -233,6 +236,11 @@ function message(obj) {
 	if (obj.partition["1"].status.tamper) {
 		str += '<span class="label label-warning">Tamper</span>';
 	}
+
+	if (obj.partition["1"].status.pgm_output) {
+		str += '<span class="label label-info">in progress</span>';
+	}
+
 	$('#message').html(str).fadeIn();
 }
 
