@@ -145,7 +145,9 @@ function actions(obj) {
 		str += '<a class="btn" href="#" onclick="disarm();return false;">Disarm</a>';
 	} else if (!exit) {
 		str += '<a class="btn" href="#" onclick="doAction(\'arm\');return false;">Arm</a>';
+		str += '<a class="btn" href="#" onclick="armwithcode();return false;">Arm W/Code</a>';
 		str += '<a class="btn" href="#" onclick="doAction(\'stayarm\');return false;">Stay</a>';
+		str += '<a class="btn" href="#" onclick="pgm();return false;">PGM</a>';
 	}
 	if (exit) {
 		str += '<a class="btn" href="#" onclick="disarm();return false;">Cancel</a>';
@@ -159,6 +161,35 @@ function disarm() {
 	$.ajax({
 		type:"GET",
 		url:"/api/alarm/disarm?alarmcode=" + code,
+		contentType:"application/json; charset=utf-8",
+		dataType:"json",
+		data:"{}",
+		success:function (res) {
+			$.scojs_message(res.response, $.scojs_message.TYPE_OK);
+		}
+	});
+}
+
+function pgm() {
+	var pgmnum= prompt("Enter PGM # to trigger", "");
+	var code= prompt("What is your code?", "");
+	$.ajax({
+		type:"GET",
+		url:"/api/pgm?pgmnum=" + pgmnum + "&alarmcode=" + code,
+		contentType:"application/json; charset=utf-8",
+		dataType:"json",
+		data:"{}",
+		success:function (res) {
+			$.scojs_message(res.response, $.scojs_message.TYPE_OK);
+		}
+	});
+}
+
+function armwithcode() {
+	var code = prompt("What is your code?", "");
+	$.ajax({
+		type:"GET",
+		url:"/api/alarm/armwithcode?alarmcode=" + code,
 		contentType:"application/json; charset=utf-8",
 		dataType:"json",
 		data:"{}",
