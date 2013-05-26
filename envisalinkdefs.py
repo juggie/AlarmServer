@@ -3,6 +3,7 @@
 ## Written by donnyk+envisalink@gmail.com
 ##
 ## This code is under the terms of the GPL v3 license.
+
 evl_Defaults = {
 	'zone' : {'open' : False, 'fault' : False, 'alarm' : False, 'tamper' : False},
 	'partition' : {'ready' : False, 'trouble' : False, 'exit_delay' : False, 'entry_delay' : False, 'armed' : False, 'armed_bypass' : False, 'alarm' : False, 'tamper' : False, 'chime' : False, 'trouble_led' : False},
