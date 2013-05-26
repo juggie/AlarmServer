@@ -21,6 +21,7 @@ class CodeError(Exception): pass
 ALARMSTATE={'version' : 0.1}
 MAXPARTITIONS=16
 MAXZONES=128
+MAXALARMUSERS=47
 CONNECTEDCLIENTS={}
 
 def dict_merge(a, b):
@@ -83,6 +84,10 @@ class AlarmServerConfig():
 		self.ZONENAMES={}
 		for i in range(1, MAXZONES+1):
 			self.ZONENAMES[i]=self.read_config_var('alarmserver', 'zone'+str(i), False, 'str', True)
+
+		self.ALARMUSERNAMES={}
+		for i in range(1, MAXALARMUSERS+1):
+			self.ALARMUSERNAMES[i]=self.read_config_var('alarmserver', 'user'+str(i), False, 'str', True)
 		
 		if self.PUSHOVER_USERTOKEN == False and self.PUSHOVER_ENABLE == True: self.PUSHOVER_ENABLE = False
 		
@@ -262,7 +267,22 @@ class EnvisalinkClient(asynchat.async_chat):
 				if event['type'] == 'partition':
 					if int(parameters) in self._config.PARTITIONNAMES:
 						if self._config.PARTITIONNAMES[int(parameters)]!=False:
-							return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters)]))
+							# Pull out user code if available
+							try:
+								usercode = parameters[1:]
+							except:
+								usercode = False
+							if int(usercode) in self._config.ALARMUSERNAMES:
+								if self._config.ALARMUSERNAMES[int(usercode)]!=False:
+									alarmusername = self._config.ALARMUSERNAMES[int(usercode)]
+								else:
+									# Didnt find a username, use the code instead
+									alarmusername = usercode
+								print "Usercode: %s" % usercode
+								print "Alarmusername: %s" % alarmusername
+								return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters)]), str(alarmusername))
+							else:
+								return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters)]))
 				elif event['type'] == 'zone':						
 					if int(parameters) in self._config.ZONENAMES:
 						if self._config.ZONENAMES[int(parameters)]!=False:
@@ -508,7 +528,8 @@ class EnvisalinkProxy(asyncore.dispatcher):
 if __name__=="__main__":
 	alarmserver_logger('Alarm Server Starting')
 	alarmserver_logger('Currently Supporting Envisalink 2DS/3 only')
-	alarmserver_logger('Tested only on a DSC-1616 + EVL-3')
+	alarmserver_logger('Tested on a DSC-1616 + EVL-3')
+	alarmserver_logger('and on a DSC-1832 + EVL-2DS')
 	alarmserver_logger('Reading config file')
 	
 	config = AlarmServerConfig('alarmserver.cfg')
