@@ -140,17 +140,27 @@ function actions(obj) {
 	var str = '';
 	var armed = obj.partition["1"].status.armed;
 	var exit = obj.partition["1"].status.exit_delay;
+	var pgm_output = obj.partition["1"].status.pgm_output;
 
 	if (armed) {
 		str += '<a class="btn" href="#" onclick="disarm();return false;">Disarm</a>';
-	} else if (!exit) {
-		str += '<a class="btn" href="#" onclick="doAction(\'arm\');return false;">Arm</a>';
-		str += '<a class="btn" href="#" onclick="armwithcode();return false;">Arm W/Code</a>';
-		str += '<a class="btn" href="#" onclick="doAction(\'stayarm\');return false;">Stay</a>';
-		str += '<a class="btn" href="#" onclick="pgm();return false;">PGM</a>';
+	} else if (pgm_output) {
+		/* Dont show any button, you can't cancel a PGM output */
+		str += '';
+        } else if (!exit) {
+                /* Quick arm is default now with new drop down to select Arm with code */
+                str += '<div class="btn-group">';
+                str += '<button class="btn"><a href="#" onclick="doAction(\'arm\');return false;">Quick Arm</a></button>';
+                str += '<button class="btn dropdown-toggle" data-toggle="dropdown">';
+                str += '<span class="caret"></span></button><ul class="dropdown-menu">';
+		str += '<li><a href="#" onclick="armwithcode();return false;">Arm W/Code</a></li>';
+                str += '</ul></div>';
+                /* Now back to regular buttons here */
+		str += '<a class="btn" href="#" onclick="doAction(\'stayarm\');return false;">Stay</a> ';
+		str += '<a class="btn" href="#" onclick="pgm();return false;">PGM</a> ';
 	}
 	if (exit) {
-		str += '<a class="btn" href="#" onclick="disarm();return false;">Cancel</a>';
+		str += '<a class="btn-small" href="#" onclick="disarm();return false;">Cancel</a>';
 	}
 
 	return str;
@@ -233,6 +243,11 @@ function message(obj) {
 	if (obj.partition["1"].status.tamper) {
 		str += '<span class="label label-warning">Tamper</span>';
 	}
+
+	if (obj.partition["1"].status.pgm_output) {
+		str += '<span class="label label-info">PGM Output in progress</span>';
+	}
+
 	$('#message').html(str).fadeIn();
 }
 

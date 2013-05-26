@@ -3,11 +3,19 @@
 ## Written by donnyk+envisalink@gmail.com
 ##
 ## This code is under the terms of the GPL v3 license.
+
 evl_Defaults = {
 	'zone' : {'open' : False, 'fault' : False, 'alarm' : False, 'tamper' : False},
 	'partition' : {'ready' : False, 'trouble' : False, 'exit_delay' : False, 'entry_delay' : False, 'armed' : False, 'armed_bypass' : False, 'alarm' : False, 'tamper' : False, 'chime' : False, 'trouble_led' : False},
 	'system' : {'fire_key_alarm' : False, 'aux_key_alarm' : False, 'panic_key_alarm' : False, '2wire_alarm' : False, 'battery_trouble' : False, 'ac_trouble' : False, 'system_bell_trouble' : False, 'system_tamper' : False, 'fire_trouble' : False}
 	}
+
+evl_ArmModes = {
+        0 : 'Away',
+        1 : 'Stay',
+        2 : 'Zero Entry Away',
+        3 : 'Zero Entry Stay'
+    }
 
 evl_ResponseTypes = {
     500 : {'name' : 'Command Acknowledge', 'description' : 'A command has been received successfully.'},
@@ -38,9 +46,9 @@ evl_ResponseTypes = {
     626 : {'type' : 'system', 'name' : '[P] Key Alarm', 'description' : 'A Panic key alarm has been restored (sent automatically).', 'status' : {'panic_key_alarm' : False}},
     631 : {'type' : 'system', 'name' : '2-Wire Smoke/Aux Alarm', 'description' : 'A 2-wire smoke/Auxiliary alarm has been activated.', 'status' : {'2wire_alarm' : True}},
     632 : {'type' : 'system', 'name' : '2-Wire Smoke/Aux Restore', 'description' : 'A 2-wire smoke/Auxiliary alarm has been restored.', 'status' : {'2wire_alarm' : False}},
-    650 : {'type' : 'partition', 'name' : 'Partition {0} Ready', 'description' : 'Partition can now be armed (all zones restored, no troubles, etc). Also issued at the end of Bell Timeout if the partition was READY when an alarm occurred.', 'status' : {'ready' : True}},
+    650 : {'type' : 'partition', 'name' : 'Partition {0} Ready', 'description' : 'Partition can now be armed (all zones restored, no troubles, etc). Also issued at the end of Bell Timeout if the partition was READY when an alarm occurred.', 'status' : {'ready' : True, 'pgm_output' : False}},
     651 : {'type' : 'partition', 'name' : 'Partition {0} Not Ready', 'description' : 'Partition cannot be armed (zones open, trouble present, etc).', 'status' : {'ready' : False}},
-    652 : {'type' : 'partition', 'name' : 'Partition {0[0]} Armed Mode {0[1]}', 'description' : 'Partition has been armed - sent at the end of exit delay Also sent after an alarm if the Bell Cutoff Timer expires Mode is appended to indicate whether the partition is armed AWAY, STAY, ZERO-ENTRY-AWAY, or ZERO-ENTRY-STAY.', 'handler' : 'partition', 'status' : {'armed' : True, 'exit_delay' : False}},
+    652 : {'type' : 'partition', 'name' : 'Partition {0} Armed Mode {1}', 'description' : 'Partition has been armed - sent at the end of exit delay Also sent after an alarm if the Bell Cutoff Timer expires Mode is appended to indicate whether the partition is armed AWAY, STAY, ZERO-ENTRY-AWAY, or ZERO-ENTRY-STAY.', 'handler' : 'partition', 'status' : {'armed' : True, 'exit_delay' : False}},
     653 : {'type' : 'partition', 'name' : 'Partition {0} Ready - Force Arming Enabled', 'description' : 'Partition can now be armed (all zones restored, no troubles, etc). Also issued at the end of Bell Timeout if the partition was READY when an alarm occurred.', 'status' : {'ready' : True}},
     654 : {'type' : 'partition', 'name' : 'Partition {0} In Alarm', 'description' : 'A partition is in alarm.', 'status' : {'alarm' : True}},
     655 : {'type' : 'partition', 'name' : 'Partition {0} Disarmed', 'description' : 'A partition has been disarmed.', 'status' : {'alarm' : False, 'armed' : False, 'exit_delay' : False, 'entry_delay' : False}},
@@ -48,7 +56,7 @@ evl_ResponseTypes = {
     657 : {'type' : 'partition', 'name' : 'Partition {0} Entry Delay in Progress', 'description' : 'A partition is in Entry Delay.', 'status' : {'entry_delay' : True}},
     658 : {'type' : 'partition', 'name' : 'Partition {0} Keypad Lock-out', 'description' : 'A partition is in Keypad Lockout due to too many failed user code attempts.'},
     659 : {'type' : 'partition', 'name' : 'Partition {0} Failed to Arm', 'description' : 'An attempt to arm the partition has failed.'},
-    660 : {'type' : 'partition', 'name' : 'Partition {0} PGM Output is in Progress', 'description' : '*71, *72, *73, or *74 has been pressed.'},
+    660 : {'type' : 'partition', 'name' : 'Partition {0} PGM Output is in Progress', 'description' : '*71, *72, *73, or *74 has been pressed.', 'status': {'pgm_output' : True}},
     663 : {'type' : 'partition', 'name' : 'Partition {0} Chime Enabled', 'description' : 'The door chime feature has been enabled.', 'status' : {'chime' : True}},
     664 : {'type' : 'partition', 'name' : 'Partition {0} Chime Disabled', 'description' : 'The door chime feature has been disabled.', 'status' : {'chime' : False}},
     670 : {'type' : 'partition', 'name' : 'Partition {0} Invalid Access Code', 'description' : 'Invalid Access Code.'},
@@ -57,10 +65,10 @@ evl_ResponseTypes = {
     673 : {'type' : 'partition', 'name' : 'Partition {0} is Busy', 'description' : 'The partition is busy (another keypad is programming or an installer is programming).'},
     674 : {'type' : 'partition', 'name' : 'Partition {0} System Arming in Progress', 'description' : 'This system is auto-arming and is in arm warning delay.'},
     680 : {'name' : 'System in installers mode', 'description' : 'System has entered installers mode'},
-    700 : {'type' : 'partition', 'name' : 'Partition {0[0]} User {0[1]}{0[2]}{0[3]}{0[4]} Closing', 'description' : 'A partition has been armed by a user - sent at the end of exit delay.', 'handler' : 'partition', 'status' : {'armed' : True, 'exit_delay' : False}},
+    700 : {'type' : 'partition', 'name' : 'Partition {0} User {1} Closing', 'description' : 'A partition has been armed by a user - sent at the end of exit delay.', 'handler' : 'partition', 'status' : {'armed' : True, 'exit_delay' : False}},
     701 : {'type' : 'partition', 'name' : 'Partition {0} Special Closing', 'description' : 'A partition has been armed by one of the following methods: Quick Arm, Auto Arm, Keyswitch, DLS software, Wireless Key.', 'status' : {'armed' : True, 'exit_delay' : False}},
     702 : {'type' : 'partition', 'name' : 'Partition {0} Partial Closing', 'description' : 'A partition has been armed but one or more zones have been bypassed.', 'status' : {'armed' : True, 'exit_delay' : False}},
-    750 : {'type' : 'partition', 'name' : 'Partition {0[0]} User {0[1]}{0[2]}{0[3]}{0[4]} Opening', 'description' : 'A partition has been disarmed by a user.', 'handler' : 'partition', 'status' : {'armed' : False, 'entry_delay' : False}},
+    750 : {'type' : 'partition', 'name' : 'Partition {0} User {1} Opening', 'description' : 'A partition has been disarmed by a user.', 'handler' : 'partition', 'status' : {'armed' : False, 'entry_delay' : False}},
     751 : {'type' : 'partition', 'name' : 'Partition {0} Special Opening', 'description' : 'A partition has been disarmed by one of the following methods: Keyswitch, DLS software, Wireless Key.',  'status' : {'armed' : False, 'entry_delay' : False}},
     800 : {'type' : 'system', 'name' : 'Panel Battery Trouble', 'description' : 'The panel has a low battery.', 'status' : {'battery_trouble' : True}},
     801 : {'type' : 'system', 'name' : 'Panel Battery Trouble Restore', 'description' : 'The panel''s low battery has been restored.', 'status' : {'battery_trouble' : False}},
