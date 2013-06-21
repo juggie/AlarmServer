@@ -35,7 +35,12 @@ def getMessageType(code):
     return evl_ResponseTypes[code]
 
 def alarmserver_logger(message, type = 0, level = 0):
-    print (str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message)
+    if config.LOGFILE:
+	outfile.write(str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message+'\n')
+	outfile.flush()
+    else:
+    	print (str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message)
+    
 
 def to_chars(string):
     chars = []
@@ -78,6 +83,7 @@ class AlarmServerConfig():
         self.PUSHOVER_USERTOKEN = self.read_config_var('pushover', 'enable', False, 'bool')
         self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
         self.EVENTTIMEAGO = self.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
+	self.LOGFILE = self.read_config_var('alarmserver', 'logfile', '', 'str')
 
         self.PARTITIONNAMES={}
         for i in range(1, MAXPARTITIONS+1):
@@ -536,13 +542,17 @@ class EnvisalinkProxy(asyncore.dispatcher):
             handler = ProxyChannel(server, self._config.ENVISALINKPROXYPASS, sock, addr)
 
 if __name__=="__main__":
+    print "Reading config file alarmserver.cfg"
+    config = AlarmServerConfig('alarmserver.cfg')
+    if config.LOGFILE:
+        outfile=open(config.LOGFILE,'a')
+        print ('Writing logfile to %s' % config.LOGFILE)
+
     alarmserver_logger('Alarm Server Starting')
     alarmserver_logger('Currently Supporting Envisalink 2DS/3 only')
     alarmserver_logger('Tested on a DSC-1616 + EVL-3')
     alarmserver_logger('and on a DSC-1832 + EVL-2DS')
-    alarmserver_logger('Reading config file')
-
-    config = AlarmServerConfig('alarmserver.cfg')
+    alarmserver_logger('and on a DSC-1864 v4.6 + EVL-3')
 
     server = AlarmServer(config)
     proxy = EnvisalinkProxy(config, server)
@@ -553,3 +563,5 @@ if __name__=="__main__":
             # insert scheduling code here.
     except KeyboardInterrupt:
         print "Crtl+C pressed. Shutting down."
+	if config.LOGFILE:	
+		outfile.close()
