@@ -1,6 +1,8 @@
+#!/usr/bin/python
 ## Alarm Server
 ## Supporting Envisalink 2DS/3
 ## Written by donnyk+envisalink@gmail.com
+## Lightly improved by leaberry@gmail.com
 ##
 ## This code is under the terms of the GPL v3 license.
 
@@ -13,6 +15,7 @@ import StringIO, mimetools
 import json
 import hashlib
 import time
+import getopt
 
 from envisalinkdefs import evl_ResponseTypes
 from envisalinkdefs import evl_Defaults
@@ -71,6 +74,8 @@ class AlarmServerConfig():
         self._config.read(configfile)
 
         self.HTTPSPORT = self.read_config_var('alarmserver', 'httpsport', 8111, 'int')
+	self.CERTFILE = self.read_config_var('alarmserver', 'certfile', 'server.crt', 'str')
+	self.KEYFILE = self.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
         self.MAXEVENTS = self.read_config_var('alarmserver', 'maxevents', 10, 'int')
         self.MAXALLEVENTS = self.read_config_var('alarmserver', 'maxallevents', 100, 'int')
         self.ENVISALINKHOST = self.read_config_var('envisalink', 'host', 'envisalink', 'str')
@@ -395,7 +400,7 @@ class AlarmServer(asyncore.dispatcher):
         alarmserver_logger('Incoming web connection from %s' % repr(addr))
 
         try:
-            HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile="server.crt", keyfile="server.key", ssl_version=ssl.PROTOCOL_TLSv1), addr)
+            HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile=config.CERTFILE, keyfile=config.KEYFILE, ssl_version=ssl.PROTOCOL_TLSv1), addr)
         except ssl.SSLError:
             alarmserver_logger('Failed https connection, attempted with http')
             return
@@ -541,9 +546,29 @@ class EnvisalinkProxy(asyncore.dispatcher):
             alarmserver_logger('Incoming proxy connection from %s' % repr(addr))
             handler = ProxyChannel(server, self._config.ENVISALINKPROXYPASS, sock, addr)
 
+def usage():
+    print 'Usage: '+sys.argv[0]+' -c <configfile>'
+
+def main(argv):
+    try:
+        opts, args = getopt.getopt(argv, "hc:", ["help", "config="])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif opt in ("-c", "--config"):
+            global conffile
+            conffile = arg
+
+
 if __name__=="__main__":
-    print "Reading config file alarmserver.cfg"
-    config = AlarmServerConfig('alarmserver.cfg')
+    conffile='alarmserver.cfg'
+    main(sys.argv[1:])
+    print('Using configuration file %s' % conffile)
+    config = AlarmServerConfig(conffile)
     if config.LOGFILE:
         outfile=open(config.LOGFILE,'a')
         print ('Writing logfile to %s' % config.LOGFILE)
