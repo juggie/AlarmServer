@@ -181,7 +181,7 @@ class HTTPChannel(asynchat.async_chat):
         elif extension == ".css":
             self.push("Content-type: text/css\r\n")
         self.push("\r\n")
-        self.push_with_producer(push_FileProducer('ext' + os.sep + file))
+        self.push_with_producer(push_FileProducer(sys.path[0] + os.sep + 'ext' + os.sep + file))
 
 class EnvisalinkClient(asynchat.async_chat):
     def __init__(self, config):
@@ -451,7 +451,7 @@ class AlarmServer(asyncore.dispatcher):
         else:
             if len(query.path.split('/')) == 2:
                 try:
-                    with open('ext' + os.sep + query.path.split('/')[1]) as f:
+                    with open(sys.path[0] + os.sep + 'ext' + os.sep + query.path.split('/')[1]) as f:
                         f.close()
                         channel.pushfile(query.path.split('/')[1])
                 except IOError as e:
