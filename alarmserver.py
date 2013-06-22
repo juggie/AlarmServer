@@ -391,6 +391,7 @@ class AlarmServer(asyncore.dispatcher):
 
         # Create socket and listen on it
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.bind(("", config.HTTPSPORT))
         self.listen(5)
 
@@ -588,5 +589,10 @@ if __name__=="__main__":
             # insert scheduling code here.
     except KeyboardInterrupt:
         print "Crtl+C pressed. Shutting down."
+        alarmserver_logger('Shutting down from Ctrl+C')
 	if config.LOGFILE:	
 		outfile.close()
+        
+        server.shutdown(socket.SHUT_RDWR) 
+        server.close() 
+        sys.exit()
