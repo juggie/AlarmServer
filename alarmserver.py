@@ -89,6 +89,7 @@ class AlarmServerConfig():
         self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
         self.EVENTTIMEAGO = self.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
 	self.LOGFILE = self.read_config_var('alarmserver', 'logfile', '', 'str')
+	self.LOGURLREQUESTS = self.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
 
         self.PARTITIONNAMES={}
         for i in range(1, MAXPARTITIONS+1):
@@ -398,7 +399,8 @@ class AlarmServer(asyncore.dispatcher):
     def handle_accept(self):
         # Accept the connection
         conn, addr = self.accept()
-        alarmserver_logger('Incoming web connection from %s' % repr(addr))
+	if (config.LOGURLREQUESTS):
+        	alarmserver_logger('Incoming web connection from %s' % repr(addr))
 
         try:
             HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile=config.CERTFILE, keyfile=config.KEYFILE, ssl_version=ssl.PROTOCOL_TLSv1), addr)
@@ -407,7 +409,8 @@ class AlarmServer(asyncore.dispatcher):
             return
 
     def handle_request(self, channel, method, request, header):
-        alarmserver_logger('Web request: '+str(method)+' '+str(request))
+	if (config.LOGURLREQUESTS):
+        	alarmserver_logger('Web request: '+str(method)+' '+str(request))
 
         query = urlparse.urlparse(request)
         query_array = urlparse.parse_qs(query.query, True)
@@ -461,7 +464,9 @@ class AlarmServer(asyncore.dispatcher):
                     channel.push("File not found")
                     channel.push("\r\n")
             else:
-                alarmserver_logger("Invalid file requested")
+                if (config.LOGURLREQUESTS):
+			alarmserver_logger("Invalid file requested")
+
                 channel.pushstatus(404, "Not found")
                 channel.push("Content-type: text/html\r\n")
                 channel.push("\r\n")
