@@ -19,6 +19,7 @@ WEB INTERFACE
 There are two different web interfaces, a desktop viewer and a mobile viewer.
 The desktop viewer uses a paned interface and works best on resolutions of 800px or wider.
 The mobile viewer uses an accordion interface and works on resolutions down to 300px.
+Note that the mobile interface disables refreshing every 5 seconds on the zone states when you expand one of the zones. Upon collapse of the zone it re-enables the 5 second refreshes.
 
 The default is the desktop viewer (ie https://myserver:8111) To call the mobile viewer go to
 https://myserver:8111/mobile.html
