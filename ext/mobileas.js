@@ -1,4 +1,7 @@
 var timeago = true;
+var expanded = false;
+var timerenabled = true;
+var timer;
 
 $.ajax({
 	type:"GET",
@@ -32,7 +35,7 @@ function talllist(obj) {
 	var str = '';
 	str += partitions(obj);
 	str += zones(obj);
-	str += '</div>';
+	str += '';
 
 	return str;
 }
@@ -55,7 +58,7 @@ function zones(obj) {
 			}
 		}
 	}
-
+	str += '</div></div>';
 	return str;
 }
 
@@ -81,7 +84,7 @@ function partitions(obj) {
 			}
 		}
 	}
-
+	str += '</div></div>';
 	return str;
 }
 
@@ -210,24 +213,32 @@ function refresh() {
 		dataType:"json",
 		data:"{}",
 		success:function (res) {
-			$('#container').html(talllist(res)).fadeIn();
+			if(timerenabled) {
+				$('#container').html(talllist(res)).fadeIn();
+			}
 			$('#actions').html(actions(res)).fadeIn();
 			$("[rel=tooltip]").tooltip();
-			
+		
+			if(timerenabled) {	
 			//Keep track of what is expanded and what isn't with LocalStorage
 			$('.accordion-body').on('hidden', function() {
 				if (this.id) {
 						localStorage.removeItem(this.id);
+						timerenabled = true;
+						console.log('enabling timer');
 				}
 			}).on('shown', function() {
 					if (this.id) {
-							localStorage[this.id] = 'true';							
+							localStorage[this.id] = 'true';
+							timerenabled = false;
+							console.log('disabling timer');	
 					}
 			}).each(function() {
 					if (this.id && localStorage[this.id] === 'true' ) {
 							$(this).collapse('show');
 					}
 			});
+			}
 
 			message(res);
 		}
@@ -239,6 +250,8 @@ $(document).ready(function () {
 
 });
 
+
 setInterval(function () {
 	refresh();
 }, 5000);
+
