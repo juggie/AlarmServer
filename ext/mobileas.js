@@ -32,10 +32,10 @@ function createEvents(list) {
 }
 
 function talllist(obj) {
-	var str = '';
+	var str = '<div class="accordion" id="accordion2">';
 	str += partitions(obj);
 	str += zones(obj);
-	str += '';
+	str += '</div>';
 
 	return str;
 }
@@ -50,7 +50,7 @@ function zones(obj) {
 				var icon = !zone.status.open ? 'icon-ok-sign' : 'icon-minus-sign';
 				var name = obj.zone[i + ''].name;
 
-				str += '<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseZone' + i +'"><span class="badge ' + cls + '"> <i class="' + icon + ' icon-white"></i></span>'+ ' ' + name + '</a></span>'
+				str += '<a div class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseZone' + i +'"><span class="badge ' + cls + '"> <i class="' + icon + ' icon-white"></i></span>'+ ' ' + name + '</span></a>'
 
 				str += '<div id="collapseZone' + i + '" class="accordion-body collapse">'
 				str += createEvents(zone.lastevents);
@@ -225,13 +225,13 @@ function refresh() {
 				if (this.id) {
 						localStorage.removeItem(this.id);
 						timerenabled = true;
-						console.log('enabling timer');
+						//console.log('enabling timer');
 				}
 			}).on('shown', function() {
 					if (this.id) {
 							localStorage[this.id] = 'true';
 							timerenabled = false;
-							console.log('disabling timer');	
+						//	console.log('disabling timer');	
 					}
 			}).each(function() {
 					if (this.id && localStorage[this.id] === 'true' ) {
