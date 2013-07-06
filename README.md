@@ -37,6 +37,9 @@ To generate a self signed cert issue the following in a command prompt:
 Openssl will ask you some questions. The only semi-important one is the 'common name' field.
 You want this set to your servers fqdn. IE alarmserver.example.com. 
 
+If you have a real ssl cert from a certificate authority and it has intermediate certs then you'll need to bundle them all up or the webbrowser will complain about it not being a valid cert. To bundle the certs use cat to include your cert, then the intermediates (ie cat mycert.crt > combined.crt; cat intermediates.crt >> combined.crt) 
+
+
 Dependencies:
 -------------
 

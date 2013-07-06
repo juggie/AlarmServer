@@ -1,17 +1,10 @@
-## This is compatible with upstart scripts used by Ubuntu
-## Place in /etc/init/alarmserver.conf
-## Start and stop with service alarmserver start (or stop)
-## 
-## Change the network interface and path to the alarmserver.py 
-## and your config file. For upstart you need to use the -c option
-## and specify the full path to the config file
 version "1.0"
 author "Daniel Leaberry"
 
-start on runlevel [2345]
+start on filesystem and net-device-up IFACE!=lo
 stop on stopping network-interface INTERFACE=eth0
 stop on starting shutdown
 
 respawn
 console output
-exec python /path/to/alarmserver.py -c /path/to/config_file
+exec /usr/bin/python /path/to/alarmserver.py -c /path/to/alarmserver.cfg
