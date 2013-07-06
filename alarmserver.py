@@ -39,8 +39,8 @@ def getMessageType(code):
 
 def alarmserver_logger(message, type = 0, level = 0):
     if config.LOGFILE:
-	outfile.write(str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message+'\n')
-	outfile.flush()
+			outfile.write(str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message+'\n')
+			outfile.flush()
     else:
     	print (str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message)
     
@@ -74,8 +74,8 @@ class AlarmServerConfig():
         self._config.read(configfile)
 
         self.HTTPSPORT = self.read_config_var('alarmserver', 'httpsport', 8111, 'int')
-	self.CERTFILE = self.read_config_var('alarmserver', 'certfile', 'server.crt', 'str')
-	self.KEYFILE = self.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
+				self.CERTFILE = self.read_config_var('alarmserver', 'certfile', 'server.crt', 'str')
+				self.KEYFILE = self.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
         self.MAXEVENTS = self.read_config_var('alarmserver', 'maxevents', 10, 'int')
         self.MAXALLEVENTS = self.read_config_var('alarmserver', 'maxallevents', 100, 'int')
         self.ENVISALINKHOST = self.read_config_var('envisalink', 'host', 'envisalink', 'str')
@@ -88,8 +88,8 @@ class AlarmServerConfig():
         self.PUSHOVER_USERTOKEN = self.read_config_var('pushover', 'enable', False, 'bool')
         self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
         self.EVENTTIMEAGO = self.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
-	self.LOGFILE = self.read_config_var('alarmserver', 'logfile', '', 'str')
-	self.LOGURLREQUESTS = self.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
+				self.LOGFILE = self.read_config_var('alarmserver', 'logfile', '', 'str')
+				self.LOGURLREQUESTS = self.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
 
         self.PARTITIONNAMES={}
         for i in range(1, MAXPARTITIONS+1):
@@ -399,7 +399,7 @@ class AlarmServer(asyncore.dispatcher):
     def handle_accept(self):
         # Accept the connection
         conn, addr = self.accept()
-	if (config.LOGURLREQUESTS):
+				if (config.LOGURLREQUESTS):
         	alarmserver_logger('Incoming web connection from %s' % repr(addr))
 
         try:
@@ -409,7 +409,7 @@ class AlarmServer(asyncore.dispatcher):
             return
 
     def handle_request(self, channel, method, request, header):
-	if (config.LOGURLREQUESTS):
+				if (config.LOGURLREQUESTS):
         	alarmserver_logger('Web request: '+str(method)+' '+str(request))
 
         query = urlparse.urlparse(request)
@@ -465,7 +465,7 @@ class AlarmServer(asyncore.dispatcher):
                     channel.push("\r\n")
             else:
                 if (config.LOGURLREQUESTS):
-			alarmserver_logger("Invalid file requested")
+									alarmserver_logger("Invalid file requested")
 
                 channel.pushstatus(404, "Not found")
                 channel.push("Content-type: text/html\r\n")
@@ -557,17 +557,17 @@ def usage():
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "hc:", ["help", "config="])
+      opts, args = getopt.getopt(argv, "hc:", ["help", "config="])
     except getopt.GetoptError:
-        usage()
-        sys.exit(2)
+			usage()
+			sys.exit(2)
     for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            usage()
-            sys.exit()
-        elif opt in ("-c", "--config"):
-            global conffile
-            conffile = arg
+			if opt in ("-h", "--help"):
+				usage()
+				sys.exit()
+			elif opt in ("-c", "--config"):
+				global conffile
+				conffile = arg
 
 
 if __name__=="__main__":
@@ -576,8 +576,8 @@ if __name__=="__main__":
     print('Using configuration file %s' % conffile)
     config = AlarmServerConfig(conffile)
     if config.LOGFILE:
-        outfile=open(config.LOGFILE,'a')
-        print ('Writing logfile to %s' % config.LOGFILE)
+			outfile=open(config.LOGFILE,'a')
+			print ('Writing logfile to %s' % config.LOGFILE)
 
     alarmserver_logger('Alarm Server Starting')
     alarmserver_logger('Currently Supporting Envisalink 2DS/3 only')
@@ -598,6 +598,6 @@ if __name__=="__main__":
 	if config.LOGFILE:	
 		outfile.close()
         
-        server.shutdown(socket.SHUT_RDWR) 
-        server.close() 
-        sys.exit()
+		server.shutdown(socket.SHUT_RDWR) 
+		server.close() 
+		sys.exit()
