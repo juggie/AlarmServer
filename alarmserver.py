@@ -559,15 +559,15 @@ def main(argv):
     try:
       opts, args = getopt.getopt(argv, "hc:", ["help", "config="])
     except getopt.GetoptError:
-                        usage()
-                        sys.exit(2)
+        usage()
+        sys.exit(2)
     for opt, arg in opts:
-                        if opt in ("-h", "--help"):
-                                usage()
-                                sys.exit()
-                        elif opt in ("-c", "--config"):
-                                global conffile
-                                conffile = arg
+        if opt in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif opt in ("-c", "--config"):
+            global conffile
+            conffile = arg
 
 
 if __name__=="__main__":
