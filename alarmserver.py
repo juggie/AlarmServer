@@ -38,7 +38,7 @@ def getMessageType(code):
     return evl_ResponseTypes[code]
 
 def alarmserver_logger(message, type = 0, level = 0):
-    if config.LOGFILE:
+    if config.LOGFILE != 'nolog':
         outfile.write(str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message+'\n')
         outfile.flush()
     else:
@@ -88,7 +88,7 @@ class AlarmServerConfig():
         self.PUSHOVER_USERTOKEN = self.read_config_var('pushover', 'enable', False, 'bool')
         self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
         self.EVENTTIMEAGO = self.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
-        self.LOGFILE = self.read_config_var('alarmserver', 'logfile', '', 'str')
+        self.LOGFILE = self.read_config_var('alarmserver', 'logfile', 'nolog', 'str')
         self.LOGURLREQUESTS = self.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
 
         self.PARTITIONNAMES={}
@@ -107,7 +107,7 @@ class AlarmServerConfig():
 
     def defaulting(self, section, variable, default, quiet = False):
         if quiet == False:
-            alarmserver_logger('C:'+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
+            print('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
 
     def read_config_var(self, section, variable, default, type = 'str', quiet = False):
         try:
@@ -575,7 +575,7 @@ if __name__=="__main__":
     main(sys.argv[1:])
     print('Using configuration file %s' % conffile)
     config = AlarmServerConfig(conffile)
-    if config.LOGFILE:
+    if config.LOGFILE != 'nolog':
         outfile=open(config.LOGFILE,'a')
         print ('Writing logfile to %s' % config.LOGFILE)
 
@@ -595,7 +595,7 @@ if __name__=="__main__":
     except KeyboardInterrupt:
         print "Crtl+C pressed. Shutting down."
         alarmserver_logger('Shutting down from Ctrl+C')
-        if config.LOGFILE:      
+        if config.LOGFILE != 'nolog':
             outfile.close()
         
         server.shutdown(socket.SHUT_RDWR) 
