@@ -1,6 +1,8 @@
+#!/usr/bin/python
 ## Alarm Server
 ## Supporting Envisalink 2DS/3
 ## Written by donnyk+envisalink@gmail.com
+## Lightly improved by leaberry@gmail.com
 ##
 ## This code is under the terms of the GPL v3 license.
 
@@ -13,10 +15,13 @@ import StringIO, mimetools
 import json
 import hashlib
 import time
+import getopt
 
 from envisalinkdefs import evl_ResponseTypes
 from envisalinkdefs import evl_Defaults
 from envisalinkdefs import evl_ArmModes
+
+LOGTOFILE = False
 
 class CodeError(Exception): pass
 
@@ -35,7 +40,12 @@ def getMessageType(code):
     return evl_ResponseTypes[code]
 
 def alarmserver_logger(message, type = 0, level = 0):
-    print (str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message)
+    if LOGTOFILE:
+        outfile.write(str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message+'\n')
+        outfile.flush()
+    else:
+        print (str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message)
+    
 
 def to_chars(string):
     chars = []
@@ -65,7 +75,10 @@ class AlarmServerConfig():
         self._config = ConfigParser.ConfigParser()
         self._config.read(configfile)
 
+        self.LOGURLREQUESTS = self.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
         self.HTTPSPORT = self.read_config_var('alarmserver', 'httpsport', 8111, 'int')
+        self.CERTFILE = self.read_config_var('alarmserver', 'certfile', 'server.crt', 'str')
+        self.KEYFILE = self.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
         self.MAXEVENTS = self.read_config_var('alarmserver', 'maxevents', 10, 'int')
         self.MAXALLEVENTS = self.read_config_var('alarmserver', 'maxallevents', 100, 'int')
         self.ENVISALINKHOST = self.read_config_var('envisalink', 'host', 'envisalink', 'str')
@@ -78,6 +91,12 @@ class AlarmServerConfig():
         self.PUSHOVER_USERTOKEN = self.read_config_var('pushover', 'enable', False, 'bool')
         self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
         self.EVENTTIMEAGO = self.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
+        self.LOGFILE = self.read_config_var('alarmserver', 'logfile', '', 'str')
+        global LOGTOFILE
+        if self.LOGFILE == '':
+            LOGTOFILE = False
+        else:
+            LOGTOFILE = True
 
         self.PARTITIONNAMES={}
         for i in range(1, MAXPARTITIONS+1):
@@ -95,7 +114,7 @@ class AlarmServerConfig():
 
     def defaulting(self, section, variable, default, quiet = False):
         if quiet == False:
-            alarmserver_logger('C:'+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
+            print('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
 
     def read_config_var(self, section, variable, default, type = 'str', quiet = False):
         try:
@@ -170,7 +189,7 @@ class HTTPChannel(asynchat.async_chat):
         elif extension == ".css":
             self.push("Content-type: text/css\r\n")
         self.push("\r\n")
-        self.push_with_producer(push_FileProducer('ext' + os.sep + file))
+        self.push_with_producer(push_FileProducer(sys.path[0] + os.sep + 'ext' + os.sep + file))
 
 class EnvisalinkClient(asynchat.async_chat):
     def __init__(self, config):
@@ -380,22 +399,25 @@ class AlarmServer(asyncore.dispatcher):
 
         # Create socket and listen on it
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.bind(("", config.HTTPSPORT))
         self.listen(5)
 
     def handle_accept(self):
         # Accept the connection
         conn, addr = self.accept()
-        alarmserver_logger('Incoming web connection from %s' % repr(addr))
+        if (config.LOGURLREQUESTS):
+            alarmserver_logger('Incoming web connection from %s' % repr(addr))
 
         try:
-            HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile="server.crt", keyfile="server.key", ssl_version=ssl.PROTOCOL_TLSv1), addr)
+            HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile=config.CERTFILE, keyfile=config.KEYFILE, ssl_version=ssl.PROTOCOL_TLSv1), addr)
         except ssl.SSLError:
             alarmserver_logger('Failed https connection, attempted with http')
             return
 
     def handle_request(self, channel, method, request, header):
-        alarmserver_logger('Web request: '+str(method)+' '+str(request))
+        if (config.LOGURLREQUESTS):
+            alarmserver_logger('Web request: '+str(method)+' '+str(request))
 
         query = urlparse.urlparse(request)
         query_array = urlparse.parse_qs(query.query, True)
@@ -439,7 +461,7 @@ class AlarmServer(asyncore.dispatcher):
         else:
             if len(query.path.split('/')) == 2:
                 try:
-                    with open('ext' + os.sep + query.path.split('/')[1]) as f:
+                    with open(sys.path[0] + os.sep + 'ext' + os.sep + query.path.split('/')[1]) as f:
                         f.close()
                         channel.pushfile(query.path.split('/')[1])
                 except IOError as e:
@@ -449,7 +471,9 @@ class AlarmServer(asyncore.dispatcher):
                     channel.push("File not found")
                     channel.push("\r\n")
             else:
-                alarmserver_logger("Invalid file requested")
+                if (config.LOGURLREQUESTS):
+                                                                        alarmserver_logger("Invalid file requested")
+
                 channel.pushstatus(404, "Not found")
                 channel.push("Content-type: text/html\r\n")
                 channel.push("\r\n")
@@ -535,14 +559,38 @@ class EnvisalinkProxy(asyncore.dispatcher):
             alarmserver_logger('Incoming proxy connection from %s' % repr(addr))
             handler = ProxyChannel(server, self._config.ENVISALINKPROXYPASS, sock, addr)
 
+def usage():
+    print 'Usage: '+sys.argv[0]+' -c <configfile>'
+
+def main(argv):
+    try:
+      opts, args = getopt.getopt(argv, "hc:", ["help", "config="])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif opt in ("-c", "--config"):
+            global conffile
+            conffile = arg
+
+
 if __name__=="__main__":
+    conffile='alarmserver.cfg'
+    main(sys.argv[1:])
+    print('Using configuration file %s' % conffile)
+    config = AlarmServerConfig(conffile)
+    if LOGTOFILE:
+        outfile=open(config.LOGFILE,'a')
+        print ('Writing logfile to %s' % config.LOGFILE)
+
     alarmserver_logger('Alarm Server Starting')
     alarmserver_logger('Currently Supporting Envisalink 2DS/3 only')
     alarmserver_logger('Tested on a DSC-1616 + EVL-3')
     alarmserver_logger('and on a DSC-1832 + EVL-2DS')
-    alarmserver_logger('Reading config file')
-
-    config = AlarmServerConfig('alarmserver.cfg')
+    alarmserver_logger('and on a DSC-1864 v4.6 + EVL-3')
 
     server = AlarmServer(config)
     proxy = EnvisalinkProxy(config, server)
@@ -553,3 +601,10 @@ if __name__=="__main__":
             # insert scheduling code here.
     except KeyboardInterrupt:
         print "Crtl+C pressed. Shutting down."
+        alarmserver_logger('Shutting down from Ctrl+C')
+        if LOGTOFILE:
+            outfile.close()
+        
+        server.shutdown(socket.SHUT_RDWR) 
+        server.close() 
+        sys.exit()
