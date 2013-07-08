@@ -75,6 +75,7 @@ class AlarmServerConfig():
         self._config = ConfigParser.ConfigParser()
         self._config.read(configfile)
 
+        self.LOGURLREQUESTS = self.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
         self.HTTPSPORT = self.read_config_var('alarmserver', 'httpsport', 8111, 'int')
         self.CERTFILE = self.read_config_var('alarmserver', 'certfile', 'server.crt', 'str')
         self.KEYFILE = self.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
@@ -96,8 +97,6 @@ class AlarmServerConfig():
             LOGTOFILE = False
         else:
             LOGTOFILE = True
-
-        self.LOGURLREQUESTS = self.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
 
         self.PARTITIONNAMES={}
         for i in range(1, MAXPARTITIONS+1):
