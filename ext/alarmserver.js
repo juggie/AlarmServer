@@ -1,4 +1,5 @@
 var activeTab = null;
+var activeCollapse = null;
 var timeago = true;
 
 
@@ -30,8 +31,8 @@ function createEvents(list) {
 	return template({events: list});
 }
 
-function details(obj) {
-	var source  = $("#template").html();
+function details(obj, templateId) {
+	var source  = $(templateId).html();
 	var template = Handlebars.compile(source);
 
 	var zones = [];
@@ -184,7 +185,8 @@ function refresh() {
 		dataType:"json",
 		data:"{}",
 		success:function (res) {
-			$('#details').html(details(res)).fadeIn();
+			$('#details').html(details(res, "#template")).fadeIn();
+			$('#mobile-details').html(details(res, "#mobile-template")).fadeIn();
 			$('#actions').html(actions(res)).fadeIn();
 			$('#tabs').tab();
 
@@ -196,6 +198,16 @@ function refresh() {
 			}
 
 			$("[rel=tooltip]").tooltip();
+
+			$('.accordion-body').on('shown', function() {
+				activeCollapse = this.id;
+				console.log(activeCollapse);
+			}).on('hidden', function() {
+				activeCollapse = null;
+			});
+			if (activeCollapse) {
+				$('#accordion2 #' + activeCollapse).collapse('show');
+			}
 
 			message(res);
 		}

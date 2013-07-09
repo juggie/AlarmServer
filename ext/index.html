@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<script type="text/javascript">
-		<!-- redirect to mobile site if screen size is less than 700 pixels
-		if (screen.width <= 700) {
-			var cURL= window.location.protocol + "//" + window.location.hostname + ":" + window.location.port;
-			document.location = cURL + "/mobile.html";
-		}
-		//-->
-	</script>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Alarm Server</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="bootstrap.min.css" rel="stylesheet" media="screen">
 
+	<link href="bootstrap-responsive.min.css" rel="stylesheet" media="screen">
+	<link href="scojs.css" rel="stylesheet" media="screen">
 	<style>
 	body {
 		padding-top: 60px;
 	}
+	.no-transition {
+	  -webkit-transition: height 0.001s;
+	  -moz-transition: height 0.001s;
+	  -ms-transition: height 0.001s;
+	  -o-transition: height 0.001s;
+	  transition: height 0.001s;
+	}
 	</style>
-	<link href="bootstrap-responsive.min.css" rel="stylesheet" media="screen">
-	<link href="scojs.css" rel="stylesheet" media="screen">
 </head>
 <body>
 	<script src="jquery.js"></script>
@@ -94,6 +93,61 @@
 
 	</script>
 
+	<script id="mobile-template" type="text/x-handlebars-template">
+	<div class="container-fluid">
+		<div class="row-fluid">
+			<div class="span12">
+				<div class="accordion" id="accordion2">
+					<div class="accordion-group">
+						<div class="accordion-heading">
+							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapsePartAll">Partitions</a>
+						</div>
+
+						<div id="collapsePartAll" class="accordion-body collapse no-transition">
+						{{{partitionAllEvents}}}
+						</div>
+					</div>
+
+					<div class="accordion-group">
+						{{#each partitions}}
+							<div class="accordion-heading">
+								<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapsePart{{id}}"><span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span>{{name}}</a></span>
+							</div>
+							<div id="collapsePart{{id}}" class="accordion-body collapse no-transition">
+							{{{events}}}
+							</div>
+						{{/each}}
+					</div>
+
+
+					<div class="accordion-group">
+						<div class="accordion-heading">
+							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseZoneAll">Zones</a>
+						</div>
+
+						<div id="collapseZoneAll" class="accordion-body collapse no-transition">
+							{{{zoneAllEvents}}}
+						</div>
+					</div>
+
+					<div class="accordion-group">
+						{{#each zones}}
+						<div class="accordion-heading">
+							<a div class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseZone{{id}}"><span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span>{{name}}</span></a>
+						</div>
+
+						<div id="collapseZone{{id}}" class="accordion-body collapse no-transition">
+							{{{events}}}
+						</div>
+						{{/each}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	</script>
+
 <div class="navbar navbar-inverse navbar-fixed-top">
 	<div class="navbar-inner">
 		<div class="container">
@@ -130,7 +184,8 @@
 		</div>
 	</div>
 
-	<div id="details"></div>
+	<div id="details" class="hidden-phone"></div>
+	<div id="mobile-details" class="visible-phone"></div>
 
 </div>
 </body>
