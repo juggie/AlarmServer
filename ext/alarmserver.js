@@ -1,6 +1,7 @@
 var activeTab = null;
 var timeago = true;
 
+
 $.ajax({
 	type:"GET",
 	url:"/api/config/eventtimeago",
@@ -13,128 +14,52 @@ $.ajax({
 });
 
 function createEvents(list) {
-	var str = '';
-	str += '<table class="table table-striped table-bordered"> <thead> <tr> <th>Message</th> <th>Time</th></tr> </thead> <tbody>';
+	var source  = $("#events-template").html();
+	var template = Handlebars.compile(source);
 
-	for (var j = 0; j < list.length; j++) {
-		var ev = list[list.length - j - 1];
-		var time = ev.datetime;
-		var tooltip = jQuery.timeago(ev.datetime);
+	list.reverse().forEach(function (ev, i) {
+		if (timeago) {
+			ev.tooltip = ev.datetime;
+			ev.time = jQuery.timeago(ev.datetime);
+		} else {
+			ev.tooltip = jQuery.timeago(ev.datetime);
+			ev.time = ev.datetime;
+		}
+	});
 
-		str += '<tr> <td>' + ev.message + '</td> <td> <a href="#" rel="tooltip" data-placement="top" data-original-title="' + (timeago ? time : tooltip) + '">' + (timeago ? tooltip : time) + '</a></td> </tr>';
-	}
-
-	str += '</tbody> </table>';
-
-	return str;
-}
-
-function tabs(obj) {
-	var str = '<div class="tabbable tabs-left"> <ul id="tabs" class="nav nav-tabs">';
-	str += partitions(obj);
-	str += zones(obj);
-	str += '</ul></div>';
-
-	return str;
+	return template({events: list});
 }
 
 function details(obj) {
-	var str = '';
-	str += partitiondetails(obj);
-	str += zonedetails(obj);
-	return str;
-}
+	var source  = $("#template").html();
+	var template = Handlebars.compile(source);
 
-function zones(obj) {
-	var str = '<li class="nav-header">Zones</li>';
-	str += '<li><a href="#zoneall" data-toggle="tab">All</a></li>'
+	var zones = [];
 	for (var i = 1; i < 65; i++) {
 		var zone = obj.zone[i + ''];
-		if (zone) {
-			if (zone.name) {
-				var cls = zone.status.open ? 'badge-important' : 'badge-success';
-				var icon = !zone.status.open ? 'icon-ok-sign' : 'icon-minus-sign';
-				var name = obj.zone[i + ''].name;
-
-
-				str += '<li><a href="#zone' + i + '" data-toggle="tab"> <span class="badge ' + cls + '"> <i class="' + icon + ' icon-white"></i></span>    ' + name + ' </a></li>'
-			}
+		if (zone && zone.name) {
+			zone.id = i;
+			zone.class = zone.status.open ? 'badge-important' : 'badge-success';
+			zone.icon = !zone.status.open ? 'icon-ok-sign' : 'icon-minus-sign';
+			zone.events = createEvents(zone.lastevents);
+			zones.push(zone);
 		}
 	}
 
-	return str;
-}
-
-function zonedetails(obj) {
-	var str = '';
-	str += '<div class="tab-pane" id="zoneall">' + createEvents(obj.zone.lastevents) + '</div>';
-
-	for (var i = 1; i < 65; i++) {
-		var zone = obj.zone[i + ''];
-		if (zone) {
-			if (zone.name) {
-				var cls = zone.status.open ? 'badge-important' : 'badge-success';
-				var icon = !zone.status.open ? 'icon-ok-sign' : 'icon-minus-sign';
-				var name = obj.zone[i + ''].name;
-
-				str += '<div class="tab-pane" id="zone' + i + '">';
-
-				str += createEvents(zone.lastevents);
-				str += '</div>';
-			}
-		}
-	}
-
-	return str;
-
-}
-
-
-function partitions(obj) {
-	var str = '<li class="nav-header">Partitions</li>';
-
-	str += '<li><a href="#partitionall" data-toggle="tab">All</a></li>';
-
+	var partitions = [];
 	for (var i = 1; i < 65; i++) {
 		var partition = obj.partition[i + ''];
-		if (partition) {
-			if (partition.name) {
-				var cls = partition.status.ready ? 'badge-success' : 'badge-important';
-				var icon = partition.status.ready ? 'icon-ok-sign' : 'icon-minus-sign';
-				var name = obj.partition[i + ''].name;
-
-
-				str += '<li><a href="#partition' + i + '" data-toggle="tab"> <span class="badge ' + cls + '"> <i class="' + icon + ' icon-white"></i></span>    ' + name + ' </a></li>'
-			}
+		if (partition && partition.name) {
+			partition.id = i;
+			partition.class = partition.status.ready ? 'badge-success' : 'badge-important';
+			partition.icon = partition.status.ready ? 'icon-ok-sign' : 'icon-minus-sign';
+			partition.events = createEvents(partition.lastevents);
+			partitions.push(partition);
 		}
 	}
 
-	return str;
+	return template({zones: zones, zoneAllEvents: createEvents(obj.zone.lastevents), partitions: partitions, partitionAllEvents: createEvents(obj.partition.lastevents)});
 }
-
-
-function partitiondetails(obj) {
-	var str = '';
-	str += '<div class="tab-pane" id="partitionall">' + createEvents(obj.partition.lastevents) + '</div>';
-	for (var i = 1; i < 65; i++) {
-		var partition = obj.partition[i + ''];
-		if (partition) {
-			if (partition.name) {
-				var cls = partition.status.ready ? 'badge-success' : 'badge-important';
-				var icon = partition.status.ready ? 'icon-ok-sign' : 'icon-minus-sign';
-				var name = obj.partition[i + ''].name;
-
-				str += '<div class="tab-pane" id="partition' + i + '">';
-
-				str += createEvents(partition.lastevents);
-				str += '</div>';
-			}
-		}
-	}
-
-	return str;
-}
-
 
 function actions(obj) {
 	var str = '';
@@ -259,7 +184,6 @@ function refresh() {
 		dataType:"json",
 		data:"{}",
 		success:function (res) {
-			$('#tabcontainer').html(tabs(res)).fadeIn();
 			$('#details').html(details(res)).fadeIn();
 			$('#actions').html(actions(res)).fadeIn();
 			$('#tabs').tab();

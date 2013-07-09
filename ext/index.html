@@ -10,51 +10,116 @@
 		//-->
 	</script>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Alarm Server</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="bootstrap.min.css" rel="stylesheet" media="screen">
-	<link href="scojs.css" rel="stylesheet" media="screen">
-	<style type="text/css">
-		body {
-			padding-top: 20px;
-			padding-bottom: 40px;
-		}
 
-		.container-narrow {
-			margin: 0 auto;
-			max-width: 900px;
-		}
-
-		.container-narrow > hr {
-			margin: 30px 0;
-		}
-
+	<style>
+	body {
+		padding-top: 60px;
+	}
 	</style>
+	<link href="bootstrap-responsive.min.css" rel="stylesheet" media="screen">
+	<link href="scojs.css" rel="stylesheet" media="screen">
 </head>
 <body>
-<script src="jquery.js"></script>
-<script src="alarmserver.js"></script>
-<script src="bootstrap.min.js"></script>
-<script src="bootbox.min.js"></script>
-<script src="jquery.timeago.js"></script>
-<script src="sco.message.js"></script>
-<div class="container-narrow">
-	<div class="masthead">
-		<ul class="nav nav-pills pull-right">
-			<li class="active"><a href="#">Home</a></li>
-			<li><a href="/api">API/JSON</a></li>
-			<li><a href="https://github.com/juggie/AlarmServer">About</a></li>
-		</ul>
-		<h3 class="muted">Alarm Server</h3>
+	<script src="jquery.js"></script>
+	<script src="alarmserver.js"></script>
+	<script src="bootstrap.min.js"></script>
+	<script src="bootbox.min.js"></script>
+	<script src="jquery.timeago.js"></script>
+	<script src="sco.message.js"></script>
+	<script src="handlebars.js"></script>
+
+	<script id="events-template" type="text/x-handlebars-template">
+	<table class="table table-striped table-bordered"> 
+	<thead> 
+	<tr> 
+	<th>Message</th> 
+	<th>Time</th>
+	</tr> 
+	</thead> 
+	<tbody>
+
+	{{#each events}}
+	<tr> 
+	<td>{{message}}</td> 
+	<td> <a href="#" rel="tooltip" data-placement="top" data-original-title="{{tooltip}}">{{time}}</a></td> 
+	</tr>
+	{{/each}}
+	</tbody> 
+	</table>
+	</script>
+
+	<script id="template" type="text/x-handlebars-template">
+	<div class="container-fluid">
+		<div class="row-fluid">
+			<div class="span4">
+				<div class="tabbable tabs-left"> <ul id="tabs" class="nav nav-tabs">
+
+				<li class="nav-header">Partitions</li>
+				<li><a href="#partitionall" data-toggle="tab">All</a></li>
+				{{#each partitions}}
+					<li><a href="#partition{{id}}" data-toggle="tab"> <span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span>{{name}} </a></li>
+				{{/each}}
+
+				<li class="nav-header">Zones</li>
+				<li><a href="#zoneall" data-toggle="tab">All</a></li>
+				{{#each zones}}
+					<li><a href="#zone{{id}}" data-toggle="tab"> <span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span>{{name}} </a></li>
+				{{/each}}
+				</ul></div>
+			</div>
+			<div class="span8">
+				<div class="tab-content">
+				<div class="tab-pane" id="zoneall">{{{zoneAllEvents}}}</div>
+
+				{{#each zones}}
+				<div class="tab-pane" id="zone{{id}}">
+				{{{events}}}
+				</div>
+				{{/each}}
+
+				<div class="tab-pane" id="partitionall">{{{partitionAllEvents}}}</div>
+				{{#each partitions}}
+				<div class="tab-pane" id="partition{{id}}">
+				{{{events}}}
+				</div>
+				</div>
+				{{/each}}
+			</div>
+		</div>
 	</div>
-	<hr>
+
+	</script>
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+	<div class="navbar-inner">
+		<div class="container">
+			<button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="brand" href="#">Alarm Server</a>
+			<div class="nav-collapse collapse">
+				<ul class="nav">
+					<li class="active"><a href="#">Home</a></li>
+					<li><a href="/api">API/JSON</a></li>
+					<li><a href="https://github.com/juggie/AlarmServer">About</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="container">
 
 	<div class="container-fluid">
 		<div class="row-fluid">
-			<div class="row-fluid">
-				<div class="btn-toolbar">
-					<div id="actions">
-					</div>
+			<div class="btn-toolbar">
+				<div id="actions">
 				</div>
 			</div>
 		</div>
@@ -65,16 +130,8 @@
 		</div>
 	</div>
 
-	<div class="container-fluid">
-		<div class="row-fluid">
-			<div class="span4">
-				<div id="tabcontainer"></div>
-			</div>
-			<div class="span8">
-				<div id="details" class="tab-content"></div>
-			</div>
-		</div>
-	</div>
+	<div id="details"></div>
+
 </div>
 </body>
 </html>
