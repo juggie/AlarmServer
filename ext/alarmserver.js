@@ -2,6 +2,9 @@ var activeTab = null;
 var activeCollapse = null;
 var timeago = true;
 
+window.matchMediaPhone = function() { return matchMedia('(max-width: 767px)').matches; } 
+window.matchMediaTablet = function() { return matchMedia('(min-width: 768px) and (max-width: 979px)').matches; } 
+window.matchMediaDesktop = function() { return matchMedia('(min-width: 979px)').matches; } 
 
 $.ajax({
 	type:"GET",
@@ -185,8 +188,11 @@ function refresh() {
 		dataType:"json",
 		data:"{}",
 		success:function (res) {
-			$('#details').html(details(res, "#template")).fadeIn();
-			$('#mobile-details').html(details(res, "#mobile-template")).fadeIn();
+			if (matchMediaPhone()) {
+				$('#mobile-details').html(details(res, "#mobile-template")).fadeIn();
+			} else {
+				$('#details').html(details(res, "#template")).fadeIn();
+			}
 			$('#actions').html(actions(res)).fadeIn();
 			$('#tabs').tab();
 
