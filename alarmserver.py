@@ -17,6 +17,13 @@ import hashlib
 import time
 import getopt
 
+# Cookie handling
+import Cookie
+# Session handling
+import sqlite3
+# Crypt stuff for user/pass login
+from pbkdf2 import crypt
+
 from envisalinkdefs import evl_ResponseTypes
 from envisalinkdefs import evl_Defaults
 from envisalinkdefs import evl_ArmModes
@@ -45,7 +52,6 @@ def alarmserver_logger(message, type = 0, level = 0):
         outfile.flush()
     else:
         print (str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message)
-    
 
 def to_chars(string):
     chars = []
@@ -394,6 +400,13 @@ class AlarmServer(asyncore.dispatcher):
         # Create Envisalink client object
         self._envisalinkclient = EnvisalinkClient(config)
 
+        # Logged in?
+        self._loggedin = False
+        # User details
+        self._username = False
+        self._password = False
+        self._session_token = False
+
         #Store config
         self._config = config
 
@@ -422,8 +435,56 @@ class AlarmServer(asyncore.dispatcher):
         query = urlparse.urlparse(request)
         query_array = urlparse.parse_qs(query.query, True)
 
+        # Dummy auth for testing
+        self._loggedin = True
+
+        # Get some cookies (yum)
+        cookies_string = header.getheader('Cookie')
+        # Make a cookie object for easier handling of cookies
+        cookies = Cookie.SimpleCookie(cookies_string)
+
+        # Check for our session token
+        try:
+            self._session_token = cookies['session_token']
+        except:
+            # Didn't find our token - redirect to login page or check for passed user/pass in query params?
+            pass
+
+        # Did we get a token?
+        if self._session_token:
+            print "Found token cookie: %s" % self._session_token
+            # some sqllite code here to check for valid token?
+            # For now assume token is valid and log us in
+            self._loggedin = True
+
+        # Now that we had a chance to check for a valid token see if we are logged in yet
+        if self._loggedin == False:
+            # Still not logged in, check for passed user/pass in URL or finally prompt for login if needed
+
+            # Do we have a username?
+            if 'username' in query_array:
+                self._username = query_array['username']
+
+            # How about a password?
+            if 'password' in query_array:
+                self._password = query_array['password']
+
+            if self._username and self._password:
+                # Validate username/pass combo in sqlite
+                if True:
+                    # We made it!
+                    self._loggedin == True
+                else:
+                    # Failure, send to login page
+                    channel.pushfile('login.html')
+
+        # If we made it here all is good we can proceed as usual?
         if query.path == '/':
             channel.pushfile('index.html');
+        elif query.path == '/login':
+            channel.pushfile('login.html')
+        elif query.path == '/logout':
+            channel.pushfile('logout.html')
         elif query.path == '/api':
             channel.pushok(json.dumps(ALARMSTATE))
         elif query.path == '/api/alarm/arm':
@@ -472,7 +533,7 @@ class AlarmServer(asyncore.dispatcher):
                     channel.push("\r\n")
             else:
                 if (config.LOGURLREQUESTS):
-                                                                        alarmserver_logger("Invalid file requested")
+                    alarmserver_logger("Invalid file requested")
 
                 channel.pushstatus(404, "Not found")
                 channel.push("Content-type: text/html\r\n")
