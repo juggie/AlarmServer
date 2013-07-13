@@ -12,13 +12,6 @@
 	body {
 		padding-top: 60px;
 	}
-	.no-transition {
-	  -webkit-transition: height 0.001s;
-	  -moz-transition: height 0.001s;
-	  -ms-transition: height 0.001s;
-	  -o-transition: height 0.001s;
-	  transition: height 0.001s;
-	}
 	</style>
 	<link href="bootstrap-responsive.min.css" rel="stylesheet" media="screen">
 </head>
@@ -103,7 +96,7 @@
 							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapsePartAll">Partitions</a>
 						</div>
 
-						<div id="collapsePartAll" class="accordion-body collapse no-transition">
+						<div id="collapsePartAll" class="accordion-body collapse {{partitionAllSelected}}">
 						{{{partitionAllEvents}}}
 						</div>
 					</div>
@@ -113,7 +106,7 @@
 							<div class="accordion-heading">
 								<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapsePart{{id}}"><span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span>{{name}}</a></span>
 							</div>
-							<div id="collapsePart{{id}}" class="accordion-body collapse no-transition">
+							<div id="collapsePart{{id}}" class="accordion-body collapse {{selected}}">
 							{{{events}}}
 							</div>
 						{{/each}}
@@ -125,7 +118,7 @@
 							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseZoneAll">Zones</a>
 						</div>
 
-						<div id="collapseZoneAll" class="accordion-body collapse no-transition">
+						<div id="collapseZoneAll" class="accordion-body collapse {{zoneAllSelected}}">
 							{{{zoneAllEvents}}}
 						</div>
 					</div>
@@ -136,7 +129,7 @@
 							<a div class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseZone{{id}}"><span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span>{{name}}</span></a>
 						</div>
 
-						<div id="collapseZone{{id}}" class="accordion-body collapse no-transition">
+						<div id="collapseZone{{id}}" class="accordion-body collapse {{selected}}">
 							{{{events}}}
 						</div>
 						{{/each}}

@@ -46,6 +46,10 @@ function details(obj, templateId) {
 			zone.class = zone.status.open ? 'badge-important' : 'badge-success';
 			zone.icon = !zone.status.open ? 'icon-ok-sign' : 'icon-minus-sign';
 			zone.events = createEvents(zone.lastevents);
+			zone.selected = "";
+			if (activeCollapse == "collapseZone" + i) {
+				zone.selected = "in";
+			}
 			zones.push(zone);
 		}
 	}
@@ -58,11 +62,21 @@ function details(obj, templateId) {
 			partition.class = partition.status.ready ? 'badge-success' : 'badge-important';
 			partition.icon = partition.status.ready ? 'icon-ok-sign' : 'icon-minus-sign';
 			partition.events = createEvents(partition.lastevents);
+			partition.selected = "";
+			if (activeCollapse == "collapsePart" + i) {
+				partition.selected = "in";
+			}
 			partitions.push(partition);
 		}
 	}
 
-	return template({zones: zones, zoneAllEvents: createEvents(obj.zone.lastevents), partitions: partitions, partitionAllEvents: createEvents(obj.partition.lastevents)});
+	return template({zones: zones, 
+		zoneAllEvents: createEvents(obj.zone.lastevents), 
+		partitions: partitions, 
+		partitionAllEvents: createEvents(obj.partition.lastevents),
+		zoneAllSelected: activeCollapse == "collapseZoneAll" ? "in" : "",
+		partitionAllSelected: activeCollapse == "collapsePartAll" ? "in" : "",
+	});
 }
 
 function actions(obj) {
@@ -205,15 +219,12 @@ function refresh() {
 
 			$("[rel=tooltip]").tooltip();
 
-			$('.accordion-body').on('shown', function() {
+			$('.accordion-body').on('show', function() {
 				activeCollapse = this.id;
 				console.log(activeCollapse);
-			}).on('hidden', function() {
+			}).on('hide', function() {
 				activeCollapse = null;
 			});
-			if (activeCollapse) {
-				$('#accordion2 #' + activeCollapse).collapse('show');
-			}
 
 			message(res);
 		}
