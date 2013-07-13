@@ -1,6 +1,7 @@
 var activeTab = null;
 var activeCollapse = null;
 var timeago = true;
+var autorefresh = true;
 
 window.matchMediaPhone = function() { return matchMedia('(max-width: 767px)').matches; } 
 window.matchMediaTablet = function() { return matchMedia('(min-width: 768px) and (max-width: 979px)').matches; } 
@@ -196,15 +197,15 @@ function refresh() {
 			if (activeTab) {
 				$('#tabs a[href="' + activeTab + '"]').tab('show');
 			}
-
-			$("[rel=tooltip]").tooltip();
-
 			$('.accordion-body').on('show', function() {
 				activeCollapse = this.id;
-				console.log(activeCollapse);
 			}).on('hide', function() {
 				activeCollapse = null;
 			});
+
+			if (autorefresh) {
+				$("#autorefresh").button('toggle');
+			}
 
 			message(res);
 		}
@@ -213,9 +214,14 @@ function refresh() {
 
 $(document).ready(function () {
 	refresh();
+	$('body').tooltip({
+	    selector: '[rel="tooltip"]'
+	});
 });
 
 
 setInterval(function () {
-	refresh();
+	if (autorefresh) {
+		refresh();
+	}
 }, 5000);
