@@ -24,6 +24,41 @@
 	<script src="sco.message.js"></script>
 	<script src="handlebars.js"></script>
 
+	<script id="actions-template" type="text/x-handlebars-template">
+		{{#unless pgm_output}}
+			<div class="btn-toolbar">
+			{{#if armed}}
+	            <div class="btn-group">
+					<button class="btn" onclick="disarm();return false;">Disarm</button>
+				</div>
+			{{/if}}
+			{{#unless exit}}
+	            <div class="btn-group">
+                <button class="btn" onclick="doAction('arm');return false;">Quick Arm</button>
+                <button class="btn dropdown-toggle" data-toggle="dropdown"> <span class="caret"></span></button>
+	                <ul class="dropdown-menu">
+					<li><a href="#" onclick="armwithcode();return false;">Arm W/Code</a></li>
+                	</ul>
+				</div>
+	
+	            <div class="btn-group">
+					<button class="btn" onclick="doAction('stayarm');return false;">Stay</button>
+				</div>
+
+	            <div class="btn-group">
+					<button class="btn" onclick="pgm();return false;">PGM</button>
+				</div>
+			{{/unless}}
+			{{#if exit}}
+	            <div class="btn-group">
+					<button class="btn-small" honclick="disarm();return false;">Cancel</button>
+				</div>
+			{{/if}}
+			</div>
+		{{/unless}}
+	</script>
+
+
 	<script id="events-template" type="text/x-handlebars-template">
 	<table class="table table-striped table-bordered"> 
 	<thead> 

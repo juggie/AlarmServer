@@ -80,33 +80,13 @@ function details(obj, templateId) {
 }
 
 function actions(obj) {
-	var str = '';
-	var armed = obj.partition["1"].status.armed;
-	var exit = obj.partition["1"].status.exit_delay;
-	var pgm_output = obj.partition["1"].status.pgm_output;
+	var source  = $("#actions-template").html();
+	var template = Handlebars.compile(source);
 
-	if (armed) {
-		str += '<a class="btn" href="#" onclick="disarm();return false;">Disarm</a>';
-	} else if (pgm_output) {
-		/* Dont show any button, you can't cancel a PGM output */
-		str += '';
-        } else if (!exit) {
-                /* Quick arm is default now with new drop down to select Arm with code */
-                str += '<div class="btn-group">';
-                str += '<button class="btn"><a href="#" onclick="doAction(\'arm\');return false;">Quick Arm</a></button>';
-                str += '<button class="btn dropdown-toggle" data-toggle="dropdown">';
-                str += '<span class="caret"></span></button><ul class="dropdown-menu">';
-		str += '<li><a href="#" onclick="armwithcode();return false;">Arm W/Code</a></li>';
-                str += '</ul></div>';
-                /* Now back to regular buttons here */
-		str += '<a class="btn" href="#" onclick="doAction(\'stayarm\');return false;">Stay</a> ';
-		str += '<a class="btn" href="#" onclick="pgm();return false;">PGM</a> ';
-	}
-	if (exit) {
-		str += '<a class="btn-small" href="#" onclick="disarm();return false;">Cancel</a>';
-	}
-
-	return str;
+	return template({armed: obj.partition["1"].status.armed,
+	 				exit: obj.partition["1"].status.exit_delay,
+	 				pgm_output: obj.partition["1"].status.pgm_output
+	});
 }
 
 function disarm() {
