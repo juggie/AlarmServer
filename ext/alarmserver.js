@@ -2,6 +2,7 @@ var activeTab = null;
 var activeCollapse = null;
 var timeago = true;
 var autorefresh = true;
+var cache = {};
 
 window.matchMediaPhone = function() { return matchMedia('(max-width: 767px)').matches; } 
 window.matchMediaTablet = function() { return matchMedia('(min-width: 768px) and (max-width: 979px)').matches; } 
@@ -175,6 +176,16 @@ function message(obj) {
 	$('#message').html(str).fadeIn();
 }
 
+function update(id, value) {
+	var old = cache[id];
+	if (old != value) {
+		$(id).html(value).fadeIn();
+		cache[id] = value;
+		return true;
+	}
+	return false;
+}
+
 function refresh() {
 	$.ajax({
 		type:"GET",
@@ -184,19 +195,20 @@ function refresh() {
 		data:"{}",
 		success:function (res) {
 			if (matchMediaPhone()) {
-				$('#mobile-details').html(details(res, "#mobile-template")).fadeIn();
+				update('#mobile-details', details(res, "#mobile-template"));
 			} else {
-				$('#details').html(details(res, "#template")).fadeIn();
+				if (update('#details', details(res, "#template"))) {
+					if (activeTab) {
+						$('#tabs a[href="' + activeTab + '"]').tab('show');
+					}
+				}
 			}
-			$('#actions').html(actions(res)).fadeIn();
+			update('#actions', actions(res));
 			$('#tabs').tab();
 
 			$('#tabs a[data-toggle="tab"]').on('shown', function (e) {
 				activeTab = e.target.hash;
 			});
-			if (activeTab) {
-				$('#tabs a[href="' + activeTab + '"]').tab('show');
-			}
 			$('.accordion-body').on('show', function() {
 				activeCollapse = this.id;
 			}).on('hide', function() {
@@ -204,7 +216,7 @@ function refresh() {
 			});
 
 			if (autorefresh) {
-				$("#autorefresh").button('toggle');
+				$("#autorefresh").addClass('active');
 			}
 
 			message(res);
