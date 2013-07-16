@@ -1,6 +1,3 @@
-README
-------
-
 This is still beta software.
 
 The ssl certificates that are provided are intended for demo purposes only.  
@@ -14,21 +11,18 @@ Please see the alarmserver-example.cfg and rename to alarmserver.cfg and
 customize to requirements.
 
 
-WEB INTERFACE
+Web Interface
 -------------
-There are two different web interfaces, a desktop viewer and a mobile viewer.
-The desktop viewer uses a paned interface and works best on resolutions of 800px or wider.
-The mobile viewer uses an accordion interface and works on resolutions down to 300px.
-Note that the mobile interface disables refreshing every 5 seconds on the zone states when you expand one of the zones. Upon collapse of the zone it re-enables the 5 second refreshes.
+The web interface uses a responsive design which limits the scrolling on both desktop and mobile.
 
-The default is the desktop viewer (ie https://myserver:8111) To call the mobile viewer go to
-https://myserver:8111/mobile.html
+### Desktop ###
+![Desktop](http://gschrader.github.io/AlarmServer/images/desktop.png)
 
-If you want to switch the mobile one to the default just move index.html to desktop.html and move 
-mobile.html to index.html.
+### Mobile ###
+![Mobile](http://gschrader.github.io/AlarmServer/images/mobile.png)
 
 
-OPENSSL CERT HOWTO
+OpenSSL Certificate Howto
 -------------------
 
 To generate a self signed cert issue the following in a command prompt:
