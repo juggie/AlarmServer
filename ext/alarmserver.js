@@ -24,16 +24,10 @@ function createEvents(list) {
 	var template = Handlebars.compile(source);
 
 	list.reverse().forEach(function (ev, i) {
-		if (timeago) {
-			ev.tooltip = ev.datetime;
-			ev.time = jQuery.timeago(ev.datetime);
-		} else {
-			ev.tooltip = jQuery.timeago(ev.datetime);
-			ev.time = ev.datetime;
-		}
+		ev.time = moment(ev.datetime).calendar();
 	});
 
-	return template({events: list});
+	return template({events: list, timeago: timeago});
 }
 
 function details(obj, templateId) {
@@ -176,9 +170,9 @@ function message(obj) {
 	$('#message').html(str).fadeIn();
 }
 
-function update(id, value) {
+function update(id, value, force) {
 	var old = cache[id];
-	if (old != value) {
+	if (old != value || force) {
 		$(id).html(value).fadeIn();
 		cache[id] = value;
 		return true;
@@ -186,7 +180,7 @@ function update(id, value) {
 	return false;
 }
 
-function refresh() {
+function refresh(force) {
 	$.ajax({
 		type:"GET",
 		url:"/api",
@@ -195,15 +189,15 @@ function refresh() {
 		data:"{}",
 		success:function (res) {
 			if (matchMediaPhone()) {
-				update('#mobile-details', details(res, "#mobile-template"));
+				update('#mobile-details', details(res, "#mobile-template"), force);
 			} else {
-				if (update('#details', details(res, "#template"))) {
+				if (update('#details', details(res, "#template")), force) {
 					if (activeTab) {
 						$('#tabs a[href="' + activeTab + '"]').tab('show');
 					}
 				}
 			}
-			update('#actions', actions(res));
+			update('#actions', actions(res), force);
 			$('#tabs').tab();
 
 			$('#tabs a[data-toggle="tab"]').on('shown', function (e) {
@@ -217,6 +211,10 @@ function refresh() {
 
 			if (autorefresh) {
 				$("#autorefresh").addClass('active');
+			}
+
+			if (timeago) {
+				$("#timeago").addClass('active');
 			}
 
 			message(res);
@@ -234,6 +232,6 @@ $(document).ready(function () {
 
 setInterval(function () {
 	if (autorefresh) {
-		refresh();
+		refresh(false);
 	}
 }, 5000);
