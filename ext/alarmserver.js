@@ -224,9 +224,7 @@ function refresh(force) {
 
 $(document).ready(function () {
 	refresh();
-	$('body').tooltip({
-	    selector: '[rel="tooltip"]'
-	});
+	FastClick.attach(document.body);
 });
 
 
