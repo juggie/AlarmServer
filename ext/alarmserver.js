@@ -4,23 +4,29 @@ var timeago = true;
 var autorefresh = true;
 var cache = {};
 
-window.matchMediaPhone = function() { return matchMedia('(max-width: 767px)').matches; } 
-window.matchMediaTablet = function() { return matchMedia('(min-width: 768px) and (max-width: 979px)').matches; } 
-window.matchMediaDesktop = function() { return matchMedia('(min-width: 979px)').matches; } 
+window.matchMediaPhone = function () {
+	return matchMedia('(max-width: 767px)').matches;
+}
+window.matchMediaTablet = function () {
+	return matchMedia('(min-width: 768px) and (max-width: 979px)').matches;
+}
+window.matchMediaDesktop = function () {
+	return matchMedia('(min-width: 979px)').matches;
+}
 
 $.ajax({
-	type:"GET",
-	url:"/api/config/eventtimeago",
-	contentType:"application/json; charset=utf-8",
-	dataType:"json",
-	data:"{}",
-	success:function (res) {
+	type: "GET",
+	url: "/api/config/eventtimeago",
+	contentType: "application/json; charset=utf-8",
+	dataType: "json",
+	data: "{}",
+	success: function (res) {
 		timeago = res.eventtimeago.toLowerCase() == "true";
 	}
 });
 
 function createEvents(list) {
-	var source  = $("#events-template").html();
+	var source = $("#events-template").html();
 	var template = Handlebars.compile(source);
 
 	list.reverse().forEach(function (ev, i) {
@@ -31,7 +37,7 @@ function createEvents(list) {
 }
 
 function details(obj, templateId) {
-	var source  = $(templateId).html();
+	var source = $(templateId).html();
 	var template = Handlebars.compile(source);
 
 	var zones = [];
@@ -66,9 +72,9 @@ function details(obj, templateId) {
 		}
 	}
 
-	return template({zones: zones, 
-		zoneAllEvents: createEvents(obj.zone.lastevents), 
-		partitions: partitions, 
+	return template({zones: zones,
+		zoneAllEvents: createEvents(obj.zone.lastevents),
+		partitions: partitions,
 		partitionAllEvents: createEvents(obj.partition.lastevents),
 		zoneAllSelected: activeCollapse == "collapseZoneAll" ? "in" : "",
 		partitionAllSelected: activeCollapse == "collapsePartAll" ? "in" : "",
@@ -76,58 +82,48 @@ function details(obj, templateId) {
 }
 
 function actions(obj) {
-	var source  = $("#actions-template").html();
+	var source = $("#actions-template").html();
 	var template = Handlebars.compile(source);
 
 	return template({armed: obj.partition["1"].status.armed,
-	 				exit: obj.partition["1"].status.exit_delay,
-	 				pgm_output: obj.partition["1"].status.pgm_output
+		exit: obj.partition["1"].status.exit_delay,
+		pgm_output: obj.partition["1"].status.pgm_output
 	});
 }
 
 function disarm() {
-	Alertify.dialog.prompt("What is your code?", function (e, code) {
-		if (e) {
-			doAction("disarm?alarmcode=" + code);
-		}
+	Alertify.dialog.prompt("What is your code?", function (code) {
+		doAction("/api/alarm/disarm?alarmcode=" + code);
 	});
 }
 
 function pgm() {
-	var pgmnum= prompt("Enter PGM # to trigger", "");
-	var code= prompt("What is your code?", "");
-	$.ajax({
-		type:"GET",
-		url:"/api/pgm?pgmnum=" + pgmnum + "&alarmcode=" + code,
-		contentType:"application/json; charset=utf-8",
-		dataType:"json",
-		data:"{}",
-		success:function (res) {
-			Alertify.log.success(res.response);
-		}
+	Alertify.dialog.prompt("Enter PGM # to trigger", function (pgmnum) {
+		Alertify.dialog.prompt("What is your code?", function (code) {
+			doAction("/api/pgm?pgmnum=" + pgmnum + "&alarmcode=" + code);
+		});
 	});
 }
 
 function armwithcode() {
-	Alertify.dialog.prompt("What is your code?", function (e, code) {
-		if (e) {
-			doAction("armwithcode?alarmcode=" + code);
-		}
+	Alertify.dialog.prompt("What is your code?", function (code) {
+		console.log(code);
+		doAction("/api/alarm/armwithcode?alarmcode=" + code);
 	});
 }
 
 function doAction(action) {
+	console.log(action);
 	$.ajax({
-		type:"GET",
-		url:"/api/alarm/" + action,
-		contentType:"application/json; charset=utf-8",
-		dataType:"json",
-		data:"{}",
-		success:function (res) {
+		type: "GET",
+		url: action,
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
+		success: function (res) {
 			console.log(res.response);
 			Alertify.log.success(res.response);
 		},
-		error:function () {
+		error: function () {
 			Alertify.log.error("error performing action");
 		}
 	});
@@ -174,12 +170,12 @@ function update(id, value, force) {
 
 function refresh(force) {
 	$.ajax({
-		type:"GET",
-		url:"/api",
-		contentType:"application/json; charset=utf-8",
-		dataType:"json",
-		data:"{}",
-		success:function (res) {
+		type: "GET",
+		url: "/api",
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
+		data: "{}",
+		success: function (res) {
 			if (matchMediaPhone()) {
 				update('#mobile-details', details(res, "#mobile-template"), force);
 			} else {
@@ -195,11 +191,11 @@ function refresh(force) {
 			$('#tabs a[data-toggle="tab"]').on('shown', function (e) {
 				activeTab = e.target.hash;
 			});
-			$('.accordion-body').on('show', function() {
+			$('.accordion-body').on('show',function () {
 				activeCollapse = this.id;
-			}).on('hide', function() {
-				activeCollapse = null;
-			});
+			}).on('hide', function () {
+					activeCollapse = null;
+				});
 
 			if (autorefresh) {
 				$("#autorefresh").addClass('active');

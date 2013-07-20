@@ -6,8 +6,8 @@
 	<title>Alarm Server</title>
 	<link href="bootstrap.min.css" rel="stylesheet" media="screen">
 
-	<link rel="stylesheet" href="alertify.css" />
-	<link rel="stylesheet" href="alertify.bootstrap.css" />
+	<link rel="stylesheet" href="alertify.css"/>
+	<link rel="stylesheet" href="alertify.bootstrap.css"/>
 	<style>
 		body {
 			padding-top: 60px;
@@ -20,160 +20,170 @@
 	</style>
 	<link href="bootstrap-responsive.min.css" rel="stylesheet" media="screen">
 	<link rel="apple-touch-icon" href="apple-touch-icon-precomposed.png"/>
-	<link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72-precomposed.png" />
-	<link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-114x114-precomposed.png" />
-	<link rel="apple-touch-icon" sizes="144x144" href="apple-touch-icon-144x144-precomposed.png" />
-	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72-precomposed.png"/>
+	<link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-114x114-precomposed.png"/>
+	<link rel="apple-touch-icon" sizes="144x144" href="apple-touch-icon-144x144-precomposed.png"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
 </head>
 <body>
-	<script src="jquery.js"></script>
-	<script src="alarmserver.js"></script>
-	<script src="bootstrap.min.js"></script>
-	<script src="moment.min.js"></script>
-	<script src="livestamp.min.js"></script>
-	<script src="handlebars.js"></script>
-	<script src='fastclick.min.js'></script>
-	<script src="alertify.min.js"></script>
+<script src="jquery.js"></script>
+<script src="alarmserver.js"></script>
+<script src="bootstrap.min.js"></script>
+<script src="moment.min.js"></script>
+<script src="livestamp.min.js"></script>
+<script src="handlebars.js"></script>
+<script src='fastclick.min.js'></script>
+<script src="alertify.min.js"></script>
 
-	<script id="actions-template" type="text/x-handlebars-template">
-		{{#unless pgm_output}}
-			<div class="btn-toolbar">
-				{{#if armed}}
-		            <div class="btn-group">
-						<button class="btn btn-small" onclick="disarm();return false;">Disarm</button>
-					</div>
-				{{/if}}
-				{{#unless exit}}
-		            <div class="btn-group">
-	                <button class="btn btn-small" onclick="doAction('arm');return false;">Arm</button>
-	                <button class="btn btn-small dropdown-toggle" data-toggle="dropdown"> <span class="caret"></span></button>
-		                <ul class="dropdown-menu">
-						<li><a href="#" onclick="armwithcode();return false;">Arm with Code</a></li>
-	                	</ul>
-					</div>
-		
-		            <div class="btn-group">
-						<button class="btn btn-small" onclick="doAction('stayarm');return false;">Stay</button>
-					</div>
+<script id="actions-template" type="text/x-handlebars-template">
+	{{#unless pgm_output}}
+	<div class="btn-toolbar">
+		{{#if armed}}
+		<div class="btn-group">
+			<button class="btn btn-small" onclick="disarm();return false;">Disarm</button>
+		</div>
+		{{/if}}
+		{{#unless exit}}
+		<div class="btn-group">
+			<button class="btn btn-small" onclick="doAction('/api/alarm/arm');return false;">Arm</button>
+			<button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+			<ul class="dropdown-menu">
+				<li><a href="#" onclick="armwithcode();return false;">Arm with Code</a></li>
+			</ul>
+		</div>
 
-		            <div class="btn-group">
-						<button class="btn btn-small" onclick="pgm();return false;">PGM</button>
-					</div>
-				{{/unless}}
-				{{#if exit}}
-		            <div class="btn-group">
-						<button class="btn btn-small" onclick="disarm();return false;">Cancel</button>
-					</div>
-				{{/if}}
-	            <div class="btn-group" data-toggle="buttons-checkbox">
-		            <button id="autorefresh" class="btn btn-small" href="#" onclick="autorefresh = !autorefresh;"><i class="icon-refresh"></i></button>
-				</div>
-	            <div class="btn-group" data-toggle="buttons-checkbox">
-		            <button id="timeago" class="btn btn-small" href="#" onclick="timeago = !timeago; refresh(true);"><i class="icon-time"></i></button>
-				</div>
-			</div>
+		<div class="btn-group">
+			<button class="btn btn-small" onclick="doAction('/api/alarm/stayarm');return false;">Stay</button>
+		</div>
+
+		<div class="btn-group">
+			<button class="btn btn-small" onclick="pgm();return false;">PGM</button>
+		</div>
 		{{/unless}}
-	</script>
+		{{#if exit}}
+		<div class="btn-group">
+			<button class="btn btn-small" onclick="disarm();return false;">Cancel</button>
+		</div>
+		{{/if}}
+		<div class="btn-group" data-toggle="buttons-checkbox">
+			<button id="autorefresh" class="btn btn-small" href="#" onclick="autorefresh = !autorefresh;"><i
+					class="icon-refresh"></i></button>
+		</div>
+		<div class="btn-group" data-toggle="buttons-checkbox">
+			<button id="timeago" class="btn btn-small" href="#" onclick="timeago = !timeago; refresh(true);"><i
+					class="icon-time"></i></button>
+		</div>
+	</div>
+	{{/unless}}
+</script>
 
 
-	<script id="events-template" type="text/x-handlebars-template">
-	<table class="table table-striped table-bordered"> 
-	<thead> 
-	<tr> 
-	<th>Message</th> 
-	<th>Time</th>
-	</tr> 
-	</thead> 
-	<tbody>
+<script id="events-template" type="text/x-handlebars-template">
+	<table class="table table-striped table-bordered">
+		<thead>
+		<tr>
+			<th>Message</th>
+			<th>Time</th>
+		</tr>
+		</thead>
+		<tbody>
 
-	{{#each events}}
-	<tr> 
-	<td>{{message}}</td> 
-	<td>
-	{{#if ../timeago}}
-		<span class="livestamp" data-livestamp="{{datetime}}">{{time}}</span>
-	{{else}}
-		{{time}}
-	{{/if}}
-	</td> 
-	</tr>
-	{{/each}}
-	</tbody> 
+		{{#each events}}
+		<tr>
+			<td>{{message}}</td>
+			<td>
+				{{#if ../timeago}}
+				<span class="livestamp" data-livestamp="{{datetime}}">{{time}}</span>
+				{{else}}
+				{{time}}
+				{{/if}}
+			</td>
+		</tr>
+		{{/each}}
+		</tbody>
 	</table>
-	</script>
+</script>
 
-	<script id="template" type="text/x-handlebars-template">
+<script id="template" type="text/x-handlebars-template">
 	<div class="container-fluid">
 		<div class="row-fluid">
 			<div class="span4">
-				<div class="tabbable tabs-left"> <ul id="tabs" class="nav nav-tabs">
+				<div class="tabbable tabs-left">
+					<ul id="tabs" class="nav nav-tabs">
 
-				<li class="nav-header">Partitions</li>
-				<li><a href="#partitionall" data-toggle="tab">All</a></li>
-				{{#each partitions}}
-					<li><a href="#partition{{id}}" data-toggle="tab"> <span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span> {{name}} </a></li>
-				{{/each}}
+						<li class="nav-header">Partitions</li>
+						<li><a href="#partitionall" data-toggle="tab">All</a></li>
+						{{#each partitions}}
+						<li><a href="#partition{{id}}" data-toggle="tab"> <span class="badge {{class}}"> <i
+								class="{{icon}} icon-white"></i></span> {{name}} </a></li>
+						{{/each}}
 
-				<li class="nav-header">Zones</li>
-				<li><a href="#zoneall" data-toggle="tab">All</a></li>
-				{{#each zones}}
-					<li><a href="#zone{{id}}" data-toggle="tab"> <span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span> {{name}} </a></li>
-				{{/each}}
-				</ul></div>
+						<li class="nav-header">Zones</li>
+						<li><a href="#zoneall" data-toggle="tab">All</a></li>
+						{{#each zones}}
+						<li><a href="#zone{{id}}" data-toggle="tab"> <span class="badge {{class}}"> <i
+								class="{{icon}} icon-white"></i></span> {{name}} </a></li>
+						{{/each}}
+					</ul>
+				</div>
 			</div>
 			<div class="span8">
 				<div class="tab-content">
-				<div class="tab-pane" id="zoneall">{{{zoneAllEvents}}}</div>
+					<div class="tab-pane" id="zoneall">{{{zoneAllEvents}}}</div>
 
-				{{#each zones}}
-				<div class="tab-pane" id="zone{{id}}">
-				{{{events}}}
-				</div>
-				{{/each}}
+					{{#each zones}}
+					<div class="tab-pane" id="zone{{id}}">
+						{{{events}}}
+					</div>
+					{{/each}}
 
-				<div class="tab-pane" id="partitionall">{{{partitionAllEvents}}}</div>
-				{{#each partitions}}
-				<div class="tab-pane" id="partition{{id}}">
-				{{{events}}}
-				</div>
+					<div class="tab-pane" id="partitionall">{{{partitionAllEvents}}}</div>
+					{{#each partitions}}
+					<div class="tab-pane" id="partition{{id}}">
+						{{{events}}}
+					</div>
 				</div>
 				{{/each}}
 			</div>
 		</div>
 	</div>
 
-	</script>
+</script>
 
-	<script id="mobile-template" type="text/x-handlebars-template">
+<script id="mobile-template" type="text/x-handlebars-template">
 	<div class="container-fluid">
 		<div class="row-fluid">
 			<div class="span12">
 				<div class="accordion" id="accordion2">
 					<div class="accordion-group">
 						<div class="accordion-heading">
-							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapsePartAll">Partitions</a>
+							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2"
+							   href="#collapsePartAll">Partitions</a>
 						</div>
 
 						<div id="collapsePartAll" class="accordion-body collapse {{partitionAllSelected}}">
-						{{{partitionAllEvents}}}
+							{{{partitionAllEvents}}}
 						</div>
 					</div>
 
 					<div class="accordion-group">
 						{{#each partitions}}
-							<div class="accordion-heading">
-								<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapsePart{{id}}"><span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span> {{name}}</a></span>
-							</div>
-							<div id="collapsePart{{id}}" class="accordion-body collapse {{selected}}">
+						<div class="accordion-heading">
+							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2"
+							   href="#collapsePart{{id}}"><span class="badge {{class}}"> <i
+									class="{{icon}} icon-white"></i></span> {{name}}</a></span>
+						</div>
+						<div id="collapsePart{{id}}" class="accordion-body collapse {{selected}}">
 							{{{events}}}
-							</div>
+						</div>
 						{{/each}}
 					</div>
 
 
 					<div class="accordion-group">
 						<div class="accordion-heading">
-							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseZoneAll">Zones</a>
+							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2"
+							   href="#collapseZoneAll">Zones</a>
 						</div>
 
 						<div id="collapseZoneAll" class="accordion-body collapse {{zoneAllSelected}}">
@@ -184,7 +194,9 @@
 					<div class="accordion-group">
 						{{#each zones}}
 						<div class="accordion-heading">
-							<a div class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseZone{{id}}"><span class="badge {{class}}"> <i class="{{icon}} icon-white"></i></span> {{name}}</span></a>
+							<a div class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2"
+							   href="#collapseZone{{id}}"><span class="badge {{class}}"> <i
+									class="{{icon}} icon-white"></i></span> {{name}}</span></a>
 						</div>
 
 						<div id="collapseZone{{id}}" class="accordion-body collapse {{selected}}">
@@ -197,7 +209,7 @@
 		</div>
 	</div>
 
-	</script>
+</script>
 
 <div class="navbar navbar-inverse navbar-fixed-top">
 	<div class="navbar-inner">
@@ -208,6 +220,7 @@
 				<span class="icon-bar"></span>
 			</button>
 			<a class="brand" href="#">Alarm Server</a>
+
 			<div class="nav-collapse collapse">
 				<ul class="nav">
 					<li class="active"><a href="#">Home</a></li>
