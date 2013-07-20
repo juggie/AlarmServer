@@ -2,16 +2,21 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, user-scalable=no"/>
 	<title>Alarm Server</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="bootstrap.min.css" rel="stylesheet" media="screen">
 
-	<link href="scojs.css" rel="stylesheet" media="screen">
+	<link rel="stylesheet" href="alertify.css" />
+	<link rel="stylesheet" href="alertify.bootstrap.css" />
 	<style>
-	body {
-		padding-top: 60px;
-	}
+		body {
+			padding-top: 60px;
+		}
+
+		.alertify-logs {
+			top: 10px;
+			right: 10px;
+		}
 	</style>
 	<link href="bootstrap-responsive.min.css" rel="stylesheet" media="screen">
 	<link rel="apple-touch-icon" href="apple-touch-icon-precomposed.png"/>
@@ -24,12 +29,11 @@
 	<script src="jquery.js"></script>
 	<script src="alarmserver.js"></script>
 	<script src="bootstrap.min.js"></script>
-	<script src="bootbox.min.js"></script>
 	<script src="moment.min.js"></script>
 	<script src="livestamp.min.js"></script>
-	<script src="sco.message.js"></script>
 	<script src="handlebars.js"></script>
 	<script src='fastclick.min.js'></script>
+	<script src="alertify.min.js"></script>
 
 	<script id="actions-template" type="text/x-handlebars-template">
 		{{#unless pgm_output}}

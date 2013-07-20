@@ -86,15 +86,9 @@ function actions(obj) {
 }
 
 function disarm() {
-	var code = prompt("What is your code?", "");
-	$.ajax({
-		type:"GET",
-		url:"/api/alarm/disarm?alarmcode=" + code,
-		contentType:"application/json; charset=utf-8",
-		dataType:"json",
-		data:"{}",
-		success:function (res) {
-			$.scojs_message(res.response, $.scojs_message.TYPE_OK);
+	Alertify.dialog.prompt("What is your code?", function (e, code) {
+		if (e) {
+			doAction("disarm?alarmcode=" + code);
 		}
 	});
 }
@@ -109,21 +103,15 @@ function pgm() {
 		dataType:"json",
 		data:"{}",
 		success:function (res) {
-			$.scojs_message(res.response, $.scojs_message.TYPE_OK);
+			Alertify.log.success(res.response);
 		}
 	});
 }
 
 function armwithcode() {
-	var code = prompt("What is your code?", "");
-	$.ajax({
-		type:"GET",
-		url:"/api/alarm/armwithcode?alarmcode=" + code,
-		contentType:"application/json; charset=utf-8",
-		dataType:"json",
-		data:"{}",
-		success:function (res) {
-			$.scojs_message(res.response, $.scojs_message.TYPE_OK);
+	Alertify.dialog.prompt("What is your code?", function (e, code) {
+		if (e) {
+			doAction("armwithcode?alarmcode=" + code);
 		}
 	});
 }
@@ -136,7 +124,11 @@ function doAction(action) {
 		dataType:"json",
 		data:"{}",
 		success:function (res) {
-			$.scojs_message(res.response, $.scojs_message.TYPE_OK);
+			console.log(res.response);
+			Alertify.log.success(res.response);
+		},
+		error:function () {
+			Alertify.log.error("error performing action");
 		}
 	});
 }
