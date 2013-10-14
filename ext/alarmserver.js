@@ -92,23 +92,33 @@ function actions(obj) {
 }
 
 function disarm() {
-	Alertify.dialog.prompt("What is your code?", function (code) {
-		doAction("/api/alarm/disarm?alarmcode=" + code);
+	alertify.prompt("What is your code?", function (e, code) {
+		if (e) {
+			doAction("/api/alarm/disarm?alarmcode=" + code);
+		}
 	});
 }
 
 function pgm() {
-	Alertify.dialog.prompt("Enter PGM # to trigger", function (pgmnum) {
-		Alertify.dialog.prompt("What is your code?", function (code) {
-			doAction("/api/pgm?pgmnum=" + pgmnum + "&alarmcode=" + code);
-		});
+	alertify.prompt("Enter PGM # to trigger", function (e, pgmnum) {
+		if (e) {
+			alertify.prompt("What is your code?", function (e1, code) {
+				if (e1) {
+					doAction("/api/pgm?pgmnum=" + pgmnum + "&alarmcode=" + code);
+			 	}
+			});
+	    }
 	});
 }
 
 function armwithcode() {
-	Alertify.dialog.prompt("What is your code?", function (code) {
-		console.log(code);
-		doAction("/api/alarm/armwithcode?alarmcode=" + code);
+	alertify.prompt("What is your code?", function (e, code) {
+		if (e) {
+			console.log(code);
+			doAction("/api/alarm/armwithcode?alarmcode=" + code);
+	    } else {
+	    	alertify.error("not armed")
+	    }
 	});
 }
 
@@ -121,10 +131,10 @@ function doAction(action) {
 		dataType: "json",
 		success: function (res) {
 			console.log(res.response);
-			Alertify.log.success(res.response);
+			alertify.success(res.response);
 		},
 		error: function () {
-			Alertify.log.error("error performing action");
+			alertify.error("error performing action");
 		}
 	});
 }
