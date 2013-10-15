@@ -85,9 +85,11 @@ function actions(obj) {
 	var source = $("#actions-template").html();
 	var template = Handlebars.compile(source);
 
-	return template({armed: obj.partition["1"].status.armed,
-		exit: obj.partition["1"].status.exit_delay,
-		pgm_output: obj.partition["1"].status.pgm_output
+	return template({
+		arm: !obj.partition["1"].status.armed && !obj.partition["1"].status.exit_delay,
+		disarm: obj.partition["1"].status.armed,
+		cancel: obj.partition["1"].status.exit_delay,
+		pgm: obj.partition["1"].status.pgm_output
 	});
 }
 

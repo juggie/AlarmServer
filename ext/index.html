@@ -44,12 +44,13 @@
 <script id="actions-template" type="text/x-handlebars-template">
 	{{#unless pgm_output}}
 	<div class="btn-toolbar">
-		{{#if armed}}
+		{{#if disarm}}
 		<div class="btn-group">
 			<button class="btn btn-small" onclick="disarm();return false;">Disarm</button>
 		</div>
 		{{/if}}
-		{{#unless exit}}
+
+		{{#if arm}}
 		<div class="btn-group">
 			<button class="btn btn-small" onclick="doAction('/api/alarm/arm');return false;">Arm</button>
 			<button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
@@ -65,12 +66,14 @@
 		<div class="btn-group">
 			<button class="btn btn-small" onclick="pgm();return false;">PGM</button>
 		</div>
-		{{/unless}}
-		{{#if exit}}
+		{{/if}}
+
+		{{#if cancel}}
 		<div class="btn-group">
 			<button class="btn btn-small" onclick="disarm();return false;">Cancel</button>
 		</div>
 		{{/if}}
+
 		<div class="btn-group" data-toggle="buttons-checkbox">
 			<button id="autorefresh" class="btn btn-small" href="#" onclick="autorefresh = !autorefresh;"><i
 					class="icon-refresh"></i></button>
