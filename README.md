@@ -40,6 +40,11 @@ Dependencies:
 On windows, pyOpenSSL is required.
 http://pypi.python.org/pypi/pyOpenSSL
 
+
+Launchers
+---------
+* [MacOSX](https://github.com/gschrader/Alarm-Server-Launcher)
+
 REST API Info
 -------------
 
@@ -79,4 +84,4 @@ REST API Info
 */api/config/eventtimeago* 
 
 * Returns status of eventtimeago from the config file
-  
+

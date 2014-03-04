@@ -168,7 +168,7 @@ class HTTPChannel(asynchat.async_chat):
 
     def pushok(self, content):
         self.pushstatus(200, "OK")
-        self.push('Content-type: text/html\r\n')
+        self.push('Content-type: application/json\r\n')
         self.push('Expires: Sat, 26 Jul 1997 05:00:00 GMT\r\n')
         self.push('Last-Modified: '+ datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")+' GMT\r\n')
         self.push('Cache-Control: no-store, no-cache, must-revalidate\r\n' ) 
