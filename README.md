@@ -16,10 +16,10 @@ Web Interface
 The web interface uses a responsive design which limits the scrolling on both desktop and mobile.
 
 ### Desktop ###
-![Desktop](http://gschrader.github.io/AlarmServer/images/desktop.png)
+![Desktop](http://gschrader.github.io/Alarm-Server-Launcher/desktop.png)
 
 ### Mobile ###
-![Mobile](http://gschrader.github.io/AlarmServer/images/mobile.png)
+![Mobile](http://gschrader.github.io/Alarm-Server-Launcher/mobile.png)
 
 
 OpenSSL Certificate Howto
