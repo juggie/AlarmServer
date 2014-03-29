@@ -16,6 +16,7 @@ import json
 import hashlib
 import time
 import getopt
+import requests
 
 from envisalinkdefs import evl_ResponseTypes
 from envisalinkdefs import evl_Defaults
@@ -92,6 +93,10 @@ class AlarmServerConfig():
         self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
         self.EVENTTIMEAGO = self.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
         self.LOGFILE = self.read_config_var('alarmserver', 'logfile', '', 'str')
+        self.CALLBACKURL_BASE = self.read_config_var('alarmserver', 'callbackurl_base', '', 'str')
+        self.CALLBACKURL_APP_ID = self.read_config_var('alarmserver', 'callbackurl_app_id', '', 'str')
+        self.CALLBACKURL_ACCESS_TOKEN = self.read_config_var('alarmserver', 'callbackurl_access_token', '', 'str')
+        self.CALLBACKURL_EVENT_CODES = self.read_config_var('alarmserver', 'callbackurl_event_codes', '', 'str')
         global LOGTOFILE
         if self.LOGFILE == '':
             LOGTOFILE = False
@@ -337,7 +342,8 @@ class EnvisalinkClient(asynchat.async_chat):
             if event['type'] in ('partition', 'zone'):
                 if event['type'] == 'zone':
                     if int(parameters) in self._config.ZONENAMES:
-                        if not int(parameters) in ALARMSTATE[event['type']]: ALARMSTATE[event['type']][int(parameters)] = {'name' : self._config.ZONENAMES[int(parameters)]}
+                        if not int(parameters) in ALARMSTATE[event['type']]:
+                          ALARMSTATE[event['type']][int(parameters)] = {'name' : self._config.ZONENAMES[int(parameters)]}
                     else:
                         if not int(parameters) in ALARMSTATE[event['type']]: ALARMSTATE[event['type']][int(parameters)] = {}
                 elif event['type'] == 'partition':
@@ -365,12 +371,44 @@ class EnvisalinkClient(asynchat.async_chat):
             if len(ALARMSTATE[event['type']]['lastevents']) > self._config.MAXALLEVENTS:
                 ALARMSTATE[event['type']]['lastevents'].pop(0)
             ALARMSTATE[event['type']]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+        self.callbackurl_event(code, parameters, event, message)
 
     def handle_zone(self, code, parameters, event, message):
         self.handle_event(code, parameters[1:], event, message)
 
     def handle_partition(self, code, parameters, event, message):
         self.handle_event(code, parameters[0], event, message)
+
+    def callbackurl_event(self, code, parameters, event, message):
+        myEvents = self._config.CALLBACKURL_EVENT_CODES.split(',')
+        # Determin what events we are sending to smartthings then send if we match
+        if str(code) in myEvents:
+           # Now check if Zone has a custom name, if it does then send notice to Smartthings
+           # Check for event type
+           if event['type'] == 'partition':
+             # Is our partition setup with a custom name?
+             if int(parameters[0]) in self._config.PARTITIONNAMES:
+               myURL = self._config.CALLBACKURL_BASE + "/" + self._config.CALLBACKURL_APP_ID + "/panel/" + str(code) + "/" + str(int(parameters[0])) + "?access_token=" + self._config.CALLBACKURL_ACCESS_TOKEN
+             else:
+               # We don't care about this partition
+               return
+           elif event['type'] == 'zone':
+             # Is our zone setup with a custom name, if so we care about it
+             if self._config.ZONENAMES[int(parameters)]: 
+               myURL = self._config.CALLBACKURL_BASE + "/" + self._config.CALLBACKURL_APP_ID + "/panel/" + str(code) + "/" + str(int(parameters)) + "?access_token=" + self._config.CALLBACKURL_ACCESS_TOKEN
+             else:
+               # We don't care about this zone
+               return
+           else:
+             # Unhandled event type..
+             return
+
+           # If we made it here we should send to Smartthings
+           try:
+             # Note: I don't currently care about the return value, fire and forget right now
+             requests.get(myURL)
+           except:
+             print sys.exc_info()[0]
 
 class push_FileProducer:
     # a producer which reads data from a file object
@@ -410,9 +448,9 @@ class AlarmServer(asyncore.dispatcher):
             alarmserver_logger('Incoming web connection from %s' % repr(addr))
 
         try:
+            # HTTPChannel(self, conn, addr)
             HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile=config.CERTFILE, keyfile=config.KEYFILE, ssl_version=ssl.PROTOCOL_TLSv1), addr)
         except ssl.SSLError:
-            alarmserver_logger('Failed https connection, attempted with http')
             return
 
     def handle_request(self, channel, method, request, header):
