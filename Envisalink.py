@@ -182,30 +182,45 @@ class Client(asynchat.async_chat):
         if 'type' in event:
             if not event['type'] in self._alarmstate: self._alarmstate[event['type']]={'lastevents' : []}
 
-            if event['type'] in ('partition', 'zone'):
-                if event['type'] == 'zone':
-                    if int(parameters) in self._config.ZONENAMES:
-                        if not int(parameters) in self._alarmstate[event['type']]: self._alarmstate[event['type']][int(parameters)] = {'name' : self._config.ZONENAMES[int(parameters)]}
-                    else:
-                        if not int(parameters) in self._alarmstate[event['type']]: self._alarmstate[event['type']][int(parameters)] = {}
-                elif event['type'] == 'partition':
-                    if int(parameters) in self._config.PARTITIONNAMES:
-                        if not int(parameters) in self._alarmstate[event['type']]: self._alarmstate[event['type']][int(parameters)] = {'name' : self._config.PARTITIONNAMES[int(parameters)]}
-                    else:
-                        if not int(parameters) in self._alarmstate[event['type']]: self._alarmstate[event['type']][int(parameters)] = {}
-            else:
-                if not int(parameters) in self._alarmstate[event['type']]: self._alarmstate[event['type']][int(parameters)] = {}
+            # save event in alarm state depending on
+            # the type of event
 
-            if not 'lastevents' in self._alarmstate[event['type']][int(parameters)]: self._alarmstate[event['type']][int(parameters)]['lastevents'] = []
-            if not 'status' in self._alarmstate[event['type']][int(parameters)]:
-                if not 'type' in event:
-                    self._alarmstate[event['type']][int(parameters)]['status'] = {}
+            # if zone event
+            if event['type'] == 'zone':
+                zone = int(parameters)
+                # if the zone is named in the config file save info in self._alarmstate
+                if zone in self._config.ZONENAMES:
+                    # save zone if not already there
+                    if not zone in self._alarmstate['zone']: 
+                        self._alarmstate['zone'][zone] = {'name' : self._config.ZONENAMES[zone]}
                 else:
+                    # save the zone if not already there (no config file info)
+                    if not zone in self._alarmstate['zone']: 
+                        self._alarmstate['zone'][zone] = {}
+            # if partition event
+            elif event['type'] == 'partition':
+                partition = int(parameters)
+                if partition in self._config.PARTITIONNAMES:
+                    if not partition in self._alarmstate['partition']: 
+                        self._alarmstate['partition'][partition] = {'name' : self._config.PARTITIONNAMES[partition]}
+                else:
+                    if not partition in self._alarmstate['partition']:
+                        self._alarmstate['partition'][partition] = {}
+            else:
+                if not int(parameters) in self._alarmstate[event['type']]: 
+                    self._alarmstate[event['type']][partition] = {}
+
+            # make empty list for parameter in _alarm state to save last events
+            if not 'lastevents' in self._alarmstate[event['type']][int(parameters)]: 
+                self._alarmstate[event['type']][int(parameters)]['lastevents'] = []
+
+            if not 'status' in self._alarmstate[event['type']][int(parameters)]:
                     self._alarmstate[event['type']][int(parameters)]['status'] = evl_Defaults[event['type']]
 
             if 'status' in event:
                 self._alarmstate[event['type']][int(parameters)]['status']=dict_merge(self._alarmstate[event['type']][int(parameters)]['status'], event['status'])
 
+            # manage last events list
             if len(self._alarmstate[event['type']][int(parameters)]['lastevents']) > self._config.MAXEVENTS:
                 self._alarmstate[event['type']][int(parameters)]['lastevents'].pop(0)
             self._alarmstate[event['type']][int(parameters)]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
