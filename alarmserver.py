@@ -17,6 +17,23 @@ import time
 import getopt
 import logging
 
+logger = logging.getLogger('alarmserver')
+logger.setLevel(logging.DEBUG)
+
+# console handler
+ch = logging.StreamHandler();
+ch.setLevel(logging.ERROR)
+# file handler
+fh = logging.FileHandler('output.log', mode='w');
+fh.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter);
+fh.setFormatter(formatter)
+# add handlers to logger
+logger.addHandler(ch)
+logger.addHandler(fh)
+
 import HTTPChannel
 import Envisalink
 
@@ -24,20 +41,10 @@ LOGTOFILE = False
 
 class CodeError(Exception): pass
 
-logger = logging.getLogger('alarmserver')
-logger.setLevel(logging.INFO)
-
 MAXPARTITIONS=16
 MAXZONES=128
 MAXALARMUSERS=47
 CONNECTEDCLIENTS={}
-
-def alarmserver_logger(message, type = 0, level = 0):
-    if LOGTOFILE:
-        outfile.write(str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message+'\n')
-        outfile.flush()
-    else:
-        print (str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+' '+message)
 
 def to_chars(string):
     chars = []
@@ -131,6 +138,8 @@ class AlarmServer(asyncore.dispatcher):
         #Store config
         self._config = config
 
+        logger.info('AlarmServer on HTTPS port {}'.format(config.HTTPSPORT))
+
         # Create socket and listen on it
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -141,17 +150,17 @@ class AlarmServer(asyncore.dispatcher):
         # Accept the connection
         conn, addr = self.accept()
         if (config.LOGURLREQUESTS):
-            alarmserver_logger('Incoming web connection from %s' % repr(addr))
+            logger.info('Incoming web connection from %s' % repr(addr))
 
         try:
             HTTPChannel.HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile=config.CERTFILE, keyfile=config.KEYFILE, ssl_version=ssl.PROTOCOL_TLSv1), addr)
         except ssl.SSLError:
-            alarmserver_logger('Failed https connection, attempted with http')
+            logger.warning('Failed https connection, attempted with http')
             return
 
     def handle_request(self, channel, method, request, header):
         if (config.LOGURLREQUESTS):
-            alarmserver_logger('Web request: '+str(method)+' '+str(request))
+            logger.info('Web request: '+str(method)+' '+str(request))
 
         query = urlparse.urlparse(request)
         query_array = urlparse.parse_qs(query.query, True)
@@ -206,7 +215,7 @@ class AlarmServer(asyncore.dispatcher):
                     channel.push("\r\n")
             else:
                 if (config.LOGURLREQUESTS):
-                                                                        alarmserver_logger("Invalid file requested")
+                    logger.info("Invalid file requested")
 
                 channel.pushstatus(404, "Not found")
                 channel.push("Content-type: text/html\r\n")
@@ -236,19 +245,19 @@ class ProxyChannel(asynchat.async_chat):
         self.handle_line(line)
 
     def handle_line(self, line):
-        alarmserver_logger('PROXY REQ < '+line)
+        logger.info('PROXY REQ < '+line)
         if self._authenticated == True:
             self._server._envisalinkclient.send_command(line, '', False)
         else:
             self.send_command('500005')
             expectedstring = '005' + self._proxypass + get_checksum('005', self._proxypass)
             if line == ('005' + self._proxypass + get_checksum('005', self._proxypass)):
-                alarmserver_logger('Proxy User Authenticated')
+                logger.info('Proxy User Authenticated')
                 CONNECTEDCLIENTS[self._straddr]=self
                 self._authenticated = True
                 self.send_command('5051')
             else:
-                alarmserver_logger('Proxy User Authentication failed')
+                logger.info('Proxy User Authentication failed')
                 self.send_command('5050')
                 self.close()
 
@@ -261,12 +270,12 @@ class ProxyChannel(asynchat.async_chat):
         self.push(to_send)
 
     def handle_close(self):
-        alarmserver_logger('Proxy connection from %s closed' % self._straddr)
+        logger.info('Proxy connection from %s closed' % self._straddr)
         if self._straddr in CONNECTEDCLIENTS: del CONNECTEDCLIENTS[self._straddr]
         self.close()
 
     def handle_error(self):
-        alarmserver_logger('Proxy connection from %s errored' % self._straddr)
+        logger.error('Proxy connection from %s errored' % self._straddr)
         if self._straddr in CONNECTEDCLIENTS: del CONNECTEDCLIENTS[self._straddr]
         self.close()
 
@@ -291,17 +300,17 @@ def main(argv):
 if __name__=="__main__":
     conffile='alarmserver.cfg'
     main(sys.argv[1:])
-    print('Using configuration file %s' % conffile)
+    logger.info('Using configuration file %s' % conffile)
     config = AlarmServerConfig(conffile)
-    if LOGTOFILE:
-        outfile=open(config.LOGFILE,'a')
-        print ('Writing logfile to %s' % config.LOGFILE)
+    #if LOGTOFILE:
+    #    outfile=open(config.LOGFILE,'a')
 
-    alarmserver_logger('Alarm Server Starting')
-    alarmserver_logger('Currently Supporting Envisalink 2DS/3 only')
-    alarmserver_logger('Tested on a DSC-1616 + EVL-3')
-    alarmserver_logger('and on a DSC-1832 + EVL-2DS')
-    alarmserver_logger('and on a DSC-1864 v4.6 + EVL-3')
+    logger.info('-'*30)
+    logger.info('Alarm Server Starting')
+    logger.debug('Currently Supporting Envisalink 2DS/3 only')
+    logger.debug('Tested on a DSC-1616 + EVL-3')
+    logger.debug('and on a DSC-1832 + EVL-2DS')
+    logger.debug('and on a DSC-1864 v4.6 + EVL-3')
 
     server = AlarmServer(config)
     proxy = Envisalink.Proxy(config, server)
@@ -312,10 +321,10 @@ if __name__=="__main__":
             # insert scheduling code here.
     except KeyboardInterrupt:
         print "Crtl+C pressed. Shutting down."
-        alarmserver_logger('Shutting down from Ctrl+C')
-        if LOGTOFILE:
-            outfile.close()
-        
-        server.shutdown(socket.SHUT_RDWR) 
-        server.close() 
+        logger.info('Shutting down from Ctrl+C')
+        #if LOGTOFILE:
+        #    outfile.close()
+
+        server.shutdown(socket.SHUT_RDWR)
+        server.close()
         sys.exit()
