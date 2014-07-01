@@ -99,15 +99,18 @@ class AlarmServerConfig():
 
         self.PARTITIONNAMES={}
         for i in range(1, MAXPARTITIONS+1):
-            self.PARTITIONNAMES[i]=self.read_config_var('alarmserver', 'partition'+str(i), False, 'str', True)
+            partition = self.read_config_var('alarmserver', 'partition'+str(i), False, 'str', True)
+            if partition: self.PARTITIONNAMES[i] = partition
 
         self.ZONENAMES={}
         for i in range(1, MAXZONES+1):
-            self.ZONENAMES[i]=self.read_config_var('alarmserver', 'zone'+str(i), False, 'str', True)
+            zone = self.read_config_var('alarmserver', 'zone'+str(i), False, 'str', True)
+            if zone: self.ZONENAMES[i] = zone
 
         self.ALARMUSERNAMES={}
         for i in range(1, MAXALARMUSERS+1):
-            self.ALARMUSERNAMES[i]=self.read_config_var('alarmserver', 'user'+str(i), False, 'str', True)
+            user = self.read_config_var('alarmserver', 'user'+str(i), False, 'str', True)
+            if user: self.ALARMUSERNAMES[i] = user
 
         if self.PUSHOVER_USERTOKEN == False and self.PUSHOVER_ENABLE == True: self.PUSHOVER_ENABLE = False
 

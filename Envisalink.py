@@ -137,29 +137,27 @@ class Client(asynchat.async_chat):
                     # If parameters includes extra digits then this next line would fail
                     # without looking at just the first digit which is the partition number
                     if int(parameters[0]) in self._config.PARTITIONNAMES:
-                        if self._config.PARTITIONNAMES[int(parameters[0])]!=False:
-                            # After partition number can be either a usercode
-                            # or for event 652 a type of arm mode (single digit)
-                            # Usercode is always 4 digits padded with zeros
-                            if len(str(parameters)) == 5:
-                                # We have a usercode
-                                try:
-                                    usercode = int(parameters[1:5])
-                                except:
-                                    usercode = 0
-                                if int(usercode) in self._config.ALARMUSERNAMES:
-                                    if self._config.ALARMUSERNAMES[int(usercode)]!=False:
-                                        alarmusername = self._config.ALARMUSERNAMES[int(usercode)]
-                                    else:
-                                        # Didn't find a username, use the code instead
-                                        alarmusername = usercode
-                                    return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters[0])]), str(alarmusername))
-                            elif len(parameters) == 2:
-                                # We have an arm mode instead, get it's friendly name
-                                armmode = evl_ArmModes[int(parameters[1])]
-                                return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters[0])]), str(armmode))
+                        # After partition number can be either a usercode
+                        # or for event 652 a type of arm mode (single digit)
+                        # Usercode is always 4 digits padded with zeros
+                        if len(str(parameters)) == 5:
+                            # We have a usercode
+                            try:
+                                usercode = int(parameters[1:5])
+                            except:
+                                usercode = 0
+                            if int(usercode) in self._config.ALARMUSERNAMES:
+                                alarmusername = self._config.ALARMUSERNAMES[int(usercode)]
                             else:
-                                return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters)]))
+                                # Didn't find a username, use the code instead
+                                alarmusername = usercode
+                            return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters[0])]), str(alarmusername))
+                        elif len(parameters) == 2:
+                            # We have an arm mode instead, get it's friendly name
+                            armmode = evl_ArmModes[int(parameters[1])]
+                            return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters[0])]), str(armmode))
+                        else:
+                            return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters)]))
                 elif event['type'] == 'zone':
                     if int(parameters) in self._config.ZONENAMES:
                         if self._config.ZONENAMES[int(parameters)]!=False:
@@ -185,49 +183,52 @@ class Client(asynchat.async_chat):
             # save event in alarm state depending on
             # the type of event
 
+            parameters = int(parameters)
+
             # if zone event
             if event['type'] == 'zone':
-                zone = int(parameters)
+                zone = parameters
                 # if the zone is named in the config file save info in self._alarmstate
                 if zone in self._config.ZONENAMES:
                     # save zone if not already there
                     if not zone in self._alarmstate['zone']: 
                         self._alarmstate['zone'][zone] = {'name' : self._config.ZONENAMES[zone]}
                 else:
-                    # save the zone if not already there (no config file info)
-                    if not zone in self._alarmstate['zone']: 
-                        self._alarmstate['zone'][zone] = {}
+                    self.logger.info('Ignoring unnamed zone {}'.format(zone))
+
             # if partition event
             elif event['type'] == 'partition':
-                partition = int(parameters)
+                partition = parameters
                 if partition in self._config.PARTITIONNAMES:
                     if not partition in self._alarmstate['partition']: 
                         self._alarmstate['partition'][partition] = {'name' : self._config.PARTITIONNAMES[partition]}
                 else:
-                    if not partition in self._alarmstate['partition']:
-                        self._alarmstate['partition'][partition] = {}
+                    self.logger.info('Ignoring unnamed partition {}'.format(partition))
             else:
-                if not int(parameters) in self._alarmstate[event['type']]: 
+                if not parameters in self._alarmstate[event['type']]: 
                     self._alarmstate[event['type']][partition] = {}
 
-            # make empty list for parameter in _alarm state to save last events
-            if not 'lastevents' in self._alarmstate[event['type']][int(parameters)]: 
-                self._alarmstate[event['type']][int(parameters)]['lastevents'] = []
+            # shorthand to event state
+            eventstate = self._alarmstate[event['type']]
 
-            if not 'status' in self._alarmstate[event['type']][int(parameters)]:
-                    self._alarmstate[event['type']][int(parameters)]['status'] = evl_Defaults[event['type']]
+            if parameters in eventstate:
+                if not 'lastevents' in eventstate[parameters]: 
+                    eventstate[parameters]['lastevents'] = []
 
-            if 'status' in event:
-                self._alarmstate[event['type']][int(parameters)]['status']=dict_merge(self._alarmstate[event['type']][int(parameters)]['status'], event['status'])
+                if not 'status' in eventstate[parameters]:
+                        eventstate[parameters]['status'] = evl_Defaults[event['type']]
 
-            # manage last events list
-            if len(self._alarmstate[event['type']][int(parameters)]['lastevents']) > self._config.MAXEVENTS:
-                self._alarmstate[event['type']][int(parameters)]['lastevents'].pop(0)
-            self._alarmstate[event['type']][int(parameters)]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+                if 'status' in event:
+                    eventstate[parameters]['status']=dict_merge(eventstate[parameters]['status'], event['status'])
 
-            if len(self._alarmstate[event['type']]['lastevents']) > self._config.MAXALLEVENTS:
-                self._alarmstate[event['type']]['lastevents'].pop(0)
-            self._alarmstate[event['type']]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+                # manage last events list
+                if len(eventstate[parameters]['lastevents']) > self._config.MAXEVENTS:
+                    eventstate[parameters]['lastevents'].pop(0)
+                eventstate[parameters]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+
+                if len(eventstate['lastevents']) > self._config.MAXALLEVENTS:
+                    eventstate['lastevents'].pop(0)
+                eventstate['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
 
     def handle_zone(self, code, parameters, event, message):
         self.handle_event(code, parameters[1:], event, message)
