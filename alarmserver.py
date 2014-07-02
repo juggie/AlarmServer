@@ -388,14 +388,14 @@ class EnvisalinkClient(asynchat.async_chat):
            if event['type'] == 'partition':
              # Is our partition setup with a custom name?
              if int(parameters[0]) in self._config.PARTITIONNAMES:
-               myURL = self._config.CALLBACKURL_BASE + "/" + self._config.CALLBACKURL_APP_ID + "/panel/" + str(code) + "/partition" + str(int(parameters[0])) + "?access_token=" + self._config.CALLBACKURL_ACCESS_TOKEN
+               myURL = self._config.CALLBACKURL_BASE + "/" + self._config.CALLBACKURL_APP_ID + "/panel/" + str(code) + "/" + str(int(parameters[0])) + "?access_token=" + self._config.CALLBACKURL_ACCESS_TOKEN
              else:
                # We don't care about this partition
                return
            elif event['type'] == 'zone':
              # Is our zone setup with a custom name, if so we care about it
              if self._config.ZONENAMES[int(parameters)]: 
-               myURL = self._config.CALLBACKURL_BASE + "/" + self._config.CALLBACKURL_APP_ID + "/panel/" + str(code) + "/zone" + str(int(parameters)) + "?access_token=" + self._config.CALLBACKURL_ACCESS_TOKEN
+               myURL = self._config.CALLBACKURL_BASE + "/" + self._config.CALLBACKURL_APP_ID + "/panel/" + str(code) + "/" + str(int(parameters)) + "?access_token=" + self._config.CALLBACKURL_ACCESS_TOKEN
              else:
                # We don't care about this zone
                return
@@ -407,6 +407,10 @@ class EnvisalinkClient(asynchat.async_chat):
            try:
              # Note: I don't currently care about the return value, fire and forget right now
              requests.get(myURL)
+             #print "myURL: ", myURL
+             #print "Exit code: ", r.status_code
+             #print "Response data: ", r.text
+             time.sleep(0.5)
            except:
              print sys.exc_info()[0]
 
