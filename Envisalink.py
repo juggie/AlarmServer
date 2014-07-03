@@ -177,58 +177,70 @@ class Client(asynchat.async_chat):
             sys.exit(0)
 
     def handle_event(self, code, parameters, event, message):
-        if 'type' in event:
-            if not event['type'] in self._alarmstate: self._alarmstate[event['type']]={'lastevents' : []}
+        # only handle events with a 'type' defined
+        if not 'type' in event:
+            return
 
-            # save event in alarm state depending on
-            # the type of event
+        if not event['type'] in self._alarmstate: 
+            self._alarmstate[event['type']]={'lastevents' : []}
 
-            parameters = int(parameters)
+        # save event in alarm state depending on
+        # the type of event
 
-            # if zone event
-            if event['type'] == 'zone':
-                zone = parameters
-                # if the zone is named in the config file save info in self._alarmstate
-                if zone in self._config.ZONENAMES:
-                    # save zone if not already there
-                    if not zone in self._alarmstate['zone']: 
-                        self._alarmstate['zone'][zone] = {'name' : self._config.ZONENAMES[zone]}
-                else:
-                    self.logger.info('Ignoring unnamed zone {}'.format(zone))
+        parameters = int(parameters)
 
-            # if partition event
-            elif event['type'] == 'partition':
-                partition = parameters
-                if partition in self._config.PARTITIONNAMES:
-                    if not partition in self._alarmstate['partition']: 
-                        self._alarmstate['partition'][partition] = {'name' : self._config.PARTITIONNAMES[partition]}
-                else:
-                    self.logger.info('Ignoring unnamed partition {}'.format(partition))
+        # if zone event
+        if event['type'] == 'zone':
+            zone = parameters
+            # if the zone is named in the config file save info in self._alarmstate
+            if zone in self._config.ZONENAMES:
+                # save zone if not already there
+                if not zone in self._alarmstate['zone']: 
+                    self._alarmstate['zone'][zone] = {'name' : self._config.ZONENAMES[zone]}
             else:
-                if not parameters in self._alarmstate[event['type']]: 
-                    self._alarmstate[event['type']][partition] = {}
+                self.logger.info('Ignoring unnamed zone {}'.format(zone))
 
-            # shorthand to event state
-            eventstate = self._alarmstate[event['type']]
+        # if partition event
+        elif event['type'] == 'partition':
+            partition = parameters
+            if partition in self._config.PARTITIONNAMES:
+                if not partition in self._alarmstate['partition']: 
+                    self._alarmstate['partition'][partition] = {'name' : self._config.PARTITIONNAMES[partition]}
+            else:
+                self.logger.info('Ignoring unnamed partition {}'.format(partition))
+        else:
+            if not parameters in self._alarmstate[event['type']]: 
+                self._alarmstate[event['type']][partition] = {}
 
-            if parameters in eventstate:
-                if not 'lastevents' in eventstate[parameters]: 
-                    eventstate[parameters]['lastevents'] = []
+        # shorthand to event state
+        eventstate = self._alarmstate[event['type']]
 
-                if not 'status' in eventstate[parameters]:
-                        eventstate[parameters]['status'] = evl_Defaults[event['type']]
+        # return if the parameters isn't in the alarm event state
+        # i.e. if the current event type is in zone 1 (event[type]:zone, param:1)
+        # then, if there isn't an alaramstate['zone'][2], return
+        if not parameters in eventstate:
+            return
 
-                if 'status' in event:
-                    eventstate[parameters]['status']=dict_merge(eventstate[parameters]['status'], event['status'])
+        # populate status with defaults if there isn't already a status
+        # append event to lastevents
+        if not 'lastevents' in eventstate[parameters]: 
+            eventstate[parameters]['lastevents'] = []
 
-                # manage last events list
-                if len(eventstate[parameters]['lastevents']) > self._config.MAXEVENTS:
-                    eventstate[parameters]['lastevents'].pop(0)
-                eventstate[parameters]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+        if not 'status' in eventstate[parameters]:
+                eventstate[parameters]['status'] = evl_Defaults[event['type']]
 
-                if len(eventstate['lastevents']) > self._config.MAXALLEVENTS:
-                    eventstate['lastevents'].pop(0)
-                eventstate['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+        # save event status
+        if 'status' in event:
+            eventstate[parameters]['status']=dict_merge(eventstate[parameters]['status'], event['status'])
+
+        # manage last events list
+        if len(eventstate[parameters]['lastevents']) > self._config.MAXEVENTS:
+            eventstate[parameters]['lastevents'].pop(0)
+        eventstate[parameters]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+
+        if len(eventstate['lastevents']) > self._config.MAXALLEVENTS:
+            eventstate['lastevents'].pop(0)
+        eventstate['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
 
     def handle_zone(self, code, parameters, event, message):
         self.handle_event(code, parameters[1:], event, message)
