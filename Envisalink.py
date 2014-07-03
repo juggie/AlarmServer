@@ -222,10 +222,6 @@ class Client(asynchat.async_chat):
             return
 
         # populate status with defaults if there isn't already a status
-        # append event to lastevents
-        if not 'lastevents' in eventstate[parameters]: 
-            eventstate[parameters]['lastevents'] = []
-
         if not 'status' in eventstate[parameters]:
                 eventstate[parameters]['status'] = evl_Defaults[event['type']]
 
@@ -233,14 +229,33 @@ class Client(asynchat.async_chat):
         if 'status' in event:
             eventstate[parameters]['status']=dict_merge(eventstate[parameters]['status'], event['status'])
 
-        # manage last events list
+        # append event to lastevents, crete list if it doesn't exist
+        if not 'lastevents' in eventstate[parameters]: 
+            eventstate[parameters]['lastevents'] = []
+
+        # if lastevents is a list of non-zero length
+        if eventstate[parameters]['lastevents']:
+            # if this event is the same as previous discard it 
+            # except if lastevents is empty, then we get an IndexError exception
+            if eventstate[parameters]['lastevents'][-1]['code'] == code:
+                self.logger.info('{}:{} ({}) discarded duplicate event'.format(event['type'], parameters, code))
+                return
+
+        # append this event  to lastevents
+        eventstate[parameters]['lastevents'].append({  
+                  'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 
+                  'code'     : code,
+                  'message'  : message})
+
+        # manage last events list if it's > MAXEVENTS
         if len(eventstate[parameters]['lastevents']) > self._config.MAXEVENTS:
             eventstate[parameters]['lastevents'].pop(0)
-        eventstate[parameters]['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
 
+
+        eventstate['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
         if len(eventstate['lastevents']) > self._config.MAXALLEVENTS:
             eventstate['lastevents'].pop(0)
-        eventstate['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
+
 
     def handle_zone(self, code, parameters, event, message):
         self.handle_event(code, parameters[1:], event, message)
