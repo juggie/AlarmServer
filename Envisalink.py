@@ -90,7 +90,7 @@ class Client(asynchat.async_chat):
         self.logger.info("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         self.do_connect(True)
 
-    def handle_eerror(self):
+    def handle_error(self):
         self._loggedin = False
         self.close()
         self.logger.error("Error, disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
