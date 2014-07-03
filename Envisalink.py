@@ -62,7 +62,7 @@ class Client(asynchat.async_chat):
     def do_connect(self, reconnect = False):
         # Create the socket and connect to the server
         if reconnect == True:
-            self.logger.info('Connection failed, retrying in '+str(self._retrydelay)+ ' seconds')
+            self.logger.warning('Connection failed, retrying in '+str(self._retrydelay)+ ' seconds')
             for i in range(0, self._retrydelay):
                 time.sleep(1)
 
@@ -93,7 +93,7 @@ class Client(asynchat.async_chat):
     def handle_eerror(self):
         self._loggedin = False
         self.close()
-        self.logger.info("Error, disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        self.logger.error("Error, disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         self.do_connect(True)
 
     def send_command(self, code, data, checksum = True):
@@ -102,7 +102,7 @@ class Client(asynchat.async_chat):
         else:
             to_send = code+data+'\r\n'
 
-        self.logger.info('TX > '+to_send[:-1])
+        self.logger.debug('TX > '+to_send[:-1])
         self.push(to_send)
 
     def handle_line(self, input):
@@ -114,7 +114,7 @@ class Client(asynchat.async_chat):
             parameters=input[3:][:-2]
             event = getMessageType(int(code))
             message = self.format_event(event, parameters)
-            self.logger.info('RX < ' +str(code)+' - '+message)
+            self.logger.debug('RX < ' +str(code)+' - '+message)
 
             try:
                 handler = "handle_%s" % evl_ResponseTypes[code]['handler']
@@ -173,7 +173,7 @@ class Client(asynchat.async_chat):
         if parameters == '1':
             self.send_command('001', '')
         if parameters == '0':
-            self.logger.info('Incorrect envisalink password')
+            self.logger.warning('Incorrect envisalink password')
             sys.exit(0)
 
     def handle_event(self, code, parameters, event, message):
@@ -198,7 +198,7 @@ class Client(asynchat.async_chat):
                 if not zone in self._alarmstate['zone']: 
                     self._alarmstate['zone'][zone] = {'name' : self._config.ZONENAMES[zone]}
             else:
-                self.logger.info('Ignoring unnamed zone {}'.format(zone))
+                self.logger.debug('Ignoring unnamed zone {}'.format(zone))
 
         # if partition event
         elif event['type'] == 'partition':
@@ -207,7 +207,7 @@ class Client(asynchat.async_chat):
                 if not partition in self._alarmstate['partition']: 
                     self._alarmstate['partition'][partition] = {'name' : self._config.PARTITIONNAMES[partition]}
             else:
-                self.logger.info('Ignoring unnamed partition {}'.format(partition))
+                self.logger.debug('Ignoring unnamed partition {}'.format(partition))
         else:
             if not parameters in self._alarmstate[event['type']]: 
                 self._alarmstate[event['type']][partition] = {}

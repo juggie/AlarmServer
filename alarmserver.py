@@ -22,17 +22,12 @@ logger.setLevel(logging.DEBUG)
 
 # console handler
 ch = logging.StreamHandler();
-ch.setLevel(logging.ERROR)
-# file handler
-fh = logging.FileHandler('output.log', mode='w');
-fh.setLevel(logging.DEBUG)
+ch.setLevel(logging.DEBUG)
 # create formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter);
-fh.setFormatter(formatter)
 # add handlers to logger
 logger.addHandler(ch)
-logger.addHandler(fh)
 
 import HTTPChannel
 import Envisalink
@@ -153,7 +148,7 @@ class AlarmServer(asyncore.dispatcher):
         # Accept the connection
         conn, addr = self.accept()
         if (config.LOGURLREQUESTS):
-            logger.info('Incoming web connection from %s' % repr(addr))
+            logger.debug('Incoming web connection from %s' % repr(addr))
 
         try:
             HTTPChannel.HTTPChannel(self, ssl.wrap_socket(conn, server_side=True, certfile=config.CERTFILE, keyfile=config.KEYFILE, ssl_version=ssl.PROTOCOL_TLSv1), addr)
@@ -163,7 +158,7 @@ class AlarmServer(asyncore.dispatcher):
 
     def handle_request(self, channel, method, request, header):
         if (config.LOGURLREQUESTS):
-            logger.info('Web request: '+str(method)+' '+str(request))
+            logger.debug('Web request: '+str(method)+' '+str(request))
 
         query = urlparse.urlparse(request)
         query_array = urlparse.parse_qs(query.query, True)
@@ -218,7 +213,7 @@ class AlarmServer(asyncore.dispatcher):
                     channel.push("\r\n")
             else:
                 if (config.LOGURLREQUESTS):
-                    logger.info("Invalid file requested")
+                    logger.warning("Invalid file requested")
 
                 channel.pushstatus(404, "Not found")
                 channel.push("Content-type: text/html\r\n")
@@ -260,7 +255,7 @@ class ProxyChannel(asynchat.async_chat):
                 self._authenticated = True
                 self.send_command('5051')
             else:
-                logger.info('Proxy User Authentication failed')
+                logger.warning('Proxy User Authentication failed')
                 self.send_command('5050')
                 self.close()
 
@@ -305,8 +300,12 @@ if __name__=="__main__":
     main(sys.argv[1:])
     logger.info('Using configuration file %s' % conffile)
     config = AlarmServerConfig(conffile)
-    #if LOGTOFILE:
-    #    outfile=open(config.LOGFILE,'a')
+    if LOGTOFILE:
+        # file handler
+        fh = logging.FileHandler(config.LOGFILE)
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
 
     logger.info('-'*30)
     logger.info('Alarm Server Starting')
@@ -325,8 +324,6 @@ if __name__=="__main__":
     except KeyboardInterrupt:
         print "Crtl+C pressed. Shutting down."
         logger.info('Shutting down from Ctrl+C')
-        #if LOGTOFILE:
-        #    outfile.close()
 
         server.shutdown(socket.SHUT_RDWR)
         server.close()
