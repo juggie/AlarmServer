@@ -68,7 +68,7 @@ class Client(asynchat.async_chat):
 
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        self.logger.info('envisalink host: {}\nenvisalink port:{}'.format(self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        self.logger.debug('Connecting to {}:{}'.format(self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         self.connect((self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
 
     def collect_incoming_data(self, data):
@@ -93,7 +93,7 @@ class Client(asynchat.async_chat):
     def handle_error(self):
         self._loggedin = False
         self.close()
-        self.logger.error("Error, disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        self.logger.error("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         self.do_connect(True)
 
     def send_command(self, code, data, checksum = True):
@@ -238,7 +238,7 @@ class Client(asynchat.async_chat):
             # if this event is the same as previous discard it 
             # except if lastevents is empty, then we get an IndexError exception
             if eventstate[parameters]['lastevents'][-1]['code'] == code:
-                self.logger.info('{}:{} ({}) discarded duplicate event'.format(event['type'], parameters, code))
+                self.logger.debug('{}:{} ({}) discarded duplicate event'.format(event['type'], parameters, code))
                 return
 
         # append this event  to lastevents

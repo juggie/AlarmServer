@@ -24,7 +24,9 @@ logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler();
 ch.setLevel(logging.DEBUG)
 # create formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter(
+    fmt='%(asctime)s %(name)s %(levelname)s: %(message)s',
+    datefmt='%b %d %H:%M:%S')
 ch.setFormatter(formatter);
 # add handlers to logger
 logger.addHandler(ch)
@@ -219,6 +221,9 @@ class AlarmServer(asyncore.dispatcher):
                 channel.push("Content-type: text/html\r\n")
                 channel.push("\r\n")
 
+    def handle_error(self):
+        logger.exception('AlarmServer exception')
+
 class ProxyChannel(asynchat.async_chat):
     def __init__(self, server, proxypass, sock, addr):
         asynchat.async_chat.__init__(self, sock)
@@ -273,7 +278,7 @@ class ProxyChannel(asynchat.async_chat):
         self.close()
 
     def handle_error(self):
-        logger.error('Proxy connection from %s errored' % self._straddr)
+        logger.exception('Proxy connection from %s errored' % self._straddr)
         if self._straddr in CONNECTEDCLIENTS: del CONNECTEDCLIENTS[self._straddr]
         self.close()
 
