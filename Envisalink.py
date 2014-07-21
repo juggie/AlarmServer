@@ -8,7 +8,7 @@ from envisalinkdefs import evl_ResponseTypes
 from envisalinkdefs import evl_Defaults
 from envisalinkdefs import evl_ArmModes
 
-ALARMSTATE={'version' : 0.1}
+ALARMSTATE={'version' : 0.2}
 
 def dict_merge(a, b):
     c = a.copy()
