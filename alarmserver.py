@@ -1,8 +1,10 @@
 #!/usr/bin/python
 ## Alarm Server
 ## Supporting Envisalink 2DS/3
-## Written by donnyk+envisalink@gmail.com
-## Lightly improved by leaberry@gmail.com
+## Originally written by donnyk+envisalink@gmail.com
+## Contributors: 
+## - Daniel Leaberry                leaberry@gmail.com
+## - Jairo Sanchez                  jairoscz@gmail.com
 ##
 ## This code is under the terms of the GPL v3 license.
 
@@ -20,7 +22,8 @@ import logging
 logger = logging.getLogger('alarmserver')
 logger.setLevel(logging.DEBUG)
 
-# console handler
+# Console handler 
+# Prints all messages (debug level)
 ch = logging.StreamHandler();
 ch.setLevel(logging.DEBUG)
 # create formatter
@@ -306,7 +309,7 @@ if __name__=="__main__":
     logger.info('Using configuration file %s' % conffile)
     config = AlarmServerConfig(conffile)
     if LOGTOFILE:
-        # file handler
+        # File handler. Only print INFO and above
         fh = logging.FileHandler(config.LOGFILE)
         fh.setLevel(logging.INFO)
         fh.setFormatter(formatter)
