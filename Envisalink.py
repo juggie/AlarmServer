@@ -204,6 +204,7 @@ class Client(asynchat.async_chat):
         elif event['type'] == 'partition':
             partition = parameters
             if partition in self._config.PARTITIONNAMES:
+                # save partition name in alarmstate
                 if not partition in self._alarmstate['partition']: 
                     self._alarmstate['partition'][partition] = {'name' : self._config.PARTITIONNAMES[partition]}
             else:
@@ -225,6 +226,7 @@ class Client(asynchat.async_chat):
         if not 'status' in eventstate[parameters]:
                 eventstate[parameters]['status'] = evl_Defaults[event['type']]
 
+        prev_state = eventstate[parameters]['status']
         # save event status
         if 'status' in event:
             eventstate[parameters]['status']=dict_merge(eventstate[parameters]['status'], event['status'])
@@ -232,6 +234,13 @@ class Client(asynchat.async_chat):
         # append event to lastevents, crete list if it doesn't exist
         if not 'lastevents' in eventstate[parameters]: 
             eventstate[parameters]['lastevents'] = []
+
+        # if the state of the alarm (i.e., zone, partition, etc) remains
+        # unchanged after event['status'] has been merged, return and
+        # do not store in history
+        if prev_state == eventstate[parameters]['status']:
+            self.logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
+            return
 
         # if lastevents is a list of non-zero length
         if eventstate[parameters]['lastevents']:
