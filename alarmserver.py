@@ -1,10 +1,8 @@
 #!/usr/bin/python
 ## Alarm Server
 ## Supporting Envisalink 2DS/3
-## Originally written by donnyk+envisalink@gmail.com
-## Contributors: 
-## - Daniel Leaberry                leaberry@gmail.com
-## - Jairo Sanchez                  jairoscz@gmail.com
+## Contributors: https://github.com/juggie/AlarmServer/graphs/contributors
+## Compatibility: https://github.com/juggie/AlarmServer/wiki/Compatibility
 ##
 ## This code is under the terms of the GPL v3 license.
 
@@ -317,10 +315,6 @@ if __name__=="__main__":
 
     logger.info('-'*30)
     logger.info('Alarm Server Starting')
-    logger.debug('Currently Supporting Envisalink 2DS/3 only')
-    logger.debug('Tested on a DSC-1616 + EVL-3')
-    logger.debug('and on a DSC-1832 + EVL-2DS')
-    logger.debug('and on a DSC-1864 v4.6 + EVL-3')
 
     server = AlarmServer(config)
     proxy = Envisalink.Proxy(config, server)
