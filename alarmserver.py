@@ -28,13 +28,14 @@ def main(argv):
     #load config
     conf = config(conffile)    
 
+    #start envisalink client
+    alarmclient = alarmserver.envisalink.Client(conf)
+
     #start http server
-    httpsserver = alarmserver.httpslistener.start(conf.HTTPSPORT, ssl_options = {
+    httpsserver = alarmserver.httpslistener.start(conf.HTTPSPORT, alarmclient, ssl_options = {
         "certfile": conf.CERTFILE, 
         "keyfile" : conf.KEYFILE
     })
-
-    alarmclient = alarmserver.envisalink.Client(conf)
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()

@@ -10,15 +10,20 @@ import tornado.httpserver
 from alarmserver.config import config
 import logger
 
+ALARMCLIENT = None
+
 class ApiHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("doot2")
+        global ALARMCLIENT
+        self.write(ALARMCLIENT._alarmstate)
 
 class ApiConfigHandler(tornado.web.RequestHandler):
     def get(self, specific):
         self.write("doot")
 
-def start(port, ssl_options = None):
+def start(port, alarmclient, ssl_options = None):
+    global ALARMCLIENT
+    ALARMCLIENT = alarmclient
     logger.info("HTTP Server started on port: %s" % port) 
     ext_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../ext')
     return tornado.httpserver.HTTPServer(tornado.web.Application([
