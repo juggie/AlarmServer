@@ -274,11 +274,10 @@ class Client(object):
         elif type == 'stayarm':
             self.send_command('031', '1')            
         elif type == 'armwithcode':
-            self.send_command('033', '1' + str(parameters['alarmcode'][0]))
+            self.send_command('033', '1' + str(parameters['alarmcode']))
         elif type == 'disarm':
-            #TODO: fix
             if 'alarmcode' in parameters:
-                self.send_command('040', '1' + str(parameters['alarmcode'][0]))
+                self.send_command('040', '1' + str(parameters['alarmcode']))
             else:
                 self.send_command('040', '1' + str(config.ALARMCODE))
         elif type == 'refresh':
