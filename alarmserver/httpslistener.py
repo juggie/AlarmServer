@@ -16,20 +16,24 @@ ALARMCLIENT = None
 class ApiAlarmHandler(tornado.web.RequestHandler):
     global ALARMCLIENT
     def get(self, specific):
+        parameters = {}
+        parameters['alarmcode'] = self.get_argument('alarmcode', None)
         if specific == 'arm':
             response = {'response' : 'Request to arm received'}
         elif specific == 'stayarm':
             response = {'response' : 'Request to arm in stay received'}
         elif specific == 'armwithcode':
+            if parameters['alarmcode'] == None: raise tornado.web.HTTPError(404)
             response = {'response' : 'Request to arm with code received'}
         elif specific == 'disarm':
+            if parameters['alarmcode'] == None: raise tornado.web.HTTPError(404)
             response = {'response' : 'Request to disarm received'}
         elif specific == 'refresh':
             response = {'response' : 'Request to refresh data received'}
         elif specific == 'pgm':
             response = {'response' : 'Request to trigger PGM'}
 
-        ALARMCLIENT.request_action(specific)
+        ALARMCLIENT.request_action(specific, parameters)
         self.write(response)
 
 class ApiEventTimeAgoHandler(tornado.web.RequestHandler):

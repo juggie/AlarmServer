@@ -268,20 +268,19 @@ class Client(object):
     def handle_partition(self, code, parameters, event, message):
         self.handle_event(code, parameters[0], event, message)
 
-    def request_action(self, type, parameters = None):
+    def request_action(self, type, parameters = {}):
         if type == 'arm':
             self.send_command('030', '1')
         elif type == 'stayarm':
             self.send_command('031', '1')            
         elif type == 'armwithcode':
-            #TODO: fix
             self.send_command('033', '1' + str(parameters['alarmcode'][0]))
         elif type == 'disarm':
             #TODO: fix
-            if 'alarmcode' in query_array:
-                self._envisalinkclient.send_command('040', '1' + str(query_array['alarmcode'][0]))
+            if 'alarmcode' in parameters:
+                self.send_command('040', '1' + str(parameters['alarmcode'][0]))
             else:
-                self._envisalinkclient.send_command('040', '1' + str(config.ALARMCODE))
+                self.send_command('040', '1' + str(config.ALARMCODE))
         elif type == 'refresh':
             self.send_command('001', '')
         elif type == 'pgm':
