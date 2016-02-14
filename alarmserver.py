@@ -28,7 +28,10 @@ def main(argv):
     conf = config(conffile)    
 
     #start http server
-    httpserver = alarmserver.httpslistener.start()
+    httpsserver = alarmserver.httpslistener.start(conf.HTTPSPORT, ssl_options = {
+        "certfile": conf.CERTFILE, 
+        "keyfile" : conf.KEYFILE
+    })
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()
