@@ -32,11 +32,14 @@ rootpath = path.dirname(path.abspath(sys.modules['__main__'].__file__)) + '/'
 def debug(message):
     write(logging.DEBUG, message)
 
+def warning(message):
+    write(logging.WARNING, message)
+
 def info(message):
     write(logging.INFO, message)
 
 def write(level, message):
-    (frame, filename, line_number, function_name, lines, index) = inspect.getouterframes(inspect.currentframe())[1]
+    (frame, filename, line_number, function_name, lines, index) = inspect.getouterframes(inspect.currentframe())[2]
     if filename  == __file__:
-        (frame, filename, line_number, function_name, lines, index) = inspect.getouterframes(inspect.currentframe())[2]
+        (frame, filename, line_number, function_name, lines, index) = inspect.getouterframes(inspect.currentframe())[3]
     logging.getLogger('alarmserver').log(level, message, extra={'s_filename' : filename.replace(rootpath, ''), 's_line_number' : line_number, 's_function_name' : function_name})

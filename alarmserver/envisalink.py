@@ -1,12 +1,15 @@
+import time, datetime
 from tornado import gen
 from tornado.tcpclient import TCPClient
-
+from tornado.iostream import IOStream, StreamClosedError
 from envisalinkdefs import evl_ResponseTypes
 from envisalinkdefs import evl_Defaults
 from envisalinkdefs import evl_ArmModes
 
 #alarmserver logger
 import logger
+
+ALARMSTATE={'version' : 0.2}
 
 def dict_merge(a, b):
     c = a.copy()
@@ -25,16 +28,21 @@ def to_chars(string):
 def get_checksum(code, data):
     return ("%02X" % sum(to_chars(code)+to_chars(data)))[-2:]
 
-class Client(TCPClient):
-    def __init__(self, host, port, password):
-        # Call parent class's __init__ method
-        TCPClient.__init__(self)
-
+class Client(object):
+    def __init__(self, conf):
         logger.debug('Staring Envisalink Client')
 
-        self.host = host
-        self.port = port
-        self.password = password
+        # Create TCP CLient
+        self.tcpclient = TCPClient()
+
+        # alarm sate
+        self._alarmstate = ALARMSTATE
+
+        # Connection
+        self._connection = None
+
+        #config
+        self._config = conf
 
         # Are we logged in?
         self._loggedin = False
@@ -44,9 +52,6 @@ class Client(TCPClient):
 
         # Reconnect delay
         self._retrydelay = 10
-
-        # Buffer
-        self._buffer = None
 
         self.do_connect()
 
@@ -58,27 +63,21 @@ class Client(TCPClient):
             for i in range(0, self._retrydelay):
                 time.sleep(1)
 
-        logger.debug('Connecting to {}:{}'.format(self.host, self.port))
+        logger.debug('Connecting to {}:{}'.format(self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
 
-        self._buffer = yield self.connect(self.host, self.port)
-        self._buffer.read_until(self._terminator, callback=self.handle_line)
+        self._connection = yield self.tcpclient.connect(self._config.ENVISALINKHOST, self._config.ENVISALINKPORT)
 
-    def collect_incoming_data(self, data):
-        # Append incoming data to the buffer
-        self._buffer.append(data)
+        #set on stream close callback
+        self._connection.set_close_callback(self.handle_close)
 
-    def found_terminator(self):
-        line = "".join(self._buffer)
+        #kick off first read line
+        line = yield self._connection.read_until(self._terminator)
+        logger.debug("Connected to %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         self.handle_line(line)
-        self._buffer = []
-
-    def handle_connect(self):
-        logger.info("Connected to %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
-        pass
 
     def handle_close(self):
         self._loggedin = False
-        self.close()
+        #self._connection.disconnect()
         logger.info("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         self.do_connect(True)
 
@@ -88,6 +87,7 @@ class Client(TCPClient):
         logger.error("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         self.do_connect(True)
 
+    @gen.coroutine    
     def send_command(self, code, data, checksum = True):
         if checksum == True:
             to_send = code+data+get_checksum(code,data)+'\r\n'
@@ -95,12 +95,13 @@ class Client(TCPClient):
             to_send = code+data+'\r\n'
 
         logger.debug('TX > '+to_send[:-1])
-        self.write(to_send)
+        res = yield self._connection.write(to_send)
 
+    @gen.coroutine
     def handle_line(self, input):
         if input != '':
             code=int(input[:3])
-            parameters=input[3:][:-2]
+            parameters=input[3:][:-4]
             event = getMessageType(int(code))
             message = self.format_event(event, parameters)
             logger.debug('RX < ' +str(code)+' - '+message)
@@ -110,6 +111,8 @@ class Client(TCPClient):
             except KeyError:
                 #call general event handler
                 self.handle_event(code, parameters, event, message)
+                line = yield self._connection.read_until(self._terminator)
+                self.handle_line(line)
                 return
 
             try:
@@ -118,6 +121,8 @@ class Client(TCPClient):
                 raise CodeError("Handler function doesn't exist")
 
             func(code, parameters, event, message)
+            line = yield self._connection.read_until(self._terminator)
+            self.handle_line(line)
 
     def format_event(self, event, parameters):
         if 'type' in event:
@@ -155,8 +160,8 @@ class Client(TCPClient):
         return event['name'].format(str(parameters))
 
     #envisalink event handlers, some events are unhandeled.
+    
     def handle_login(self, code, parameters, event, message):
-        print 'handle login' + parameters
         if parameters == '3':
             self._loggedin = True
             self.send_command('005', self._config.ENVISALINKPASS)

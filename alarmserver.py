@@ -34,7 +34,7 @@ def main(argv):
         "keyfile" : conf.KEYFILE
     })
 
-    alarmclient = alarmserver.envisalink.Client(conf.ENVISALINKHOST, conf.ENVISALINKPORT, conf.ENVISALINKPASS)
+    alarmclient = alarmserver.envisalink.Client(conf)
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()
