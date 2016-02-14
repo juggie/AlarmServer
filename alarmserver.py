@@ -13,6 +13,7 @@ import sys, getopt, os
 from alarmserver import logger
 from alarmserver.config import config
 import alarmserver.httpslistener
+import alarmserver.envisalink
 
 #TODO: move elsewhere
 import tornado.ioloop
@@ -32,6 +33,8 @@ def main(argv):
         "certfile": conf.CERTFILE, 
         "keyfile" : conf.KEYFILE
     })
+
+    alarmclient = alarmserver.envisalink.Client(conf.ENVISALINKHOST, conf.ENVISALINKPORT, conf.ENVISALINKPASS)
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()

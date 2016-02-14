@@ -1,14 +1,12 @@
-import asyncore, asynchat
-import socket
-import logging
-import time
-import datetime
+from tornado import gen
+from tornado.tcpclient import TCPClient
 
 from envisalinkdefs import evl_ResponseTypes
 from envisalinkdefs import evl_Defaults
 from envisalinkdefs import evl_ArmModes
 
-ALARMSTATE={'version' : 0.2}
+#alarmserver logger
+import logger
 
 def dict_merge(a, b):
     c = a.copy()
@@ -27,49 +25,43 @@ def to_chars(string):
 def get_checksum(code, data):
     return ("%02X" % sum(to_chars(code)+to_chars(data)))[-2:]
 
-class Client(asynchat.async_chat):
-    def __init__(self, config, proxyclients):
-
-        self.logger = logging.getLogger('alarmserver.EnvisalinkClient')
-
-        self.logger.debug('Staring Envisalink Client')
+class Client(TCPClient):
+    def __init__(self, host, port, password):
         # Call parent class's __init__ method
-        asynchat.async_chat.__init__(self)
+        TCPClient.__init__(self)
 
-        # save dict reference to connected clients
-        self._proxyclients = proxyclients
+        logger.debug('Staring Envisalink Client')
 
-        # alarm sate
-        self._alarmstate = ALARMSTATE
-
-        # Define some private instance variables
-        self._buffer = []
+        self.host = host
+        self.port = port
+        self.password = password
 
         # Are we logged in?
         self._loggedin = False
 
         # Set our terminator to \n
-        self.set_terminator("\r\n")
-
-        # Set config
-        self._config = config
+        self._terminator = b"\r\n"
 
         # Reconnect delay
         self._retrydelay = 10
 
+        # Buffer
+        self._buffer = None
+
         self.do_connect()
 
+    @gen.coroutine
     def do_connect(self, reconnect = False):
         # Create the socket and connect to the server
         if reconnect == True:
-            self.logger.warning('Connection failed, retrying in '+str(self._retrydelay)+ ' seconds')
+            logger.warning('Connection failed, retrying in '+str(self._retrydelay)+ ' seconds')
             for i in range(0, self._retrydelay):
                 time.sleep(1)
 
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        logger.debug('Connecting to {}:{}'.format(self.host, self.port))
 
-        self.logger.debug('Connecting to {}:{}'.format(self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
-        self.connect((self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        self._buffer = yield self.connect(self.host, self.port)
+        self._buffer.read_until(self._terminator, callback=self.handle_line)
 
     def collect_incoming_data(self, data):
         # Append incoming data to the buffer
@@ -81,19 +73,19 @@ class Client(asynchat.async_chat):
         self._buffer = []
 
     def handle_connect(self):
-        self.logger.info("Connected to %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        logger.info("Connected to %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         pass
 
     def handle_close(self):
         self._loggedin = False
         self.close()
-        self.logger.info("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        logger.info("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         self.do_connect(True)
 
     def handle_error(self):
         self._loggedin = False
         self.close()
-        self.logger.error("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        logger.error("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
         self.do_connect(True)
 
     def send_command(self, code, data, checksum = True):
@@ -102,19 +94,16 @@ class Client(asynchat.async_chat):
         else:
             to_send = code+data+'\r\n'
 
-        self.logger.debug('TX > '+to_send[:-1])
-        self.push(to_send)
+        logger.debug('TX > '+to_send[:-1])
+        self.write(to_send)
 
     def handle_line(self, input):
         if input != '':
-            for client in self._proxyclients:
-                self._proxyclients[client].send_command(input, False)
-
             code=int(input[:3])
             parameters=input[3:][:-2]
             event = getMessageType(int(code))
             message = self.format_event(event, parameters)
-            self.logger.debug('RX < ' +str(code)+' - '+message)
+            logger.debug('RX < ' +str(code)+' - '+message)
 
             try:
                 handler = "handle_%s" % evl_ResponseTypes[code]['handler']
@@ -167,13 +156,14 @@ class Client(asynchat.async_chat):
 
     #envisalink event handlers, some events are unhandeled.
     def handle_login(self, code, parameters, event, message):
+        print 'handle login' + parameters
         if parameters == '3':
             self._loggedin = True
             self.send_command('005', self._config.ENVISALINKPASS)
         if parameters == '1':
             self.send_command('001', '')
         if parameters == '0':
-            self.logger.warning('Incorrect envisalink password')
+            logger.warning('Incorrect envisalink password')
             sys.exit(0)
 
     def handle_event(self, code, parameters, event, message):
@@ -198,7 +188,7 @@ class Client(asynchat.async_chat):
                 if not zone in self._alarmstate['zone']: 
                     self._alarmstate['zone'][zone] = {'name' : self._config.ZONENAMES[zone]}
             else:
-                self.logger.debug('Ignoring unnamed zone {}'.format(zone))
+                logger.debug('Ignoring unnamed zone {}'.format(zone))
 
         # if partition event
         elif event['type'] == 'partition':
@@ -208,7 +198,7 @@ class Client(asynchat.async_chat):
                 if not partition in self._alarmstate['partition']: 
                     self._alarmstate['partition'][partition] = {'name' : self._config.PARTITIONNAMES[partition]}
             else:
-                self.logger.debug('Ignoring unnamed partition {}'.format(partition))
+                logger.debug('Ignoring unnamed partition {}'.format(partition))
         else:
             if not parameters in self._alarmstate[event['type']]: 
                 self._alarmstate[event['type']][partition] = {}
@@ -239,7 +229,7 @@ class Client(asynchat.async_chat):
         # unchanged after event['status'] has been merged, return and
         # do not store in history
         if prev_state == eventstate[parameters]['status']:
-            self.logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
+            logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
             return
 
         # if lastevents is a list of non-zero length
@@ -247,7 +237,7 @@ class Client(asynchat.async_chat):
             # if this event is the same as previous discard it 
             # except if lastevents is empty, then we get an IndexError exception
             if eventstate[parameters]['lastevents'][-1]['code'] == code:
-                self.logger.debug('{}:{} ({}) discarded duplicate event'.format(event['type'], parameters, code))
+                logger.debug('{}:{} ({}) discarded duplicate event'.format(event['type'], parameters, code))
                 return
 
         # append this event  to lastevents
@@ -272,10 +262,10 @@ class Client(asynchat.async_chat):
     def handle_partition(self, code, parameters, event, message):
         self.handle_event(code, parameters[0], event, message)
 
-class Proxy(asyncore.dispatcher):
+"""class Proxy(asyncore.dispatcher):
     def __init__(self, config, server):
 
-        self.logger = logging.getLogger('alarmserver.Proxy')
+        logger = logging.getLogger('alarmserver.Proxy')
         
         self._config = config
         if self._config.ENABLEPROXY == False:
@@ -284,7 +274,7 @@ class Proxy(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
-        self.logger.info('Envisalink Proxy Started')
+        logger.info('Envisalink Proxy Started')
 
         self.bind(("", self._config.ENVISALINKPROXYPORT))
         self.listen(5)
@@ -295,6 +285,6 @@ class Proxy(asyncore.dispatcher):
             pass
         else:
             sock, addr = pair
-            self.logger.info('Incoming proxy connection from %s' % repr(addr))
+            logger.info('Incoming proxy connection from %s' % repr(addr))
             handler = ProxyChannel(server, self._config.ENVISALINKPROXYPASS, sock, addr)
-
+"""
