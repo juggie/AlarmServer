@@ -9,6 +9,10 @@ from envisalinkdefs import evl_ArmModes
 #alarmserver logger
 import logger
 
+#import config
+from config import config
+
+#TODO: move this to 'state' class
 ALARMSTATE={'version' : 0.2}
 
 def dict_merge(a, b):
@@ -29,7 +33,7 @@ def get_checksum(code, data):
     return ("%02X" % sum(to_chars(code)+to_chars(data)))[-2:]
 
 class Client(object):
-    def __init__(self, conf):
+    def __init__(self):
         logger.debug('Staring Envisalink Client')
 
         # Create TCP CLient
@@ -40,9 +44,6 @@ class Client(object):
 
         # Connection
         self._connection = None
-
-        #config
-        self._config = conf
 
         # Are we logged in?
         self._loggedin = False
@@ -63,28 +64,29 @@ class Client(object):
             for i in range(0, self._retrydelay):
                 time.sleep(1)
 
-        logger.debug('Connecting to {}:{}'.format(self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        logger.debug('Connecting to {}:{}'.format(config.ENVISALINKHOST, config.ENVISALINKPORT))
 
-        self._connection = yield self.tcpclient.connect(self._config.ENVISALINKHOST, self._config.ENVISALINKPORT)
+        self._connection = yield self.tcpclient.connect(config.ENVISALINKHOST, config.ENVISALINKPORT)
 
         #set on stream close callback
         self._connection.set_close_callback(self.handle_close)
 
         #kick off first read line
         line = yield self._connection.read_until(self._terminator)
-        logger.debug("Connected to %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        logger.debug("Connected to %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
         self.handle_line(line)
 
     def handle_close(self):
         self._loggedin = False
         #self._connection.disconnect()
-        logger.info("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        logger.info("Disconnected from %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
         self.do_connect(True)
 
+    #TODO: not implemented
     def handle_error(self):
         self._loggedin = False
         self.close()
-        logger.error("Disconnected from %s:%i" % (self._config.ENVISALINKHOST, self._config.ENVISALINKPORT))
+        logger.error("Disconnected from %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
         self.do_connect(True)
 
     @gen.coroutine    
@@ -130,7 +132,7 @@ class Client(object):
                 if event['type'] == 'partition':
                     # If parameters includes extra digits then this next line would fail
                     # without looking at just the first digit which is the partition number
-                    if int(parameters[0]) in self._config.PARTITIONNAMES:
+                    if int(parameters[0]) in config.PARTITIONNAMES:
                         # After partition number can be either a usercode
                         # or for event 652 a type of arm mode (single digit)
                         # Usercode is always 4 digits padded with zeros
@@ -140,31 +142,30 @@ class Client(object):
                                 usercode = int(parameters[1:5])
                             except:
                                 usercode = 0
-                            if int(usercode) in self._config.ALARMUSERNAMES:
-                                alarmusername = self._config.ALARMUSERNAMES[int(usercode)]
+                            if int(usercode) in config.ALARMUSERNAMES:
+                                alarmusername = config.ALARMUSERNAMES[int(usercode)]
                             else:
                                 # Didn't find a username, use the code instead
                                 alarmusername = usercode
-                            return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters[0])]), str(alarmusername))
+                            return event['name'].format(str(config.PARTITIONNAMES[int(parameters[0])]), str(alarmusername))
                         elif len(parameters) == 2:
                             # We have an arm mode instead, get it's friendly name
                             armmode = evl_ArmModes[int(parameters[1])]
-                            return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters[0])]), str(armmode))
+                            return event['name'].format(str(config.PARTITIONNAMES[int(parameters[0])]), str(armmode))
                         else:
-                            return event['name'].format(str(self._config.PARTITIONNAMES[int(parameters)]))
+                            return event['name'].format(str(config.PARTITIONNAMES[int(parameters)]))
                 elif event['type'] == 'zone':
-                    if int(parameters) in self._config.ZONENAMES:
-                        if self._config.ZONENAMES[int(parameters)]!=False:
-                            return event['name'].format(str(self._config.ZONENAMES[int(parameters)]))
+                    if int(parameters) in config.ZONENAMES:
+                        if config.ZONENAMES[int(parameters)]!=False:
+                            return event['name'].format(str(config.ZONENAMES[int(parameters)]))
 
         return event['name'].format(str(parameters))
 
     #envisalink event handlers, some events are unhandeled.
-    
     def handle_login(self, code, parameters, event, message):
         if parameters == '3':
             self._loggedin = True
-            self.send_command('005', self._config.ENVISALINKPASS)
+            self.send_command('005', config.ENVISALINKPASS)
         if parameters == '1':
             self.send_command('001', '')
         if parameters == '0':
@@ -188,20 +189,20 @@ class Client(object):
         if event['type'] == 'zone':
             zone = parameters
             # if the zone is named in the config file save info in self._alarmstate
-            if zone in self._config.ZONENAMES:
+            if zone in config.ZONENAMES:
                 # save zone if not already there
                 if not zone in self._alarmstate['zone']: 
-                    self._alarmstate['zone'][zone] = {'name' : self._config.ZONENAMES[zone]}
+                    self._alarmstate['zone'][zone] = {'name' : config.ZONENAMES[zone]}
             else:
                 logger.debug('Ignoring unnamed zone {}'.format(zone))
 
         # if partition event
         elif event['type'] == 'partition':
             partition = parameters
-            if partition in self._config.PARTITIONNAMES:
+            if partition in config.PARTITIONNAMES:
                 # save partition name in alarmstate
                 if not partition in self._alarmstate['partition']: 
-                    self._alarmstate['partition'][partition] = {'name' : self._config.PARTITIONNAMES[partition]}
+                    self._alarmstate['partition'][partition] = {'name' : config.PARTITIONNAMES[partition]}
             else:
                 logger.debug('Ignoring unnamed partition {}'.format(partition))
         else:
@@ -252,12 +253,12 @@ class Client(object):
                   'message'  : message})
 
         # manage last events list if it's > MAXEVENTS
-        if len(eventstate[parameters]['lastevents']) > self._config.MAXEVENTS:
+        if len(eventstate[parameters]['lastevents']) > config.MAXEVENTS:
             eventstate[parameters]['lastevents'].pop(0)
 
 
         eventstate['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
-        if len(eventstate['lastevents']) > self._config.MAXALLEVENTS:
+        if len(eventstate['lastevents']) > config.MAXALLEVENTS:
             eventstate['lastevents'].pop(0)
 
 
@@ -267,13 +268,32 @@ class Client(object):
     def handle_partition(self, code, parameters, event, message):
         self.handle_event(code, parameters[0], event, message)
 
+    def request_action(self, type, parameters = None):
+        if type == 'arm':
+            self.send_command('030', '1')
+        elif type == 'stayarm':
+            self.send_command('031', '1')            
+        elif type == 'armwithcode':
+            #TODO: fix
+            self.send_command('033', '1' + str(parameters['alarmcode'][0]))
+        elif type == 'disarm':
+            #TODO: fix
+            if 'alarmcode' in query_array:
+                self._envisalinkclient.send_command('040', '1' + str(query_array['alarmcode'][0]))
+            else:
+                self._envisalinkclient.send_command('040', '1' + str(config.ALARMCODE))
+        elif type == 'refresh':
+            self.send_command('001', '')
+        elif type == 'pgm':
+            response = {'response' : 'Request to trigger PGM'}
+
 """class Proxy(asyncore.dispatcher):
     def __init__(self, config, server):
 
         logger = logging.getLogger('alarmserver.Proxy')
         
-        self._config = config
-        if self._config.ENABLEPROXY == False:
+        config = config
+        if config.ENABLEPROXY == False:
             return
 
         asyncore.dispatcher.__init__(self)
@@ -281,7 +301,7 @@ class Client(object):
         self.set_reuse_addr()
         logger.info('Envisalink Proxy Started')
 
-        self.bind(("", self._config.ENVISALINKPROXYPORT))
+        self.bind(("", config.ENVISALINKPROXYPORT))
         self.listen(5)
 
     def handle_accept(self):
@@ -291,5 +311,5 @@ class Client(object):
         else:
             sock, addr = pair
             logger.info('Incoming proxy connection from %s' % repr(addr))
-            handler = ProxyChannel(server, self._config.ENVISALINKPROXYPASS, sock, addr)
+            handler = ProxyChannel(server, config.ENVISALINKPROXYPASS, sock, addr)
 """

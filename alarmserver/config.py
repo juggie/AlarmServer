@@ -6,61 +6,65 @@ MAXZONES=128
 MAXALARMUSERS=47
 
 class config():
-    def __init__(self, configfile):
-        self._config = ConfigParser.ConfigParser()
-        self._config.read(configfile)
+    @staticmethod
+    def load(configfile):
+        logger.debug('Loading config file: %s' % configfile)
+        config._config = ConfigParser.ConfigParser()
+        config._config.read(configfile)
 
-        self.LOGURLREQUESTS = self.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
-        self.HTTPSPORT = self.read_config_var('alarmserver', 'httpsport', 8111, 'int')
-        self.CERTFILE = self.read_config_var('alarmserver', 'certfile', 'server.crt', 'str')
-        self.KEYFILE = self.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
-        self.MAXEVENTS = self.read_config_var('alarmserver', 'maxevents', 10, 'int')
-        self.MAXALLEVENTS = self.read_config_var('alarmserver', 'maxallevents', 100, 'int')
-        self.ENVISALINKHOST = self.read_config_var('envisalink', 'host', 'envisalink', 'str')
-        self.ENVISALINKPORT = self.read_config_var('envisalink', 'port', 4025, 'int')
-        self.ENVISALINKPASS = self.read_config_var('envisalink', 'pass', 'user', 'str')
-        self.ENABLEPROXY = self.read_config_var('envisalink', 'enableproxy', True, 'bool')
-        self.ENVISALINKPROXYPORT = self.read_config_var('envisalink', 'proxyport', self.ENVISALINKPORT, 'int')
-        self.ENVISALINKPROXYPASS = self.read_config_var('envisalink', 'proxypass', self.ENVISALINKPASS, 'str')
-        self.PUSHOVER_ENABLE = self.read_config_var('pushover', 'enable', False, 'bool')
-        self.PUSHOVER_USERTOKEN = self.read_config_var('pushover', 'enable', False, 'bool')
-        self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
-        self.EVENTTIMEAGO = self.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
-        self.LOGFILE = self.read_config_var('alarmserver', 'logfile', '', 'str')
-        if self.LOGFILE == '':
-            self.LOGTOFILE = False
+        config.LOGURLREQUESTS = config.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
+        config.HTTPSPORT = config.read_config_var('alarmserver', 'httpsport', 8111, 'int')
+        config.CERTFILE = config.read_config_var('alarmserver', 'certfile', 'server.crt', 'str')
+        config.KEYFILE = config.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
+        config.MAXEVENTS = config.read_config_var('alarmserver', 'maxevents', 10, 'int')
+        config.MAXALLEVENTS = config.read_config_var('alarmserver', 'maxallevents', 100, 'int')
+        config.ENVISALINKHOST = config.read_config_var('envisalink', 'host', 'envisalink', 'str')
+        config.ENVISALINKPORT = config.read_config_var('envisalink', 'port', 4025, 'int')
+        config.ENVISALINKPASS = config.read_config_var('envisalink', 'pass', 'user', 'str')
+        config.ENABLEPROXY = config.read_config_var('envisalink', 'enableproxy', True, 'bool')
+        config.ENVISALINKPROXYPORT = config.read_config_var('envisalink', 'proxyport', config.ENVISALINKPORT, 'int')
+        config.ENVISALINKPROXYPASS = config.read_config_var('envisalink', 'proxypass', config.ENVISALINKPASS, 'str')
+        config.PUSHOVER_ENABLE = config.read_config_var('pushover', 'enable', False, 'bool')
+        config.PUSHOVER_USERTOKEN = config.read_config_var('pushover', 'enable', False, 'bool')
+        config.ALARMCODE = config.read_config_var('envisalink', 'alarmcode', 1111, 'int')
+        config.EVENTTIMEAGO = config.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
+        config.LOGFILE = config.read_config_var('alarmserver', 'logfile', '', 'str')
+        if config.LOGFILE == '':
+            config.LOGTOFILE = False
         else:
-            self.LOGTOFILE = True
+            config.LOGTOFILE = True
 
-        self.PARTITIONNAMES={}
+        config.PARTITIONNAMES={}
         for i in range(1, MAXPARTITIONS+1):
-            partition = self.read_config_var('alarmserver', 'partition'+str(i), False, 'str', True)
-            if partition: self.PARTITIONNAMES[i] = partition
+            partition = config.read_config_var('alarmserver', 'partition'+str(i), False, 'str', True)
+            if partition: config.PARTITIONNAMES[i] = partition
 
-        self.ZONENAMES={}
+        config.ZONENAMES={}
         for i in range(1, MAXZONES+1):
-            zone = self.read_config_var('alarmserver', 'zone'+str(i), False, 'str', True)
-            if zone: self.ZONENAMES[i] = zone
+            zone = config.read_config_var('alarmserver', 'zone'+str(i), False, 'str', True)
+            if zone: config.ZONENAMES[i] = zone
 
-        self.ALARMUSERNAMES={}
+        config.ALARMUSERNAMES={}
         for i in range(1, MAXALARMUSERS+1):
-            user = self.read_config_var('alarmserver', 'user'+str(i), False, 'str', True)
-            if user: self.ALARMUSERNAMES[i] = user
+            user = config.read_config_var('alarmserver', 'user'+str(i), False, 'str', True)
+            if user: config.ALARMUSERNAMES[i] = user
 
-        if self.PUSHOVER_USERTOKEN == False and self.PUSHOVER_ENABLE == True: self.PUSHOVER_ENABLE = False
+        if config.PUSHOVER_USERTOKEN == False and config.PUSHOVER_ENABLE == True: config.PUSHOVER_ENABLE = False
 
-    def defaulting(self, section, variable, default, quiet = False):
+    @staticmethod
+    def defaulting(section, variable, default, quiet = False):
         if quiet == False:
             logger.debug('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
 
-    def read_config_var(self, section, variable, default, type = 'str', quiet = False):
+    @staticmethod
+    def read_config_var(section, variable, default, type = 'str', quiet = False):
         try:
             if type == 'str':
-                return self._config.get(section,variable)
+                return config._config.get(section,variable)
             elif type == 'bool':
-                return self._config.getboolean(section,variable)
+                return config._config.getboolean(section,variable)
             elif type == 'int':
-                return int(self._config.get(section,variable))
+                return int(config._config.get(section,variable))
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
-            self.defaulting(section, variable, default, quiet)
+            config.defaulting(section, variable, default, quiet)
             return default
