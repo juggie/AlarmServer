@@ -10,16 +10,32 @@ import tornado.httpserver
 from alarmserver.config import config
 import logger
 
+#TODO: make this much less lame
 ALARMCLIENT = None
+
+class ApiAlarmHandler(tornado.web.RequestHandler):
+    def get(self, specific):
+        if specific == 'arm':
+            response = {'response' : 'Request to arm received'}
+        elif specific == 'stayarm':
+            response = {'response' : 'Request to arm in stay received'}
+        elif specific == 'armwithcode':
+            response = {'response' : 'Request to arm with code received'}
+        elif specific == 'disarm':
+            response = {'response' : 'Request to disarm received'}
+        elif specific == 'refresh':
+            response = {'response' : 'Request to refresh data received'}
+        elif specific == 'pgm':
+            response = {'response' : 'Request to trigger PGM'}
+        elif specific == 'eventtimeago':
+            response = {}
+
+        self.write(response)
 
 class ApiHandler(tornado.web.RequestHandler):
     def get(self):
         global ALARMCLIENT
         self.write(ALARMCLIENT._alarmstate)
-
-class ApiConfigHandler(tornado.web.RequestHandler):
-    def get(self, specific):
-        self.write("doot")
 
 def start(port, alarmclient, ssl_options = None):
     global ALARMCLIENT
@@ -27,7 +43,9 @@ def start(port, alarmclient, ssl_options = None):
     logger.info("HTTP Server started on port: %s" % port) 
     ext_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../ext')
     return tornado.httpserver.HTTPServer(tornado.web.Application([
-        (r'/api/config/(.*)', ApiConfigHandler),
+        (r'/api/alarm/(arm|stayarm|armwithcode|disarm)', ApiAlarmHandler),
+        (r'/api/(refresh|pgm)', ApiAlarmHandler),
+        (r'/api/config/(eventtimeago)', ApiAlarmHandler),
         (r'/api', ApiHandler),
         (r'/img/(.*)', tornado.web.StaticFileHandler, {'path': ext_path}),
         (r'/(.*)', tornado.web.StaticFileHandler, {'default_filename' : 'index.html', 'path': ext_path}),
