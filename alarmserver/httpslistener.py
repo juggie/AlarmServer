@@ -8,6 +8,7 @@ import tornado.httpserver
 
 #alarm server modules
 from config import config
+from state import state
 import logger
 
 #TODO: make this much less lame
@@ -43,8 +44,7 @@ class ApiEventTimeAgoHandler(tornado.web.RequestHandler):
 
 class ApiHandler(tornado.web.RequestHandler):
     def get(self):
-        global ALARMCLIENT
-        self.write(ALARMCLIENT._alarmstate)
+        self.write(state.get())
 
 def start(alarmclient):
     global ALARMCLIENT

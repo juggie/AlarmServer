@@ -14,6 +14,7 @@ from alarmserver import logger
 from alarmserver.config import config
 import alarmserver.httpslistener
 import alarmserver.envisalink
+from alarmserver.state import state
 
 #TODO: move elsewhere
 import tornado.ioloop
@@ -26,7 +27,11 @@ def main(argv):
     conffile='alarmserver.cfg'
 
     #load config
-    config.load(conffile)    
+    config.load(conffile)
+
+    #enable the state
+    state.init()
+    state.state = {'version' :  0.3}
 
     #start envisalink client
     alarmclient = alarmserver.envisalink.Client()

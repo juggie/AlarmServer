@@ -11,10 +11,7 @@ import logger
 
 #import config
 from config import config
-
-#TODO: move this to 'state' class
-ALARMSTATE={'version' : 0.2}
-
+from state import state
 def dict_merge(a, b):
     c = a.copy()
     c.update(b)
@@ -36,11 +33,8 @@ class Client(object):
     def __init__(self):
         logger.debug('Staring Envisalink Client')
 
-        # Create TCP CLient
+        # Create TCP Client
         self.tcpclient = TCPClient()
-
-        # alarm sate
-        self._alarmstate = ALARMSTATE
 
         # Connection
         self._connection = None
@@ -177,8 +171,8 @@ class Client(object):
         if not 'type' in event:
             return
 
-        if not event['type'] in self._alarmstate: 
-            self._alarmstate[event['type']]={'lastevents' : []}
+        if not event['type'] in state.state: 
+            state.state[event['type']]={'lastevents' : []}
 
         # save event in alarm state depending on
         # the type of event
@@ -188,11 +182,11 @@ class Client(object):
         # if zone event
         if event['type'] == 'zone':
             zone = parameters
-            # if the zone is named in the config file save info in self._alarmstate
+            # if the zone is named in the config file save info in state.state
             if zone in config.ZONENAMES:
                 # save zone if not already there
-                if not zone in self._alarmstate['zone']: 
-                    self._alarmstate['zone'][zone] = {'name' : config.ZONENAMES[zone]}
+                if not zone in state.state['zone']: 
+                    state.state['zone'][zone] = {'name' : config.ZONENAMES[zone]}
             else:
                 logger.debug('Ignoring unnamed zone {}'.format(zone))
 
@@ -201,16 +195,16 @@ class Client(object):
             partition = parameters
             if partition in config.PARTITIONNAMES:
                 # save partition name in alarmstate
-                if not partition in self._alarmstate['partition']: 
-                    self._alarmstate['partition'][partition] = {'name' : config.PARTITIONNAMES[partition]}
+                if not partition in state.state['partition']: 
+                    state.state['partition'][partition] = {'name' : config.PARTITIONNAMES[partition]}
             else:
                 logger.debug('Ignoring unnamed partition {}'.format(partition))
         else:
-            if not parameters in self._alarmstate[event['type']]: 
-                self._alarmstate[event['type']][partition] = {}
+            if not parameters in state.state[event['type']]: 
+                state.state[event['type']][partition] = {}
 
         # shorthand to event state
-        eventstate = self._alarmstate[event['type']]
+        eventstate = state.state[event['type']]
 
         # return if the parameters isn't in the alarm event state
         # i.e. if the current event type is in zone 1 (event[type]:zone, param:1)
