@@ -31,13 +31,18 @@ def main(argv):
 
     #enable the state
     state.init()
-    state.state = {'version' :  0.3}
+
+    #set version
+    state.setVersion(0.3)
 
     #start envisalink client
     alarmclient = alarmserver.envisalink.Client()
 
-    #start http server
+    #start https server
     httpsserver = alarmserver.httpslistener.start(alarmclient)
+
+    #start http server TODO: add code to disable/enable in config
+    httpserver = alarmserver.httpslistener.start(alarmclient, https = False)
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()

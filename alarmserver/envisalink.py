@@ -171,40 +171,21 @@ class Client(object):
         if not 'type' in event:
             return
 
-        if not event['type'] in state.state: 
-            state.state[event['type']]={'lastevents' : []}
-
-        # save event in alarm state depending on
-        # the type of event
-
         parameters = int(parameters)
+        try:
+            defaultStatus = evl_Defaults[event['type']]
+        except IndexError:
+            defaultStatus = {}
 
         # if zone event
         if event['type'] == 'zone':
-            zone = parameters
-            # if the zone is named in the config file save info in state.state
-            if zone in config.ZONENAMES:
-                # save zone if not already there
-                if not zone in state.state['zone']: 
-                    state.state['zone'][zone] = {'name' : config.ZONENAMES[zone]}
-            else:
-                logger.debug('Ignoring unnamed zone {}'.format(zone))
+            state.updateZone(code, parameters, event, message, defaultStatus)
 
         # if partition event
         elif event['type'] == 'partition':
-            partition = parameters
-            if partition in config.PARTITIONNAMES:
-                # save partition name in alarmstate
-                if not partition in state.state['partition']: 
-                    state.state['partition'][partition] = {'name' : config.PARTITIONNAMES[partition]}
-            else:
-                logger.debug('Ignoring unnamed partition {}'.format(partition))
-        else:
-            if not parameters in state.state[event['type']]: 
-                state.state[event['type']][partition] = {}
+            state.updatePartition(code, parameters, event, message, defaultStatus)
 
-        # shorthand to event state
-        eventstate = state.state[event['type']]
+        return
 
         # return if the parameters isn't in the alarm event state
         # i.e. if the current event type is in zone 1 (event[type]:zone, param:1)
@@ -212,16 +193,12 @@ class Client(object):
         if not parameters in eventstate:
             return
 
-        # populate status with defaults if there isn't already a status
-        if not 'status' in eventstate[parameters]:
-                eventstate[parameters]['status'] = evl_Defaults[event['type']]
-
         prev_state = eventstate[parameters]['status']
         # save event status
         if 'status' in event:
             eventstate[parameters]['status']=dict_merge(eventstate[parameters]['status'], event['status'])
 
-        # append event to lastevents, crete list if it doesn't exist
+        # append event to lastevents, create list if it doesn't exist
         if not 'lastevents' in eventstate[parameters]: 
             eventstate[parameters]['lastevents'] = []
 

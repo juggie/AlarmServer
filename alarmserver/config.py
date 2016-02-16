@@ -14,6 +14,7 @@ class config():
 
         config.LOGURLREQUESTS = config.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
         config.HTTPSPORT = config.read_config_var('alarmserver', 'httpsport', 8111, 'int')
+        config.HTTPPORT = config.read_config_var('alarmserver', 'httpport', 8011, 'int')
         config.CERTFILE = config.read_config_var('alarmserver', 'certfile', 'server.crt', 'str')
         config.KEYFILE = config.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
         config.MAXEVENTS = config.read_config_var('alarmserver', 'maxevents', 10, 'int')
