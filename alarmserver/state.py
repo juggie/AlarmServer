@@ -19,7 +19,7 @@ class state():
 
     @staticmethod
     def updateZone(code, zone, event, message, defaultStatus):
-        if not 'zone' in state.state: state.state['zone'] = {}
+        if not 'zone' in state.state: state.state['zone'] = {'lastevents' : []}
 
         # if the zone is named in the config file save info in state.state
         if zone in config.ZONENAMES:
