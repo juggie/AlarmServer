@@ -17,6 +17,7 @@ class state():
     def setVersion(version):
         state.state['version'] = version
 
+    #TODO: combine the update methods somehow perhaps if it can be done cleanly.
     @staticmethod
     def updateZone(code, zone, event, message, defaultStatus):
         if not 'zone' in state.state: state.state['zone'] = {'lastevents' : []}
@@ -29,9 +30,16 @@ class state():
         else:
             logger.debug('Ignoring unnamed zone {}'.format(zone))
 
-    @staticmethod
-    def addZoneEvent():
-        pass
+        try:
+            #keep the last state
+            prev_status = state.state['zone'][zone]['status']
+            #update the state
+            state.state['zone'][zone]['status'] = dict(state.state['zone'][zone]['status'], **event['status'])
+            #is the state changed?
+            if prev_status == state.state['zone'][zone]['status']:
+                logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], zone))
+        except KeyError:
+            pass
 
     @staticmethod
     def updatePartition(code, partition, event, message, defaultStatus):
@@ -45,3 +53,13 @@ class state():
         else:
             logger.debug('Ignoring unnamed partition {}'.format(partition))
 
+        try:
+            #keep the last state
+            prev_status = state.state['partition'][partition]['status']
+            #update the state
+            state.state['partition'][partition]['status'] = dict(state.state['partition'][partition]['status'], **event['status'])
+            #is the state changed?
+            if prev_status == state.state['partition'][partition]['status']:
+                logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], partition))
+        except KeyError:
+            pass

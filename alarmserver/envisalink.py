@@ -172,6 +172,7 @@ class Client(object):
             return
 
         parameters = int(parameters)
+        
         try:
             defaultStatus = evl_Defaults[event['type']]
         except IndexError:
@@ -184,54 +185,6 @@ class Client(object):
         # if partition event
         elif event['type'] == 'partition':
             state.updatePartition(code, parameters, event, message, defaultStatus)
-
-        return
-
-        # return if the parameters isn't in the alarm event state
-        # i.e. if the current event type is in zone 1 (event[type]:zone, param:1)
-        # then, if there isn't an alaramstate['zone'][2], return
-        if not parameters in eventstate:
-            return
-
-        prev_state = eventstate[parameters]['status']
-        # save event status
-        if 'status' in event:
-            eventstate[parameters]['status']=dict_merge(eventstate[parameters]['status'], event['status'])
-
-        # append event to lastevents, create list if it doesn't exist
-        if not 'lastevents' in eventstate[parameters]: 
-            eventstate[parameters]['lastevents'] = []
-
-        # if the state of the alarm (i.e., zone, partition, etc) remains
-        # unchanged after event['status'] has been merged, return and
-        # do not store in history
-        if prev_state == eventstate[parameters]['status']:
-            logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
-            return
-
-        # if lastevents is a list of non-zero length
-        if eventstate[parameters]['lastevents']:
-            # if this event is the same as previous discard it 
-            # except if lastevents is empty, then we get an IndexError exception
-            if eventstate[parameters]['lastevents'][-1]['code'] == code:
-                logger.debug('{}:{} ({}) discarded duplicate event'.format(event['type'], parameters, code))
-                return
-
-        # append this event  to lastevents
-        eventstate[parameters]['lastevents'].append({  
-                  'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 
-                  'code'     : code,
-                  'message'  : message})
-
-        # manage last events list if it's > MAXEVENTS
-        if len(eventstate[parameters]['lastevents']) > config.MAXEVENTS:
-            eventstate[parameters]['lastevents'].pop(0)
-
-
-        eventstate['lastevents'].append({'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'message' : message})
-        if len(eventstate['lastevents']) > config.MAXALLEVENTS:
-            eventstate['lastevents'].pop(0)
-
 
     def handle_zone(self, code, parameters, event, message):
         self.handle_event(code, parameters[1:], event, message)
