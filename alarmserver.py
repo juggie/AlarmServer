@@ -10,11 +10,11 @@
 import sys, getopt, os
 
 #alarm server modules
-from alarmserver import logger
-from alarmserver.config import config
-import alarmserver.httpslistener
-import alarmserver.envisalink
-from alarmserver.state import state
+from core.config import config
+from core.state import state
+from core import logger
+from core import httpslistener
+from core import envisalink
 
 #TODO: move elsewhere
 import tornado.ioloop
@@ -36,13 +36,13 @@ def main(argv):
     state.setVersion(0.3)
 
     #start envisalink client
-    alarmclient = alarmserver.envisalink.Client()
+    alarmclient = envisalink.Client()
 
     #start https server
-    httpsserver = alarmserver.httpslistener.start(alarmclient)
+    httpsserver = httpslistener.start(alarmclient)
 
     #start http server TODO: add code to disable/enable in config
-    httpserver = alarmserver.httpslistener.start(alarmclient, https = False)
+    httpserver = httpslistener.start(alarmclient, https = False)
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()
