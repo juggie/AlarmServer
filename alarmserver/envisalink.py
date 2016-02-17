@@ -42,7 +42,7 @@ class Client(object):
         # Are we logged in?
         self._loggedin = False
 
-        # Set our terminator to \n
+        # Set our terminator to \r\n
         self._terminator = b"\r\n"
 
         # Reconnect delay
@@ -178,13 +178,7 @@ class Client(object):
         except IndexError:
             defaultStatus = {}
 
-        # if zone event
-        if event['type'] == 'zone':
-            state.updateZone(code, parameters, event, message, defaultStatus)
-
-        # if partition event
-        elif event['type'] == 'partition':
-            state.updatePartition(code, parameters, event, message, defaultStatus)
+        state.update(event['type'], code, parameters, event, message, defaultStatus)
 
     def handle_zone(self, code, parameters, event, message):
         self.handle_event(code, parameters[1:], event, message)

@@ -1,3 +1,6 @@
+import datetime
+
+#alarmserver modules
 import logger
 from config import config
 
@@ -19,47 +22,36 @@ class state():
 
     #TODO: combine the update methods somehow perhaps if it can be done cleanly.
     @staticmethod
-    def updateZone(code, zone, event, message, defaultStatus):
-        if not 'zone' in state.state: state.state['zone'] = {'lastevents' : []}
+    def update(type, code, parameter, event, message, defaultStatus):
+        if not type in state.state: state.state[type] = {'lastevents' : []}
 
-        # if the zone is named in the config file save info in state.state
-        if zone in config.ZONENAMES:
-            # save zone if not already there
-            if not zone in state.state['zone']:
-                state.state['zone'][zone] = {'name' : config.ZONENAMES[zone], 'lastevents' : [], 'status' : defaultStatus}
+        # if the zone/partition is named in the config file save info in state.state
+        if (type == 'zone' and parameter in config.ZONENAMES) or (type == 'partition' and parameter in config.PARTITIONNAMES):
+            if not parameter in state.state[type]:
+                state.state[type][parameter] = {'name' : config.ZONENAMES[parameter] if type == 'zone' else config.PARTITIONNAMES[parameter], 'lastevents' : [], 'status' : defaultStatus}
         else:
-            logger.debug('Ignoring unnamed zone {}'.format(zone))
+            logger.debug('Ignoring unnamed %s %s' % (type, parameter))
+            return
 
         try:
             #keep the last state
-            prev_status = state.state['zone'][zone]['status']
+            prev_status = state.state[type][parameter]['status']
             #update the state
-            state.state['zone'][zone]['status'] = dict(state.state['zone'][zone]['status'], **event['status'])
+            state.state[type][parameter]['status'] = dict(state.state[type][parameter]['status'], **event['status'])
             #is the state changed?
-            if prev_status == state.state['zone'][zone]['status']:
-                logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], zone))
+            if prev_status == state.state[type][parameter]['status']:
+                logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameter))
         except KeyError:
             pass
 
-    @staticmethod
-    def updatePartition(code, partition, event, message, defaultStatus):
-        if not 'partition' in state.state: state.state['partition'] = {'lastevents' : []}
+        #write event
+        state.state[type][parameter]['lastevents'].append({  
+                  'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 
+                  'code'     : code,
+                  'message'  : message})
 
-        # if the partition is named in the config file save info in state.state
-        if partition in config.PARTITIONNAMES:
-            # save partition if not already there
-            if not partition in state.state['partition']:
-                state.state['partition'][partition] = {'name' : config.PARTITIONNAMES[partition], 'lastevents' : [], 'status' : defaultStatus}
-        else:
-            logger.debug('Ignoring unnamed partition {}'.format(partition))
-
-        try:
-            #keep the last state
-            prev_status = state.state['partition'][partition]['status']
-            #update the state
-            state.state['partition'][partition]['status'] = dict(state.state['partition'][partition]['status'], **event['status'])
-            #is the state changed?
-            if prev_status == state.state['partition'][partition]['status']:
-                logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], partition))
-        except KeyError:
-            pass
+        #write to all events
+        state.state[type]['lastevents'].append({  
+                  'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 
+                  'code'     : code,
+                  'message'  : message})
