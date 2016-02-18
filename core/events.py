@@ -14,11 +14,14 @@ class events():
             events.listeners[eventType]
         except KeyError:
             events.listeners[eventType] = []
-        
+
         events.listeners[eventType].append(callback)
         logger.debug('Registered Callback for: %s' % eventType)
 
     @staticmethod
     def put(eventType, payload):
-        for c in events.listeners[eventType]:
-            c(eventType, **payload)
+        try:
+            for c in events.listeners[eventType]:
+                c(eventType, **payload)
+        except KeyError:
+            logger.debug('No handler registered for: %s' % eventType)

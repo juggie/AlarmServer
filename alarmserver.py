@@ -7,7 +7,7 @@
 ## This code is under the terms of the GPL v3 license.
 
 #python standard modules
-import sys, getopt, os
+import sys, getopt, os, glob
 
 #alarm server modules
 from core.config import config
@@ -44,6 +44,14 @@ def main(argv):
 
     #start http server TODO: add code to disable/enable in config
     httpserver = httpslistener.start(alarmclient, https = False)
+
+    #load plugins - TODO: make this way better
+    plugins = glob.glob("plugins/*.py")
+    for p in plugins:
+        if p == 'plugins/__init__.py': continue
+        name = p[p.find('/')+1:p.find('.')]
+        exec "from plugins import %s" % name
+        exec "%s.init()" % name
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()

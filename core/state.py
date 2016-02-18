@@ -29,23 +29,18 @@ class state():
         if not type in state.state: state.state[type] = {'lastevents' : []}
 
         # if the zone/partition is named in the config file save info in state.state
-        if (type == 'zone' and parameters in config.ZONENAMES) or (type == 'partition' and parameters in config.PARTITIONNAMES):
-            if not parameters in state.state[type]:
-                state.state[type][parameters] = {'name' : config.ZONENAMES[parameters] if type == 'zone' else config.PARTITIONNAMES[parameters], 'lastevents' : [], 'status' : defaultStatus}
-        else:
-            logger.debug('Ignoring unnamed %s %s' % (type, parameters))
-            return
+        if not parameters in state.state[type]:
+             state.state[type][parameters] = {'name' : config.ZONENAMES[parameters] if type == 'zone' else config.PARTITIONNAMES[parameters], 'lastevents' : [], 'status' : defaultStatus}
 
-        try:
-            #keep the last state
-            prev_status = state.state[type][parameters]['status']
-            #update the state
-            state.state[type][parameters]['status'] = dict(state.state[type][parameters]['status'], **event['status'])
-            #is the state changed?
-            if prev_status == state.state[type][parameters]['status']:
-                logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
-        except KeyError:
-            pass
+        #keep the last state
+        prev_status = state.state[type][parameters]['status']
+        #update the state
+        state.state[type][parameters]['status'] = dict(state.state[type][parameters]['status'], **event['status'])
+        #is the state changed?
+        if prev_status == state.state[type][parameters]['status']:
+            logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
+        else:
+            events.put('statechange', {'code' : code, 'parameters' : parameters, 'event' : event, 'message' : message, 'defaultStatus' : defaultStatus})
 
         #write event
         state.state[type][parameters]['lastevents'].append({  

@@ -179,7 +179,10 @@ class Client(object):
         except IndexError:
             defaultStatus = {}
         
-        events.put(event['type'], {'code' : code, 'parameters' : parameters, 'event' : event, 'message' : message, 'defaultStatus' : defaultStatus})
+        if (event['type'] == 'zone' and parameters in config.ZONENAMES) or (event['type'] == 'partition' and parameters in config.PARTITIONNAMES):
+            events.put(event['type'], {'code' : code, 'parameters' : parameters, 'event' : event, 'message' : message, 'defaultStatus' : defaultStatus})
+        else:
+            logger.debug('Ignoring unnamed %s %s' % (event['type'], parameters))
 
     def handle_zone(self, code, parameters, event, message):
         self.handle_event(code, parameters[1:], event, message)

@@ -26,7 +26,7 @@ class config():
         config.ENVISALINKPROXYPORT = config.read_config_var('envisalink', 'proxyport', config.ENVISALINKPORT, 'int')
         config.ENVISALINKPROXYPASS = config.read_config_var('envisalink', 'proxypass', config.ENVISALINKPASS, 'str')
         config.PUSHOVER_ENABLE = config.read_config_var('pushover', 'enable', False, 'bool')
-        config.PUSHOVER_USERTOKEN = config.read_config_var('pushover', 'enable', False, 'bool')
+        config.PUSHOVER_USERTOKEN = config.read_config_var('pushover', 'usertoken', False, 'str')
         config.ALARMCODE = config.read_config_var('envisalink', 'alarmcode', 1111, 'int')
         config.EVENTTIMEAGO = config.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
         config.LOGFILE = config.read_config_var('alarmserver', 'logfile', '', 'str')

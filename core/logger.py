@@ -29,6 +29,9 @@ logging.getLogger().setLevel(logging.DEBUG)
 rootpath = path.dirname(path.abspath(sys.modules['__main__'].__file__)) + '/'
 
 #logging functions
+def error(message):
+    write(logging.ERROR, message)
+
 def debug(message):
     write(logging.DEBUG, message)
 
