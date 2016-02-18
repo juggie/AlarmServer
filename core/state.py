@@ -40,7 +40,7 @@ class state():
         if prev_status == state.state[type][parameters]['status']:
             logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
         else:
-            events.put('statechange', {'code' : code, 'parameters' : parameters, 'event' : event, 'message' : message, 'defaultStatus' : defaultStatus})
+            events.put('statechange', {'eventType' : type, 'code' : code, 'parameters' : parameters, 'event' : event, 'message' : message, 'defaultStatus' : defaultStatus})
 
         #write event
         state.state[type][parameters]['lastevents'].append({  
