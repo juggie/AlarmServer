@@ -12,6 +12,7 @@ import sys, getopt, os
 #alarm server modules
 from core.config import config
 from core.state import state
+from core.events import events
 from core import logger
 from core import httpslistener
 from core import envisalink

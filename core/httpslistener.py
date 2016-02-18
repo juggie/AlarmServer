@@ -49,7 +49,7 @@ class ApiHandler(tornado.web.RequestHandler):
 def start(alarmclient, https = True):
     global ALARMCLIENT
     ALARMCLIENT = alarmclient
-    logger.info("HTTP Server started on port: %s" % config.HTTPSPORT if https == True else config.HTTPPORT) 
+    logger.info("%s Server started on port: %s" % (('HTTPS',config.HTTPSPORT) if https == True else ('HTTP', config.HTTPPORT))) 
     ext_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../ext')
     return tornado.httpserver.HTTPServer(tornado.web.Application([
         (r'/api/alarm/(arm|stayarm|armwithcode|disarm)', ApiAlarmHandler),

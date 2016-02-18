@@ -11,7 +11,8 @@ import logger
 
 #import config
 from config import config
-from state import state
+from events import events
+
 def dict_merge(a, b):
     c = a.copy()
     c.update(b)
@@ -177,8 +178,8 @@ class Client(object):
             defaultStatus = evl_Defaults[event['type']]
         except IndexError:
             defaultStatus = {}
-
-        state.update(event['type'], code, parameters, event, message, defaultStatus)
+        
+        events.put(event['type'], {'code' : code, 'parameters' : parameters, 'event' : event, 'message' : message, 'defaultStatus' : defaultStatus})
 
     def handle_zone(self, code, parameters, event, message):
         self.handle_event(code, parameters[1:], event, message)
