@@ -40,10 +40,12 @@ def main(argv):
     alarmclient = envisalink.Client()
 
     #start https server
-    httpsserver = httpslistener.start(alarmclient)
+    if config.HTTPS == True:
+        httpsserver = httpslistener.start()
 
-    #start http server TODO: add code to disable/enable in config
-    httpserver = httpslistener.start(alarmclient, https = False)
+    #start http server
+    if config.HTTP == True:
+        httpserver = httpslistener.start(https = False)
 
     #load plugins - TODO: make this way better
     plugins = glob.glob("plugins/*.py")

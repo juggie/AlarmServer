@@ -10,7 +10,7 @@ def init():
     events.register('statechange', sendNotification)
 
 @gen.coroutine
-def sendNotification(type, eventType, code, parameters, event, message, defaultStatus):
+def sendNotification(eventType, type, code, parameters, event, message, defaultStatus):
     if config.PUSHOVER_ENABLE == True:
         http_client = AsyncHTTPClient()
         body = urllib.urlencode({

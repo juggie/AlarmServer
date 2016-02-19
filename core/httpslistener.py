@@ -9,46 +9,41 @@ import tornado.httpserver
 #alarm server modules
 from config import config
 from state import state
+from events import events
 import logger
 
-#TODO: make this much less lame
-ALARMCLIENT = None
-
 class ApiAlarmHandler(tornado.web.RequestHandler):
-    global ALARMCLIENT
-    def get(self, specific):
+    def get(self, request):
         parameters = {}
         parameters['alarmcode'] = self.get_argument('alarmcode', None)
-        if specific == 'arm':
+        if request == 'arm':
             response = {'response' : 'Request to arm received'}
-        elif specific == 'stayarm':
+        elif request == 'stayarm':
             response = {'response' : 'Request to arm in stay received'}
-        elif specific == 'armwithcode':
+        elif request == 'armwithcode':
             if parameters['alarmcode'] == None: raise tornado.web.HTTPError(404)
             response = {'response' : 'Request to arm with code received'}
-        elif specific == 'disarm':
+        elif request == 'disarm':
             if parameters['alarmcode'] == None: raise tornado.web.HTTPError(404)
             response = {'response' : 'Request to disarm received'}
-        elif specific == 'refresh':
+        elif request == 'refresh':
             response = {'response' : 'Request to refresh data received'}
-        elif specific == 'pgm':
+        elif request == 'pgm':
             response = {'response' : 'Request to trigger PGM'}
 
-        ALARMCLIENT.request_action(specific, parameters)
+        #send event for our request
+        events.put('alarm_update', request, parameters)
         self.write(response)
 
 class ApiEventTimeAgoHandler(tornado.web.RequestHandler):
     def get(self):
-        global ALARMCLIENT
         self.write({'eventtimeago' : config.EVENTTIMEAGO})
 
 class ApiHandler(tornado.web.RequestHandler):
     def get(self):
         self.write(state.getDict())
 
-def start(alarmclient, https = True):
-    global ALARMCLIENT
-    ALARMCLIENT = alarmclient
+def start(https = True):
     logger.info("%s Server started on port: %s" % (('HTTPS',config.HTTPSPORT) if https == True else ('HTTP', config.HTTPPORT))) 
     ext_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../ext')
     return tornado.httpserver.HTTPServer(tornado.web.Application([
@@ -59,4 +54,3 @@ def start(alarmclient, https = True):
         (r'/img/(.*)', tornado.web.StaticFileHandler, {'path': ext_path}),
         (r'/(.*)', tornado.web.StaticFileHandler, {'default_filename' : 'index.html', 'path': ext_path}),
     ]),ssl_options={"certfile": config.CERTFILE, "keyfile" : config.KEYFILE} if https == True else None).listen(config.HTTPSPORT if https == True else config.HTTPPORT)
-

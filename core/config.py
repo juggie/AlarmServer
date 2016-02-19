@@ -14,9 +14,11 @@ class config():
 
         config.LOGURLREQUESTS = config.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
         config.HTTPSPORT = config.read_config_var('alarmserver', 'httpsport', 8111, 'int')
-        config.HTTPPORT = config.read_config_var('alarmserver', 'httpport', 8011, 'int')
+        config.HTTPS = config.read_config_var('alarmserver', 'https', True, 'bool')
         config.CERTFILE = config.read_config_var('alarmserver', 'certfile', 'server.crt', 'str')
         config.KEYFILE = config.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
+        config.HTTPPORT = config.read_config_var('alarmserver', 'httpport', 8011, 'int')
+        config.HTTP = config.read_config_var('alarmserver', 'http', False, 'bool')
         config.MAXEVENTS = config.read_config_var('alarmserver', 'maxevents', 10, 'int')
         config.MAXALLEVENTS = config.read_config_var('alarmserver', 'maxallevents', 100, 'int')
         config.ENVISALINKHOST = config.read_config_var('envisalink', 'host', 'envisalink', 'str')

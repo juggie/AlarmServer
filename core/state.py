@@ -12,9 +12,7 @@ class state():
     def init():
         state.state = {}
         state.oldstate = {}
-        events.register('zone', state.update)
-        events.register('partition', state.update)
-
+        events.register('alarm', state.update)
 
     @staticmethod
     def getDict():
@@ -25,13 +23,11 @@ class state():
         state.state['version'] = version
 
     @staticmethod
-    def update(type, code, parameters, event, message, defaultStatus):
+    def update(eventType, type, code, parameters, event, message, defaultStatus):
         if not type in state.state: state.state[type] = {'lastevents' : []}
-
         # if the zone/partition is named in the config file save info in state.state
         if not parameters in state.state[type]:
              state.state[type][parameters] = {'name' : config.ZONENAMES[parameters] if type == 'zone' else config.PARTITIONNAMES[parameters], 'lastevents' : [], 'status' : defaultStatus}
-
         #keep the last state
         prev_status = state.state[type][parameters]['status']
         #update the state
@@ -40,7 +36,7 @@ class state():
         if prev_status == state.state[type][parameters]['status']:
             logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
         else:
-            events.put('statechange', {'eventType' : type, 'code' : code, 'parameters' : parameters, 'event' : event, 'message' : message, 'defaultStatus' : defaultStatus})
+            events.put('statechange', type, code, parameters, event, message, defaultStatus)
 
         #write event
         state.state[type][parameters]['lastevents'].append({  

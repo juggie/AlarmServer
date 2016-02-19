@@ -34,6 +34,9 @@ class Client(object):
     def __init__(self):
         logger.debug('Staring Envisalink Client')
 
+        # Register events for alarmserver requests -> envisalink
+        events.register('alarm_update', self.request_action)
+
         # Create TCP Client
         self.tcpclient = TCPClient()
 
@@ -180,7 +183,7 @@ class Client(object):
             defaultStatus = {}
         
         if (event['type'] == 'zone' and parameters in config.ZONENAMES) or (event['type'] == 'partition' and parameters in config.PARTITIONNAMES):
-            events.put(event['type'], {'code' : code, 'parameters' : parameters, 'event' : event, 'message' : message, 'defaultStatus' : defaultStatus})
+            events.put('alarm', event['type'], code, parameters, event, message, defaultStatus) 
         else:
             logger.debug('Ignoring unnamed %s %s' % (event['type'], parameters))
 
@@ -190,7 +193,7 @@ class Client(object):
     def handle_partition(self, code, parameters, event, message):
         self.handle_event(code, parameters[0], event, message)
 
-    def request_action(self, type, parameters = {}):
+    def request_action(self, eventType, type, parameters):
         if type == 'arm':
             self.send_command('030', '1')
         elif type == 'stayarm':
