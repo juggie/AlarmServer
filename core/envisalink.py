@@ -184,8 +184,10 @@ class Client(object):
         
         if (event['type'] == 'zone' and parameters in config.ZONENAMES) or (event['type'] == 'partition' and parameters in config.PARTITIONNAMES):
             events.put('alarm', event['type'], parameters, code, event, message, defaultStatus) 
-        else:
+        elif (event['type'] == 'zone' or event['type'] == 'partition'):
             logger.debug('Ignoring unnamed %s %s' % (event['type'], parameters))
+        else:
+            logger.debug('Ignoring unhandled event %s' % event['type'])
 
     def handle_zone(self, code, parameters, event, message):
         self.handle_event(code, parameters[1:], event, message)

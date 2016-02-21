@@ -32,7 +32,7 @@ class state():
             #if we are here, we've never seen this event type, parameter combination before
             prev_status = None
 
-        # if the zone/partition is named in the config file save info in state.state
+        # if this event has never generated 'state' before, populate the defaults
         if not parameters in state.state[type]:
              state.state[type][parameters] = {'name' : config.ZONENAMES[parameters] if type == 'zone' else config.PARTITIONNAMES[parameters], 'lastevents' : [], 'status' : defaultStatus}
 
