@@ -13,11 +13,11 @@ def init():
     if config.PUSHOVER_ENABLE == True:
         config.PUSHOVER_USERTOKEN = config.read_config_var('pushover', 'usertoken', False, 'str')
         if config.PUSHOVER_USERTOKEN != False:
-            events.register('statechange', sendNotification)
             config.PUSHOVER_IGNOREZONES = config.read_config_var('pushover', 'ignorezones', [], 'list')
             config.PUSHOVER_IGNOREPARTITIONS = config.read_config_var('pushover', 'ignorepartitions', [], 'list')
             logger.debug('Pushover Enabled - Partitions Ignored: %s - Zones Ignored: %s' 
                 % (",".join(config.PUSHOVER_IGNOREPARTITIONS), ",".join(config.PUSHOVER_IGNOREZONES)))
+            events.register('statechange', sendNotification, config.PUSHOVER_IGNOREPARTITIONS, config.PUSHOVER_IGNOREZONES)
 
 @gen.coroutine
 def sendNotification(eventType, type, code, parameters, event, message, defaultStatus):
