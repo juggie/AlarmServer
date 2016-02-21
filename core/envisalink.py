@@ -85,12 +85,6 @@ class Client(object):
         #logger.info("Disconnected from %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
         self.do_connect(True)
 
-    #TODO: not implemented
-    def handle_error(self):
-        self.close()
-        logger.error("Disconnected from %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
-        self.do_connect(True)
-
     @gen.coroutine    
     def send_command(self, code, data, checksum = True):
         if checksum == True:
