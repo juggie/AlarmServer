@@ -64,6 +64,8 @@ class config():
                 return config._config.getboolean(section,variable)
             elif type == 'int':
                 return int(config._config.get(section,variable))
+            elif type == 'list':
+                return config._config.get(section,variable).split(",")
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             config.defaulting(section, variable, default, quiet)
             return default

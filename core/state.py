@@ -11,7 +11,6 @@ class state():
     @staticmethod
     def init():
         state.state = {}
-        state.oldstate = {}
         events.register('alarm', state.update)
 
     @staticmethod
@@ -25,18 +24,28 @@ class state():
     @staticmethod
     def update(eventType, type, code, parameters, event, message, defaultStatus):
         if not type in state.state: state.state[type] = {'lastevents' : []}
+
+        #keep the last state
+        try:
+            prev_status = state.state[type][parameters]['status']
+        except (IndexError,KeyError):
+            #if we are here, we've never seen this event type, parameter combination before
+            prev_status = None
+
         # if the zone/partition is named in the config file save info in state.state
         if not parameters in state.state[type]:
              state.state[type][parameters] = {'name' : config.ZONENAMES[parameters] if type == 'zone' else config.PARTITIONNAMES[parameters], 'lastevents' : [], 'status' : defaultStatus}
-        #keep the last state
-        prev_status = state.state[type][parameters]['status']
+
         #update the state
         state.state[type][parameters]['status'] = dict(state.state[type][parameters]['status'], **event['status'])
-        #is the state changed?
-        if prev_status == state.state[type][parameters]['status']:
-            logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
-        else:
-            events.put('statechange', type, code, parameters, event, message, defaultStatus)
+
+        #if this is the first event in this zone/partition we've seen, don't do anything here.
+        if prev_status != None:
+            #if we've seen this before, check if it's changed
+            if prev_status == state.state[type][parameters]['status']:
+                logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
+            else:
+                events.put('statechange', type, code, parameters, event, message, defaultStatus)
 
         #write event
         state.state[type][parameters]['lastevents'].append({  
