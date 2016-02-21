@@ -22,7 +22,7 @@ class state():
         state.state['version'] = version
 
     @staticmethod
-    def update(eventType, type, code, parameters, event, message, defaultStatus):
+    def update(eventType, type, parameters, code, event, message, defaultStatus):
         if not type in state.state: state.state[type] = {'lastevents' : []}
 
         #keep the last state
@@ -45,7 +45,7 @@ class state():
             if prev_status == state.state[type][parameters]['status']:
                 logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
             else:
-                events.put('statechange', type, code, parameters, event, message, defaultStatus)
+                events.put('statechange', type, parameters, code, event, message, defaultStatus)
 
         #write event
         state.state[type][parameters]['lastevents'].append({  

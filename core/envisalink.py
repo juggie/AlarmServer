@@ -183,7 +183,7 @@ class Client(object):
             defaultStatus = {}
         
         if (event['type'] == 'zone' and parameters in config.ZONENAMES) or (event['type'] == 'partition' and parameters in config.PARTITIONNAMES):
-            events.put('alarm', event['type'], code, parameters, event, message, defaultStatus) 
+            events.put('alarm', event['type'], parameters, code, event, message, defaultStatus) 
         else:
             logger.debug('Ignoring unnamed %s %s' % (event['type'], parameters))
 

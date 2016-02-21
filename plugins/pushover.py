@@ -13,14 +13,14 @@ def init():
     if config.PUSHOVER_ENABLE == True:
         config.PUSHOVER_USERTOKEN = config.read_config_var('pushover', 'usertoken', False, 'str')
         if config.PUSHOVER_USERTOKEN != False:
-            config.PUSHOVER_IGNOREZONES = config.read_config_var('pushover', 'ignorezones', [], 'list')
-            config.PUSHOVER_IGNOREPARTITIONS = config.read_config_var('pushover', 'ignorepartitions', [], 'list')
+            config.PUSHOVER_IGNOREZONES = config.read_config_var('pushover', 'ignorezones', [], 'listint')
+            config.PUSHOVER_IGNOREPARTITIONS = config.read_config_var('pushover', 'ignorepartitions', [], 'listint')
             logger.debug('Pushover Enabled - Partitions Ignored: %s - Zones Ignored: %s' 
-                % (",".join(config.PUSHOVER_IGNOREPARTITIONS), ",".join(config.PUSHOVER_IGNOREZONES)))
+                % (",".join([str (i) for i in config.PUSHOVER_IGNOREPARTITIONS]), ",".join([str(i) for i in config.PUSHOVER_IGNOREZONES])))
             events.register('statechange', sendNotification, config.PUSHOVER_IGNOREPARTITIONS, config.PUSHOVER_IGNOREZONES)
 
 @gen.coroutine
-def sendNotification(eventType, type, code, parameters, event, message, defaultStatus):
+def sendNotification(eventType, type, parameters, code, event, message, defaultStatus):
     http_client = AsyncHTTPClient()
     body = urllib.urlencode({
         "token": ALARMSERVER_PUSHOVER_TOKEN,
