@@ -194,17 +194,18 @@ class Client(object):
         self.handle_event(code, parameters[0], event, message)
 
     def request_action(self, eventType, type, parameters):
+        partition = str(parameters['partition'])
         if type == 'arm':
-            self.send_command('030', '1')
+            self.send_command('030', partition)
         elif type == 'stayarm':
-            self.send_command('031', '1')            
+            self.send_command('031', partition)            
         elif type == 'armwithcode':
-            self.send_command('033', '1' + str(parameters['alarmcode']))
+            self.send_command('033', partition + str(parameters['alarmcode']))
         elif type == 'disarm':
             if 'alarmcode' in parameters:
-                self.send_command('040', '1' + str(parameters['alarmcode']))
+                self.send_command('040', partition + str(parameters['alarmcode']))
             else:
-                self.send_command('040', '1' + str(config.ALARMCODE))
+                self.send_command('040', partition + str(config.ALARMCODE))
         elif type == 'refresh':
             self.send_command('001', '')
         elif type == 'pgm':

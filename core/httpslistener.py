@@ -16,16 +16,17 @@ class ApiAlarmHandler(tornado.web.RequestHandler):
     def get(self, request):
         parameters = {}
         parameters['alarmcode'] = self.get_argument('alarmcode', None)
+        parameters['partition'] = self.get_argument('partition', 1)
         if request == 'arm':
-            response = {'response' : 'Request to arm received'}
+            response = {'response' : 'Request to arm partition %s received' % parameters['partition']}
         elif request == 'stayarm':
-            response = {'response' : 'Request to arm in stay received'}
+            response = {'response' : 'Request to arm partition %s in stay received' % parameters['partition']}
         elif request == 'armwithcode':
             if parameters['alarmcode'] == None: raise tornado.web.HTTPError(404)
-            response = {'response' : 'Request to arm with code received'}
+            response = {'response' : 'Request to arm partition %s with code received' % parameters['partition']}
         elif request == 'disarm':
             if parameters['alarmcode'] == None: raise tornado.web.HTTPError(404)
-            response = {'response' : 'Request to disarm received'}
+            response = {'response' : 'Request to disarm partition %s received' % parameters['partition']}
         elif request == 'refresh':
             response = {'response' : 'Request to refresh data received'}
         elif request == 'pgm':
