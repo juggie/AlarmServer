@@ -1,4 +1,4 @@
-import time, datetime
+import time, datetime, sys
 from tornado import gen
 from tornado.tcpclient import TCPClient
 from tornado.iostream import IOStream, StreamClosedError
@@ -43,9 +43,6 @@ class Client(object):
         # Connection
         self._connection = None
 
-        # Are we logged in?
-        self._loggedin = False
-
         # Set our terminator to \r\n
         self._terminator = b"\r\n"
 
@@ -59,30 +56,37 @@ class Client(object):
         # Create the socket and connect to the server
         if reconnect == True:
             logger.warning('Connection failed, retrying in '+str(self._retrydelay)+ ' seconds')
-            for i in range(0, self._retrydelay):
-                time.sleep(1)
+            yield gen.sleep(self._retrydelay)
 
-        logger.debug('Connecting to {}:{}'.format(config.ENVISALINKHOST, config.ENVISALINKPORT))
+        while self._connection == None:
+            logger.debug('Connecting to {}:{}'.format(config.ENVISALINKHOST, config.ENVISALINKPORT))
+            try:
+                self._connection = yield self.tcpclient.connect(config.ENVISALINKHOST, config.ENVISALINKPORT)
+                self._connection.set_close_callback(self.handle_close)
+            except StreamClosedError:
+                #failed to connect, but got no connection object so we will loop here
+                logger.warning('Connection failed, retrying in '+str(self._retrydelay)+ ' seconds')
+                yield gen.sleep(self._retrydelay)
+                continue
 
-        self._connection = yield self.tcpclient.connect(config.ENVISALINKHOST, config.ENVISALINKPORT)
+            try:
+                line = yield self._connection.read_until(self._terminator)
+            except StreamClosedError:
+                #in this state, since the connection object isnt none, its going to throw the callback for handle_close so we just bomb out.
+                #and let handle_close deal with this
+                return
 
-        #set on stream close callback
-        self._connection.set_close_callback(self.handle_close)
+            logger.debug("Connected to %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
+            self.handle_line(line)
 
-        #kick off first read line
-        line = yield self._connection.read_until(self._terminator)
-        logger.debug("Connected to %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
-        self.handle_line(line)
-
+    @gen.coroutine
     def handle_close(self):
-        self._loggedin = False
-        #self._connection.disconnect()
-        logger.info("Disconnected from %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
+        self._connection = None
+        #logger.info("Disconnected from %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
         self.do_connect(True)
 
     #TODO: not implemented
     def handle_error(self):
-        self._loggedin = False
         self.close()
         logger.error("Disconnected from %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
         self.do_connect(True)
@@ -162,7 +166,6 @@ class Client(object):
     #envisalink event handlers, some events are unhandeled.
     def handle_login(self, code, parameters, event, message):
         if parameters == '3':
-            self._loggedin = True
             self.send_command('005', config.ENVISALINKPASS)
         if parameters == '1':
             self.send_command('001', '')
