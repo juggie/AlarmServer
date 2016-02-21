@@ -22,7 +22,9 @@ class events():
     def put(eventType, type = None, parameters = None, *args):
         try:
             for c in events.listeners[eventType]:
-                if ((type == 'partition' and parameters not in c['partitionFilter']) or (type == 'zone' and parameters not in c['zoneFilter'])):
+                if ((type == 'partition' and parameters not in c['partitionFilter']) 
+                        or (type == 'zone' and parameters not in c['zoneFilter']) 
+                        or (type not in ['partition', 'zone'])):
                     c['callback'](eventType, type, parameters, *args)
                 else:
                     logger.debug('Event type: %s/%s parameters: %s Filtered' % (eventType, type, parameters))
