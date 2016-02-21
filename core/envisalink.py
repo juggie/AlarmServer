@@ -98,8 +98,12 @@ class Client(object):
         else:
             to_send = code+data+'\r\n'
 
-        logger.debug('TX > '+to_send[:-1])
-        res = yield self._connection.write(to_send)
+        try:
+            res = yield self._connection.write(to_send)
+            logger.debug('TX > '+to_send[:-1])
+        except StreamClosedError:
+            #we don't need to handle this, the callback has been set for closed connections.
+            pass
 
     @gen.coroutine
     def handle_line(self, input):
@@ -113,11 +117,7 @@ class Client(object):
             try:
                 handler = "handle_%s" % evl_ResponseTypes[code]['handler']
             except KeyError:
-                #call general event handler
-                self.handle_event(code, parameters, event, message)
-                line = yield self._connection.read_until(self._terminator)
-                self.handle_line(line)
-                return
+                handler = "handle_event"
 
             try:
                 func = getattr(self, handler)
@@ -125,8 +125,12 @@ class Client(object):
                 raise CodeError("Handler function doesn't exist")
 
             func(code, parameters, event, message)
-            line = yield self._connection.read_until(self._terminator)
-            self.handle_line(line)
+            try:
+                line = yield self._connection.read_until(self._terminator)
+                self.handle_line(line)
+            except StreamClosedError:
+                #we don't need to handle this, the callback has been set for closed connections.
+                pass
 
     def format_event(self, event, parameters):
         if 'type' in event:
