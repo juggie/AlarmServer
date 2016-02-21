@@ -7,7 +7,12 @@ from core.config import config
 from core.events import events
 
 def init():
-    events.register('statechange', sendNotification)
+    config.PUSHOVER_ENABLE = config.read_config_var('pushover', 'enable', False, 'bool')
+    if config.PUSHOVER_ENABLE == True:
+        config.PUSHOVER_USERTOKEN = config.read_config_var('pushover', 'usertoken', False, 'str')
+        if config.PUSHOVER_USERTOKEN != False:
+            logger.debug('Pushover Enabled')
+            events.register('statechange', sendNotification)
 
 @gen.coroutine
 def sendNotification(eventType, type, code, parameters, event, message, defaultStatus):

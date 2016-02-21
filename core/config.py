@@ -27,8 +27,6 @@ class config():
         config.ENABLEPROXY = config.read_config_var('envisalink', 'enableproxy', True, 'bool')
         config.ENVISALINKPROXYPORT = config.read_config_var('envisalink', 'proxyport', config.ENVISALINKPORT, 'int')
         config.ENVISALINKPROXYPASS = config.read_config_var('envisalink', 'proxypass', config.ENVISALINKPASS, 'str')
-        config.PUSHOVER_ENABLE = config.read_config_var('pushover', 'enable', False, 'bool')
-        config.PUSHOVER_USERTOKEN = config.read_config_var('pushover', 'usertoken', False, 'str')
         config.ALARMCODE = config.read_config_var('envisalink', 'alarmcode', 1111, 'int')
         config.EVENTTIMEAGO = config.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
         config.LOGFILE = config.read_config_var('alarmserver', 'logfile', '', 'str')
@@ -51,8 +49,6 @@ class config():
         for i in range(1, MAXALARMUSERS+1):
             user = config.read_config_var('alarmserver', 'user'+str(i), False, 'str', True)
             if user: config.ALARMUSERNAMES[i] = user
-
-        if config.PUSHOVER_USERTOKEN == False and config.PUSHOVER_ENABLE == True: config.PUSHOVER_ENABLE = False
 
     @staticmethod
     def defaulting(section, variable, default, quiet = False):
