@@ -27,10 +27,13 @@ def get_checksum(code, data):
 
 class Client(object):
     def __init__(self):
-        logger.debug('Staring Envisalink Client')
+        logger.debug('Starting Envisalink Client')
 
         # Register events for alarmserver requests -> envisalink
         events.register('alarm_update', self.request_action)
+
+        # Register events for envisalink proxy
+        events.register('envisalink', self.envisalink_proxy)
 
         # Create TCP Client
         self.tcpclient = TCPClient()
@@ -110,6 +113,8 @@ class Client(object):
 
             try:
                 func = getattr(self, handler)
+                if handler != 'handle_login':
+                    events.put('proxy', None, input)
             except AttributeError:
                 raise CodeError("Handler function doesn't exist")
 
@@ -208,3 +213,13 @@ class Client(object):
             self.send_command('001', '')
         elif type == 'pgm':
             response = {'response' : 'Request to trigger PGM'}
+
+    @gen.coroutine
+    def envisalink_proxy(self, eventType, type, parameters, *args):
+        try:
+            res = yield self._connection.write(parameters)
+            logger.debug('PROXY > '+parameters.strip())
+        except StreamClosedError:
+            #we don't need to handle this, the callback has been set for closed connections.
+            pass
+

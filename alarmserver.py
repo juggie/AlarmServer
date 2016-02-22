@@ -16,6 +16,7 @@ from core.events import events
 from core import logger
 from core import httpslistener
 from core import envisalink
+from core import envisalinkproxy
 
 #TODO: move elsewhere
 import tornado.ioloop
@@ -38,6 +39,9 @@ def main(argv):
 
     #start envisalink client
     alarmclient = envisalink.Client()
+
+    #start envisalink proxy
+    alarmproxy = envisalinkproxy.Proxy()
 
     #start https server
     if config.HTTPS == True:
