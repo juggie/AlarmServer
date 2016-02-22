@@ -13,11 +13,6 @@ import logger
 from config import config
 from events import events
 
-def dict_merge(a, b):
-    c = a.copy()
-    c.update(b)
-    return c
-
 def getMessageType(code):
     return evl_ResponseTypes[code]
 
@@ -213,30 +208,3 @@ class Client(object):
             self.send_command('001', '')
         elif type == 'pgm':
             response = {'response' : 'Request to trigger PGM'}
-
-"""class Proxy(asyncore.dispatcher):
-    def __init__(self, config, server):
-
-        logger = logging.getLogger('alarmserver.Proxy')
-        
-        config = config
-        if config.ENABLEPROXY == False:
-            return
-
-        asyncore.dispatcher.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.set_reuse_addr()
-        logger.info('Envisalink Proxy Started')
-
-        self.bind(("", config.ENVISALINKPROXYPORT))
-        self.listen(5)
-
-    def handle_accept(self):
-        pair = self.accept()
-        if pair is None:
-            pass
-        else:
-            sock, addr = pair
-            logger.info('Incoming proxy connection from %s' % repr(addr))
-            handler = ProxyChannel(server, config.ENVISALINKPROXYPASS, sock, addr)
-"""
