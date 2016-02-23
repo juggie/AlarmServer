@@ -10,8 +10,10 @@ import tornado.httpserver
 from config import config
 from state import state
 from events import events
+from httpslistener_auth import require_basic_auth
 import logger
 
+@require_basic_auth
 class ApiAlarmHandler(tornado.web.RequestHandler):
     def get(self, request):
         parameters = {}
@@ -36,13 +38,20 @@ class ApiAlarmHandler(tornado.web.RequestHandler):
         events.put('alarm_update', request, parameters)
         self.write(response)
 
+@require_basic_auth
 class ApiEventTimeAgoHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write({'eventtimeago' : config.EVENTTIMEAGO})
+       self.write({'eventtimeago' : config.EVENTTIMEAGO})
 
+@require_basic_auth
 class ApiHandler(tornado.web.RequestHandler):
     def get(self):
         self.write(state.getDict())
+
+@require_basic_auth
+class AuthStaticFileHandler(tornado.web.StaticFileHandler):
+    def get(self, filename):
+        return super(AuthStaticFileHandler, self).get(filename)
 
 def start(https = True):
     logger.info("%s Server started on port: %s" % (('HTTPS',config.HTTPSPORT) if https == True else ('HTTP', config.HTTPPORT))) 
@@ -52,6 +61,6 @@ def start(https = True):
         (r'/api/(refresh|pgm)', ApiAlarmHandler),
         (r'/api/config/eventtimeago', ApiEventTimeAgoHandler),
         (r'/api', ApiHandler),
-        (r'/img/(.*)', tornado.web.StaticFileHandler, {'path': ext_path}),
-        (r'/(.*)', tornado.web.StaticFileHandler, {'default_filename' : 'index.html', 'path': ext_path}),
+        (r'/img/(.*)', AuthStaticFileHandler, {'path': ext_path}),
+        (r'/(.*)', AuthStaticFileHandler, {'default_filename' : 'index.html', 'path': ext_path}),
     ]),ssl_options={"certfile": config.CERTFILE, "keyfile" : config.KEYFILE} if https == True else None).listen(config.HTTPSPORT if https == True else config.HTTPPORT)

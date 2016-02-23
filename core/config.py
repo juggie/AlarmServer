@@ -19,6 +19,8 @@ class config():
         config.KEYFILE = config.read_config_var('alarmserver', 'keyfile', 'server.key', 'str')
         config.HTTPPORT = config.read_config_var('alarmserver', 'httpport', 8011, 'int')
         config.HTTP = config.read_config_var('alarmserver', 'http', False, 'bool')
+        config.WEBAUTHUSER = config.read_config_var('alarmserver', 'webauthuser', False, 'str')
+        config.WEBAUTHPASS = config.read_config_var('alarmserver', 'webauthpass', False, 'str')
         config.MAXEVENTS = config.read_config_var('alarmserver', 'maxevents', 10, 'int')
         config.MAXALLEVENTS = config.read_config_var('alarmserver', 'maxallevents', 100, 'int')
         config.ENVISALINKHOST = config.read_config_var('envisalink', 'host', 'envisalink', 'str')
