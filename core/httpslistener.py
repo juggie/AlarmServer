@@ -41,7 +41,7 @@ class ApiAlarmHandler(tornado.web.RequestHandler):
 @require_basic_auth
 class ApiEventTimeAgoHandler(tornado.web.RequestHandler):
     def get(self):
-       self.write({'eventtimeago' : config.EVENTTIMEAGO})
+        self.write({'eventtimeago' : config.EVENTTIMEAGO})
 
 @require_basic_auth
 class ApiHandler(tornado.web.RequestHandler):

@@ -7,10 +7,9 @@ class InvalidLogin(Exception):
 def require_basic_auth(handler_class):
     def wrap_execute(handler_execute):
         def require_basic_auth(handler, kwargs):
-            auth_header = handler.request.headers.get('Authorization')
             try:
-                auth_decoded =  base64.decodestring(auth_header[6:])
-                username, password = auth_decoded.split(':', 2)
+                auth_header = handler.request.headers.get('Authorization')
+                username, password = base64.decodestring(auth_header[6:]).split(':', 2)
                 if config.WEBAUTHUSER == False and config.WEBAUTHPASS == False:
                     return True
                 elif config.WEBAUTHUSER == False or config.WEBAUTHPASS == False:
