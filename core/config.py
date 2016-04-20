@@ -10,7 +10,9 @@ class config():
     def load(configfile):
         logger.debug('Loading config file: %s' % configfile)
         config._config = ConfigParser.ConfigParser()
-        config._config.read(configfile)
+        if len(config._config.read(configfile)) == 0:
+            # unable to load config file
+            return False
 
         config.LOGURLREQUESTS = config.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
         config.HTTPSPORT = config.read_config_var('alarmserver', 'httpsport', 8111, 'int')

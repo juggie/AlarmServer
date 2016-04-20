@@ -27,9 +27,19 @@ def main(argv):
 
     #set default config
     conffile='alarmserver.cfg'
+    
+    try:
+        opts, args = getopt.getopt(argv, "c:", ["config="])
+    except getopt.GetoptError:
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-c", "--config"):
+            conffile = arg
 
     #load config
-    config.load(conffile)
+    if config.load(conffile) == False:
+        logger.error('Unable to load config file: %s' % conffile)
+        sys.exit(1)
 
     #enable the state
     state.init()
