@@ -62,10 +62,11 @@ def main(argv):
         httpserver = httpslistener.start(https = False)
 
     #load plugins - TODO: make this way better
-    plugins = glob.glob("plugins/*.py")
+    currpath = os.path.dirname(os.path.abspath(__file__))
+    plugins = glob.glob(currpath+"/plugins/*.py")
     for p in plugins:
-        if p == 'plugins/__init__.py': continue
-        name = p[p.find('/')+1:p.find('.')]
+        if str.find(p, '__init__.py') != -1: continue
+        name = p[p.rfind('/')+1:p.find('.')]
         exec "from plugins import %s" % name
         exec "%s.init()" % name
 
