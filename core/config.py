@@ -1,5 +1,7 @@
 import ConfigParser
-import logger
+
+#dont' use logger, write out config loading always to stdout
+#import logger
 
 MAXPARTITIONS=16
 MAXZONES=128
@@ -8,11 +10,10 @@ MAXALARMUSERS=47
 class config():
     @staticmethod
     def load(configfile):
-        logger.debug('Loading config file: %s' % configfile)
+        #logger.debug('Loading config file: %s' % configfile)
+        print('Loading config file: %s' % configfile)
         config._config = ConfigParser.ConfigParser()
-        if len(config._config.read(configfile)) == 0:
-            # unable to load config file
-            return False
+        config._config.read(configfile)
 
         config.LOGURLREQUESTS = config.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
         config.HTTPSPORT = config.read_config_var('alarmserver', 'httpsport', 8111, 'int')
@@ -57,7 +58,8 @@ class config():
     @staticmethod
     def defaulting(section, variable, default, quiet = False):
         if quiet == False:
-            logger.debug('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
+            #logger.debug('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
+            print('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
 
     @staticmethod
     def read_config_var(section, variable, default, type = 'str', quiet = False):

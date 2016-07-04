@@ -11,23 +11,25 @@ import sys, getopt, os, glob
 
 #alarm server modules
 from core.config import config
-from core.state import state
-from core.events import events
-from core import logger
-from core import httpslistener
-from core import envisalink
-from core import envisalinkproxy
+
+#moved down to load have config has logger info loaded
+#from core.state import state
+#from core.events import events
+#from core import logger
+#from core import httpslistener
+#from core import envisalink
+#from core import envisalinkproxy
 
 #TODO: move elsewhere
 import tornado.ioloop
 
 def main(argv):
     #welcome message
-    logger.info('Alarm Server Starting')
+    #logger.info('Alarm Server Starting')
 
     #set default config
     conffile='alarmserver.cfg'
-    
+
     try:
         opts, args = getopt.getopt(argv, "c:", ["config="])
     except getopt.GetoptError:
@@ -37,9 +39,14 @@ def main(argv):
             conffile = arg
 
     #load config
-    if config.load(conffile) == False:
-        logger.error('Unable to load config file: %s' % conffile)
-        sys.exit(1)
+    config.load(conffile)
+
+    #now import since config file is loaded and logging can be ready
+    from core.state import state
+    from core.events import events
+    from core import httpslistener
+    from core import envisalink
+    from core import envisalinkproxy
 
     #enable the state
     state.init()
@@ -62,11 +69,10 @@ def main(argv):
         httpserver = httpslistener.start(https = False)
 
     #load plugins - TODO: make this way better
-    currpath = os.path.dirname(os.path.abspath(__file__))
-    plugins = glob.glob(currpath+"/plugins/*.py")
+    plugins = glob.glob("plugins/*.py")
     for p in plugins:
-        if str.find(p, '__init__.py') != -1: continue
-        name = p[p.rfind('/')+1:p.find('.')]
+        if p == 'plugins/__init__.py': continue
+        name = p[p.find('/')+1:p.find('.')]
         exec "from plugins import %s" % name
         exec "%s.init()" % name
 
