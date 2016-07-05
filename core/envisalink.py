@@ -100,6 +100,9 @@ class Client(object):
     @gen.coroutine
     def handle_line(self, input):
         if input != '':
+            if config.ENVISALINKLOGRAW == True:
+                logger.debug('RX RAW < "' + str(input).strip() + '"')
+
             code=int(input[:3])
             parameters=input[3:][:-4]
             event = getMessageType(int(code))
