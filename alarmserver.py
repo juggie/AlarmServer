@@ -12,20 +12,10 @@ import sys, getopt, os, glob
 #alarm server modules
 from core.config import config
 
-#moved down to load have config has logger info loaded
-#from core.state import state
-#from core.events import events
-#from core import logger
-#from core import httpslistener
-#from core import envisalink
-#from core import envisalinkproxy
-
 #TODO: move elsewhere
 import tornado.ioloop
 
 def main(argv):
-    #welcome message
-    #logger.info('Alarm Server Starting')
 
     #set default config
     conffile='alarmserver.cfg'
@@ -41,7 +31,7 @@ def main(argv):
     #load config
     config.load(conffile)
 
-    #now import since config file is loaded and logging can be ready
+    #deferred imports until config file is loaded and logging is configured
     from core.state import state
     from core.events import events
     from core import httpslistener

@@ -10,7 +10,6 @@ MAXALARMUSERS=47
 class config():
     @staticmethod
     def load(configfile):
-        #logger.debug('Loading config file: %s' % configfile)
         print('Loading config file: %s' % configfile)
         config._config = ConfigParser.ConfigParser()
         config._config.read(configfile)
@@ -58,7 +57,6 @@ class config():
     @staticmethod
     def defaulting(section, variable, default, quiet = False):
         if quiet == False:
-            #logger.debug('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
             print('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
 
     @staticmethod
