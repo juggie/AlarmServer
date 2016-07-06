@@ -1,7 +1,5 @@
 import ConfigParser
 
-#dont' use logger, write out config loading always to stdout
-#import logger
 
 MAXPARTITIONS=16
 MAXZONES=128
