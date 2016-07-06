@@ -99,35 +99,37 @@ class Client(object):
 
     @gen.coroutine
     def handle_line(self, input):
-        if input != '':
-            if config.ENVISALINKLOGRAW == True:
-                logger.debug('RX RAW < "' + str(input).strip() + '"')
+        if input == '':
+            return
 
-            code=int(input[:3])
-            parameters=input[3:][:-4]
-            event = getMessageType(int(code))
-            message = self.format_event(event, parameters)
-            logger.debug('RX < ' +str(code)+' - '+message)
+        if config.ENVISALINKLOGRAW == True:
+            logger.debug('RX RAW < "' + str(input).strip() + '"')
 
-            try:
-                handler = "handle_%s" % evl_ResponseTypes[code]['handler']
-            except KeyError:
-                handler = "handle_event"
+        code=int(input[:3])
+        parameters=input[3:][:-4]
+        event = getMessageType(int(code))
+        message = self.format_event(event, parameters)
+        logger.debug('RX < ' +str(code)+' - '+message)
 
-            try:
-                func = getattr(self, handler)
-                if handler != 'handle_login':
-                    events.put('proxy', None, input)
-            except AttributeError:
-                raise CodeError("Handler function doesn't exist")
+        try:
+            handler = "handle_%s" % evl_ResponseTypes[code]['handler']
+        except KeyError:
+            handler = "handle_event"
 
-            func(code, parameters, event, message)
-            try:
-                line = yield self._connection.read_until(self._terminator)
-                self.handle_line(line)
-            except StreamClosedError:
-                #we don't need to handle this, the callback has been set for closed connections.
-                pass
+        try:
+            func = getattr(self, handler)
+            if handler != 'handle_login':
+                events.put('proxy', None, input)
+        except AttributeError:
+            raise CodeError("Handler function doesn't exist")
+
+        func(code, parameters, event, message)
+        try:
+            line = yield self._connection.read_until(self._terminator)
+            self.handle_line(line)
+        except StreamClosedError:
+            #we don't need to handle this, the callback has been set for closed connections.
+            pass
 
     def format_event(self, event, parameters):
         if 'type' in event:
