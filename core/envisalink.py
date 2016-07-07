@@ -1,4 +1,4 @@
-import time, datetime, sys
+import time, datetime, sys, re
 from tornado import gen
 from tornado.tcpclient import TCPClient
 from tornado.iostream import IOStream, StreamClosedError
@@ -98,28 +98,50 @@ class Client(object):
             pass
 
     @gen.coroutine
-    def handle_line(self, input):
-        if input == '':
+    def handle_line(self, rawinput):
+        if rawinput == '':
             return
 
+        input = rawinput.strip()
         if config.ENVISALINKLOGRAW == True:
-            logger.debug('RX RAW < "' + str(input).strip() + '"')
+            logger.debug('RX RAW < "' + str(input) + '"')
 
-        code=int(input[:3])
-        parameters=input[3:][:-4]
-        event = getMessageType(int(code))
+        if re.match(r'^\d\d:\d\d:\d\d ',input):
+            evltime = input[:8]
+            input = input[9:]
+
+        if not re.match(r'^[0-9a-fA-F]{5,}$', input):
+            logger.warning('Received invalid TPI message: ' + repr(rawinput));
+            return
+
+        code = int(input[:3])
+        parameters = input[3:][:-2]
+        try:
+            event = getMessageType(int(code))
+        except KeyError:
+            logger.warning('Received unknown TPI code: "%s", parameters: "%s"' %
+                           (input[:3], parameters))
+            return
+
+        rcksum = int(input[-2:], 16)
+        ccksum = int(get_checksum(input[:3],parameters), 16)
+        if rcksum != ccksum:
+            logger.warning('Received invalid TPI checksum %02X vs %02X: "%s"' %
+                           (rcksum, ccksum, input))
+            return
+
         message = self.format_event(event, parameters)
         logger.debug('RX < ' +str(code)+' - '+message)
 
         try:
-            handler = "handle_%s" % evl_ResponseTypes[code]['handler']
+            handler = "handle_%s" % event['handler']
         except KeyError:
             handler = "handle_event"
 
         try:
             func = getattr(self, handler)
             if handler != 'handle_login':
-                events.put('proxy', None, input)
+                events.put('proxy', None, rawinput)
         except AttributeError:
             raise CodeError("Handler function doesn't exist")
 
