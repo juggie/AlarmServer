@@ -2,3 +2,6 @@
 
 alarmserver.cfg
 .idea
+output.log
+log.txt
+*~
