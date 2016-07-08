@@ -17,17 +17,40 @@ evl_ArmModes = {
         3 : 'Zero Entry Stay'
     }
 
+evl_LedBitmask = {
+    0x80 : "Backlight",
+    0x40 : "Fire",
+    0x20 : "Program",
+    0x10 : "Trouble",
+    0x08 : "Bypass",
+    0x04 : "Memory",
+    0x02 : "Armed",
+    0x01 : "Ready"
+    }
+
+
+evl_VerboseTroubleBitmask = {
+    0x80 : "Loss of Time",
+    0x40 : "Zone Low Battery",
+    0x20 : "Zone Tamper",
+    0x10 : "Zone Fault",
+    0x08 : "Failure to Communicate",
+    0x04 : "Telephone Line Fault",
+    0x02 : "AC Power Lost",
+    0x01 : "Service is Required"
+    }
+
 evl_ResponseTypes = {
-    500 : {'name' : 'Command Acknowledge', 'description' : 'A command has been received successfully.'},
+    500 : {'name' : 'Command Acknowledge {0}', 'description' : 'A command has been received successfully.'},
     501 : {'name' : 'Command Error', 'description' : 'A command has been received with a bad checksum.'},
     502 : {'name' : 'System Error {0}', 'description' : 'An error has been detected.'},
-    505 : {'name' : 'Login Interaction', 'description' : 'Sent During Session Login Only.', 'handler' : 'login'},
+    505 : {'name' : 'Login Interaction {0}', 'description' : 'Sent During Session Login Only.', 'handler' : 'login'},
     510 : {'name' : 'Keypad Led State - Partition 1', 'description' : 'Outputted when the TPI has deceted a change of state in the Partition 1 keypad LEDs.'},
     511 : {'name' : 'Keypad Led Flash State - Partition 1', 'description' : 'Outputed when the TPI has detected a change of state in the Partition 1 keypad LEDs as to whether to flash or not. Overrides 510. That is, if 511 says the PROGRAM LED is flashing, then it doesn''t matter what 510 says.'},
-    550 : {'name' : 'Time/Date Broadcast', 'description' : 'Outputs the current security system time.'},
+    550 : {'name' : 'Time/Date Broadcast {0[4]}{0[5]}/{0[6]}{0[7]}/{0[8]}{0[9]} {0[0]}{0[1]}:{0[2]}{0[3]}', 'description' : 'Outputs the current security system time.'},
     560 : {'name' : 'Ring Detected', 'description' : 'The Panel has detected a ring on the telephone line. Note: This command will only be issued if an ESCORT 5580xx module is present.'},
-    561 : {'name' : 'Indoor Temperature Broadcast', 'description' : 'If an ESCORT 5580TC is installed, and at least one ENERSTAT thermostat, this command displays the interior temperature and the thermostat number.'},
-    562 : {'name' : 'Outdoor Temperature Broadcast', 'description' : 'If an ESCORT 5580TC is installed, and at least one ENERSTAT thermostat, this command displays the exterior temperature and the thermostat number.'},
+    561 : {'name' : 'Indoor Temperature Broadcast {0}', 'description' : 'If an ESCORT 5580TC is installed, and at least one ENERSTAT thermostat, this command displays the interior temperature and the thermostat number.'},
+    562 : {'name' : 'Outdoor Temperature Broadcast {0}', 'description' : 'If an ESCORT 5580TC is installed, and at least one ENERSTAT thermostat, this command displays the exterior temperature and the thermostat number.'},
     601 : {'type' : 'zone', 'name' : 'Partition {0[0]} Zone {0[1]}{0[2]}{0[3]} Alarm', 'description' : 'A zone has gone into alarm.', 'handler' : 'zone', 'status' : {'alarm' : True}},
     602 : {'type' : 'zone', 'name' : 'Partition {0[0]} Zone {0[1]}{0[2]}{0[3]} Alarm Restore', 'description' : 'A zone alarm has been restored.', 'handler' : 'zone', 'status' : {'alarm' : False}},
     603 : {'type' : 'zone', 'name' : 'Partition {0[0]} Zone {0[1]}{0[2]}{0[3]} Tamper', 'description' : 'A zone has a tamper condition.', 'handler' : 'zone', 'status' : {'tamper' : True}},
@@ -37,6 +60,7 @@ evl_ResponseTypes = {
     609 : {'type' : 'zone', 'name' : 'Zone {0} Open', 'description' : 'General status of the zone.', 'status' : {'open' : True}},
     610 : {'type' : 'zone', 'name' : 'Zone {0} Restored', 'description' : 'General status of the zone.', 'status' : {'open' : False}},
     615 : {'name' : 'Envisalink Zone Timer Dump', 'description' : 'This command contains the raw zone timers used inside the Envisalink. The dump is a 256 character packed HEX string representing 64 UINT16 (little endian) zone timers. Zone timers count down from 0xFFFF (zone is open) to 0x0000 (zone is closed too long ago to remember). Each ''tick'' of the zone time is actually 5 seconds so a zone timer of 0xFFFE means ''5 seconds ago''. Remember, the zone timers are LITTLE ENDIAN so the above example would be transmitted as FEFF.'},
+    616 : {'name' : 'Bypassed Zoine List {0}', 'description' : 'This command is issued upon leaving Zone Bypass programming (*1 on the keypad). It is a 16 character HEX string representing an 8 byte bitfield. The bitfield indicates which zones are currently in bypass. A "1" indicates the zone is in bypass. The lower 8 zones are in the first position of the bitfield. The developer can force this dump by using the keystring commands to enter and leave zone bypassing, i.e. "*1#"'},
     620 : {'name' : 'Duress Alarm', 'description' : 'A duress code has been entered on a system keypad.'},
     621 : {'type' : 'system', 'name' : '[F] Key Alarm', 'description' : 'A Fire key alarm has been detected.', 'status' : {'fire_key_alarm' : True}},
     622 : {'type' : 'system', 'name' : '[F] Key Alarm', 'description' : 'A Fire key alarm has been restored (sent automatically).', 'status' : {'fire_key_alarm' : False}},
@@ -76,7 +100,7 @@ evl_ResponseTypes = {
     803 : {'type' : 'system', 'name' : 'Panel AC Restore', 'description' : 'AC power to the panel has been restored.', 'status' : {'ac_trouble' : False}},
     806 : {'type' : 'system', 'name' : 'System Bell Trouble', 'description' : 'An open circuit has been detected across the bell terminals.', 'status' : {'system_bell_trouble' : True}},
     807 : {'type' : 'system', 'name' : 'System Bell Trouble Restoral', 'description' : 'The bell trouble has been restored.', 'status' : {'system_bell_trouble' : False}},
-    814 : {'name' : 'FTC Trouble', 'description' : 'The panel has failed to communicate successfully to the monitoring.'},
+    814 : {'name' : 'FTC Trouble', 'description' : 'The panel has failed to communicate successfully to the monitoring station.'},
     816 : {'name' : 'Buffer Near Full', 'description' : 'Sent when the panel''s Event Buffer is 75% full from when it was last uploaded to DLS.'},
     829 : {'type' : 'system', 'name' : 'General System Tamper', 'description' : 'A tamper has occurred with one of the following modules: Zone Expander, PC5132, PC5204, PC5208, PC5400, PC59XX, LINKS 2X50, PC5108L, PC5100, PC5200.', 'status' : {'system_tamper' : True}},
     830 : {'type' : 'system', 'name' : 'General System Tamper Restore', 'description' : 'A general system Tamper has been restored.', 'status' : {'system_tamper' : False}},
@@ -84,9 +108,9 @@ evl_ResponseTypes = {
     841 : {'type' : 'partition', 'name' : 'Partition {0} Trouble LED OFF', 'description' : 'This command shows the general trouble status that the trouble LED on a keypad normally shows. When the LED is OFF, this usually means there are no troubles present on this partition but certain modes will blank this LED even in the presence of a partition trouble. This command when the LED transitions from ON, to OFF.', 'status' : {'trouble' : False}},
     842 : {'type' : 'system', 'name' : 'Fire Trouble Alarm', 'description' : 'Fire Trouble Alarm', 'status' : {'fire_trouble' : True}},
     843 : {'type' : 'system', 'name' : 'Fire Trouble Alarm Restore', 'description' : 'Fire Trouble Alarm Restore', 'status' : {'fire_trouble' : False}},
-    849 : {'name' : 'Verbose Trouble Status', 'description' : 'This command is issued when a trouble appears on the system and roughly every 5 minutes until the trouble is cleared. The two characters are a bitfield (similar to 510,511). The meaning of each bit is the same as what you see on an LED keypad (see the user manual).'},
+    849 : {'name' : 'Verbose Trouble Status {0}', 'description' : 'This command is issued when a trouble appears on the system and roughly every 5 minutes until the trouble is cleared. The two characters are a bitfield (similar to 510,511). The meaning of each bit is the same as what you see on an LED keypad (see the user manual).'},
     900 : {'name' : 'Code Required', 'description' : 'This command will tell the API to enter an access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'},
-    912 : {'name' : 'Command Output Pressed', 'description' : 'This command will tell the API to enter an access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'},
+    912 : {'name' : 'Command Output Pressed Partition {0[0]} Command {0[1]}', 'description' : 'This command will tell the API to enter an access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'},
     921 : {'name' : 'Master Code Required', 'description' : 'This command will tell the API to enter a master access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'},
     922 : {'name' : 'Installers Code Required', 'description' : 'This command will tell the API to enter an installers access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'},    
   }
