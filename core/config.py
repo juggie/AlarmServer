@@ -1,5 +1,5 @@
 import ConfigParser
-import logger
+
 
 MAXPARTITIONS=16
 MAXZONES=128
@@ -8,11 +8,11 @@ MAXALARMUSERS=47
 class config():
     @staticmethod
     def load(configfile):
-        logger.debug('Loading config file: %s' % configfile)
+        print('Loading config file: %s' % configfile)
         config._config = ConfigParser.ConfigParser()
-        if len(config._config.read(configfile)) == 0:
-            # unable to load config file
-            return False
+
+        if config._config.read(configfile) == []:
+            raise RuntimeError('Unable to load config file: %s' % configfile)
 
         config.LOGURLREQUESTS = config.read_config_var('alarmserver', 'logurlrequests', True, 'bool')
         config.HTTPSPORT = config.read_config_var('alarmserver', 'httpsport', 8111, 'int')
@@ -58,7 +58,7 @@ class config():
     @staticmethod
     def defaulting(section, variable, default, quiet = False):
         if quiet == False:
-            logger.debug('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
+            print('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
 
     @staticmethod
     def read_config_var(section, variable, default, type = 'str', quiet = False):

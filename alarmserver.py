@@ -11,23 +11,15 @@ import sys, getopt, os, glob
 
 #alarm server modules
 from core.config import config
-from core.state import state
-from core.events import events
-from core import logger
-from core import httpslistener
-from core import envisalink
-from core import envisalinkproxy
 
 #TODO: move elsewhere
 import tornado.ioloop
 
 def main(argv):
-    #welcome message
-    logger.info('Alarm Server Starting')
 
     #set default config
     conffile='alarmserver.cfg'
-    
+
     try:
         opts, args = getopt.getopt(argv, "c:", ["config="])
     except getopt.GetoptError:
@@ -37,9 +29,14 @@ def main(argv):
             conffile = arg
 
     #load config
-    if config.load(conffile) == False:
-        logger.error('Unable to load config file: %s' % conffile)
-        sys.exit(1)
+    config.load(conffile)
+
+    #deferred imports until config file is loaded and logging is configured
+    from core.state import state
+    from core.events import events
+    from core import httpslistener
+    from core import envisalink
+    from core import envisalinkproxy
 
     #enable the state
     state.init()

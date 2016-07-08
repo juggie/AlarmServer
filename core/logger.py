@@ -2,6 +2,9 @@ import logging, inspect
 import sys
 from os import path
 
+#load config from alarmserver
+from config import config
+
 #class to dispatch our log events
 class DispatchingFormatter:
     def __init__(self, formatters, default_formatter):
@@ -13,7 +16,10 @@ class DispatchingFormatter:
         return formatter.format(record)
 
 #setup logging handler
-handler = logging.StreamHandler()
+if config.LOGTOFILE == True:
+    handler = logging.FileHandler(config.LOGFILE)
+else:
+    handler = logging.StreamHandler()
 
 #set the formatter as our dispatching class
 handler.setFormatter(DispatchingFormatter({
