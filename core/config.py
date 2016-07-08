@@ -1,5 +1,5 @@
 import ConfigParser
-
+from core import logger
 
 MAXPARTITIONS=16
 MAXZONES=128
@@ -8,7 +8,7 @@ MAXALARMUSERS=47
 class config():
     @staticmethod
     def load(configfile):
-        print('Loading config file: %s' % configfile)
+        logger.debug('Loading config file: %s' % configfile)
         config._config = ConfigParser.ConfigParser()
 
         if config._config.read(configfile) == []:
@@ -58,7 +58,7 @@ class config():
     @staticmethod
     def defaulting(section, variable, default, quiet = False):
         if quiet == False:
-            print('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
+            logger.debug('Config option '+ str(variable) + ' not set in ['+str(section)+'] defaulting to: \''+str(default)+'\'')
 
     @staticmethod
     def read_config_var(section, variable, default, type = 'str', quiet = False):
