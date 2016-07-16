@@ -70,7 +70,8 @@ def main(argv):
     plugins = glob.glob(currpath+"/plugins/*.py")
     for p in plugins:
         if str.find(p, '__init__.py') != -1: continue
-        name = p[p.rfind('/')+1:p.find('.')]
+        base=os.path.basename(p)
+        name=os.path.splitext(base)[0]
         exec "from plugins import %s" % name
         exec "%s.init()" % name
 
