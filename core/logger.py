@@ -1,10 +1,10 @@
 import logging, inspect
 import sys
-from os import path
+import os
 from Queue import Queue
 
 #set the root path of our scrippt
-rootpath = path.dirname(path.abspath(sys.modules['__main__'].__file__)) + '/'
+rootpath = os.path.dirname(os.path.abspath(sys.modules['__main__'].__file__)) + '/'
 
 #class to dispatch our log events
 class DispatchingFormatter:
@@ -19,7 +19,11 @@ class DispatchingFormatter:
 def start(logfile = None):
     #setup logging handler
     if logfile:
-        handler = logging.FileHandler(logfile)
+        if os.access(logfile, os.W_OK):
+            handler = logging.FileHandler(logfile)
+        else:
+            handler = logging.StreamHandler()
+            error("Unable to open %s for writing" % logfile)        
     else:
         handler = logging.StreamHandler()
 
