@@ -50,6 +50,9 @@ class ApiHandler(tornado.web.RequestHandler):
 
 @require_basic_auth
 class AuthStaticFileHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        # Disable cache
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
     def get(self, filename):
         return super(AuthStaticFileHandler, self).get(filename)
 

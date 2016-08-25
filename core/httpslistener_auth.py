@@ -8,14 +8,15 @@ def require_basic_auth(handler_class):
     def wrap_execute(handler_execute):
         def require_basic_auth(handler, kwargs):
             try:
-                auth_header = handler.request.headers.get('Authorization')
-                username, password = base64.decodestring(auth_header[6:]).split(':', 2)
                 if config.WEBAUTHUSER == False and config.WEBAUTHPASS == False:
                     return True
                 elif config.WEBAUTHUSER == False or config.WEBAUTHPASS == False:
                     logger.debug('Auth disabled as either user was set w/o pass, or pass was set w/o user')
                     return True
-                elif username == config.WEBAUTHUSER and hashlib.sha1(password).hexdigest() == config.WEBAUTHPASS:
+
+                auth_header = handler.request.headers.get('Authorization')
+                username, password = base64.decodestring(auth_header[6:]).split(':', 2)
+                if username == config.WEBAUTHUSER and hashlib.sha1(password).hexdigest() == config.WEBAUTHPASS:
                     return True
                 else:
                     raise InvalidLogin
