@@ -49,12 +49,12 @@ class state():
 
         #write event
         state.state[type][parameters]['lastevents'].append({  
-                  'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")), 
+                  'datetime' : str(datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")), 
                   'code'     : code,
                   'message'  : message})
 
         #write to all events
         state.state[type]['lastevents'].append({  
-                  'datetime' : str(datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")), 
+                  'datetime' : str(datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")), 
                   'code'     : code,
                   'message'  : message})
