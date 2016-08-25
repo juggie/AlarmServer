@@ -19,9 +19,9 @@ class DispatchingFormatter:
 def start(logfile = None):
     #setup logging handler
     if logfile:
-        if os.access(logfile, os.W_OK):
+        try:
             handler = logging.FileHandler(logfile)
-        else:
+        except IOError:
             handler = logging.StreamHandler()
             error("Unable to open %s for writing" % logfile)        
     else:
@@ -36,7 +36,10 @@ def start(logfile = None):
 
     #setup our handler and log level
     logging.getLogger().addHandler(handler)
-    logging.getLogger().setLevel(logging.DEBUG)
+    if logfile:
+        logging.getLogger().setLevel(logging.INFO)
+    else:
+        logging.getLogger().setLevel(logging.DEBUG)
     start.started = 1
 start.started = 0
 
