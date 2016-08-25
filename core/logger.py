@@ -36,10 +36,7 @@ def start(logfile = None):
 
     #setup our handler and log level
     logging.getLogger().addHandler(handler)
-    if logfile:
-        logging.getLogger().setLevel(logging.INFO)
-    else:
-        logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
     start.started = 1
 start.started = 0
 
