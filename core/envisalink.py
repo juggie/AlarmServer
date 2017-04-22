@@ -2,6 +2,7 @@ import time, datetime, sys, re
 from tornado import gen
 from tornado.tcpclient import TCPClient
 from tornado.iostream import IOStream, StreamClosedError
+from socket import gaierror
 from envisalinkdefs import evl_ResponseTypes
 from envisalinkdefs import evl_Defaults
 from envisalinkdefs import evl_ArmModes
@@ -53,7 +54,7 @@ class Client(object):
     def do_connect(self, reconnect = False):
         # Create the socket and connect to the server
         if reconnect == True:
-            logger.warning('Connection failed, retrying in '+str(self._retrydelay)+ ' seconds')
+            logger.warning('Connection failed, retrying in %s seconds' % str(self._retrydelay))
             yield gen.sleep(self._retrydelay)
 
         while self._connection == None:
@@ -63,9 +64,18 @@ class Client(object):
                 self._connection.set_close_callback(self.handle_close)
             except StreamClosedError:
                 #failed to connect, but got no connection object so we will loop here
-                logger.warning('Connection failed, retrying in '+str(self._retrydelay)+ ' seconds')
+                logger.warning('Connection failed, retrying in %s seconds' % str(self._retrydelay))
                 yield gen.sleep(self._retrydelay)
                 continue
+            except gaierror:
+                #could not resolve host provided, if this is a reconnect, will retry, if not, will fail
+                if reconnect == True:
+                    logger.warning('Connection failed, unable to resolve hostname %s, retrying in %s seconds' % (config.ENVISALINKHOST, str(self._retrydelay)))
+                    yield gen.sleep(self._retrydelay)
+                    continue
+                else:
+                    logger.warning('Connection failed, unable to resolve hostname %s.  Exiting due to incorrect hostname.' % config.ENVISALINKHOST)
+                    sys.exit(0)
 
             try:
                 line = yield self._connection.read_until(self._terminator)
