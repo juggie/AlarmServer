@@ -28,6 +28,7 @@ class config():
         config.ENVISALINKHOST = config.read_config_var('envisalink', 'host', 'envisalink', 'str')
         config.ENVISALINKPORT = config.read_config_var('envisalink', 'port', 4025, 'int')
         config.ENVISALINKPASS = config.read_config_var('envisalink', 'pass', 'user', 'str')
+        config.ENVISALINKKEEPALIVE = config.read_config_var('envisalink', 'keepalive', 60, 'int')
         config.ENVISALINKLOGRAW = config.read_config_var('envisalink', 'lograwmessage', False, 'bool')
         config.ENABLEPROXY = config.read_config_var('envisalink', 'enableproxy', True, 'bool')
         config.ENVISALINKPROXYPORT = config.read_config_var('envisalink', 'proxyport', config.ENVISALINKPORT, 'int')
