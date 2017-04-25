@@ -9,6 +9,7 @@ from envisalinkdefs import evl_ArmModes
 
 #alarmserver logger
 import logger
+import tornado.ioloop
 
 #import config
 from config import config
@@ -48,7 +49,15 @@ class Client(object):
         # Reconnect delay
         self._retrydelay = 10
 
+        # Connect to Envisalink
         self.do_connect()
+
+        # Setup timer to refresh envisalink
+        tornado.ioloop.PeriodicCallback(self.refresh, config.ENVISALINKKEEPALIVE*1000).start()
+
+    def refresh(self):
+        if self._connection:
+            events.put('alarm_update', 'ping')
 
     @gen.coroutine
     def do_connect(self, reconnect = False):
@@ -94,7 +103,7 @@ class Client(object):
         self.do_connect(True)
 
     @gen.coroutine    
-    def send_command(self, code, data, checksum = True):
+    def send_command(self, code, data = '', checksum = True):
         if checksum == True:
             to_send = code+data+get_checksum(code,data)+'\r\n'
         else:
@@ -203,7 +212,7 @@ class Client(object):
         if parameters == '3':
             self.send_command('005', config.ENVISALINKPASS)
         if parameters == '1':
-            self.send_command('001', '')
+            self.send_command('001')
         if parameters == '0':
             logger.warning('Incorrect envisalink password')
             sys.exit(0)
@@ -234,7 +243,11 @@ class Client(object):
         self.handle_event(code, parameters[0], event, message)
 
     def request_action(self, eventType, type, parameters):
-        partition = str(parameters['partition'])
+        try:
+            partition = str(parameters['partition'])
+        except TypeError:
+            partition = None
+
         if type == 'arm':
             self.send_command('030', partition)
         elif type == 'stayarm':
@@ -247,7 +260,9 @@ class Client(object):
             else:
                 self.send_command('040', partition + str(config.ALARMCODE))
         elif type == 'refresh':
-            self.send_command('001', '')
+            self.send_command('001')
+        elif type == 'ping':
+            self.send_command('000')
         elif type == 'pgm':
             response = {'response' : 'Request to trigger PGM'}
 
