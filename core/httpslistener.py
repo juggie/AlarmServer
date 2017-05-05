@@ -27,7 +27,7 @@ class ApiAlarmHandler(tornado.web.RequestHandler):
             if parameters['alarmcode'] == None: raise tornado.web.HTTPError(404)
             response = {'response' : 'Request to arm partition %s with code received' % parameters['partition']}
         elif request == 'disarm':
-            if parameters['alarmcode'] == None: raise tornado.web.HTTPError(404)
+            #if parameters['alarmcode'] == None: raise tornado.web.HTTPError(404)
             response = {'response' : 'Request to disarm partition %s received' % parameters['partition']}
         elif request == 'refresh':
             response = {'response' : 'Request to refresh data received'}
