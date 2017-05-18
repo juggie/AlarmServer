@@ -53,10 +53,13 @@ class Client(object):
         self.do_connect()
 
         # Setup timer to refresh envisalink
-        tornado.ioloop.PeriodicCallback(self.refresh, config.ENVISALINKKEEPALIVE*1000).start()
+        tornado.ioloop.PeriodicCallback(self.check_connection, 1000).start()
 
-    def refresh(self):
-        if self._connection:
+        # Last activity
+        self._last_activity = time.time()
+
+    def check_connection(self):
+        if (self._last_activity + config.ENVISALINKKEEPALIVE) < time.time():
             events.put('alarm_update', 'ping')
 
     @gen.coroutine
@@ -118,6 +121,8 @@ class Client(object):
 
     @gen.coroutine
     def handle_line(self, rawinput):
+        self._last_activity = time.time()
+
         if rawinput == '':
             return
 
