@@ -6,7 +6,7 @@ import os
 from queue import Queue
 
 #set the root path of our scrippt
-rootpath = os.path.dirname(os.path.abspath(sys.modules['__main__'].__file__)) + '/'
+ROOTPATH = os.path.dirname(os.path.abspath(sys.modules['__main__'].__file__)) + '/'
 
 class DispatchingFormatter: # pylint: disable=too-few-public-methods
     """Class to dispatch our log events"""
@@ -20,19 +20,22 @@ class DispatchingFormatter: # pylint: disable=too-few-public-methods
         return formatter.format(record)
 
 def start(logfile=None):
+    """Start logger"""
     #setup logging handler
     if logfile:
         try:
             handler = logging.FileHandler(logfile)
         except IOError:
             handler = logging.StreamHandler()
-            error("Unable to open %s for writing" % logfile)        
+            error("Unable to open %s for writing" % logfile)
     else:
         handler = logging.StreamHandler()
 
     #set the formatter as our dispatching class
-    handler.setFormatter(DispatchingFormatter({
-        'alarmserver': logging.Formatter('%(asctime)s - %(levelname)s - %(s_filename)s:%(s_function_name)s@%(s_line_number)s: %(message)s', '%b %d %H:%M:%S')
+    handler.setFormatter(DispatchingFormatter(
+        {
+            'alarmserver': logging.Formatter('%(asctime)s - %(levelname)s - %(s_filename)s:'\
+                '%(s_function_name)s@%(s_line_number)s: %(message)s', '%b %d %H:%M:%S')
         },
         logging.Formatter('%(asctime)s - %(levelname)s: %(message)s', '%b %d %H:%M:%S'),
     ))
@@ -62,10 +65,14 @@ def info(message):
 
 def write(level, message):
     """Write a message to log"""
-    (frame, filename, line_number, function_name, lines, index) = inspect.getouterframes(inspect.currentframe())[2]
+    #pylint: disable=unused-argument
+    (frame, filename, line_number, function_name, lines, index) = \
+        inspect.getouterframes(inspect.currentframe())[2]
     if filename == __file__:
-        (frame, filename, line_number, function_name, lines, index) = inspect.getouterframes(inspect.currentframe())[3]
-    extra = {'s_filename' : filename.replace(rootpath, ''), 's_line_number' : line_number, 's_function_name' : function_name}
+        (frame, filename, line_number, function_name, lines, index) = \
+            inspect.getouterframes(inspect.currentframe())[3]
+    extra = {'s_filename' : filename.replace(ROOTPATH, ''), 's_line_number' : line_number,\
+        's_function_name' : function_name}
     if start.started:
         while not write.queue.empty():
             job = write.queue.get()

@@ -1,23 +1,24 @@
-## Alarm Server
-## Supporting Envisalink 2DS/3
-## Written by donnyk+envisalink@gmail.com
-##
-## This code is under the terms of the GPL v3 license.
+"""Alarm Server
+Supporting Envisalink 2DS/3/4
+Written by donnyk+envisalink@gmail.com
+This code is under the terms of the GPL v3 license."""
 
-evl_Defaults = {
-	'zone' : {'open' : False, 'fault' : False, 'alarm' : False, 'tamper' : False},
-	'partition' : {'ready' : False, 'trouble' : False, 'exit_delay' : False, 'entry_delay' : False, 'armed' : False, 'armed_bypass' : False, 'alarm' : False, 'tamper' : False, 'chime' : False, 'trouble_led' : False},
-	'system' : {'fire_key_alarm' : False, 'aux_key_alarm' : False, 'panic_key_alarm' : False, '2wire_alarm' : False, 'battery_trouble' : False, 'ac_trouble' : False, 'system_bell_trouble' : False, 'system_tamper' : False, 'fire_trouble' : False}
-	}
+# pylint: disable=line-too-long
 
-evl_ArmModes = {
-        0 : 'Away',
-        1 : 'Stay',
-        2 : 'Zero Entry Away',
-        3 : 'Zero Entry Stay'
-    }
+EVL_DEFAULTS = {
+	   'zone' : {'open' : False, 'fault' : False, 'alarm' : False, 'tamper' : False},
+	   'partition' : {'ready' : False, 'trouble' : False, 'exit_delay' : False, 'entry_delay' : False, 'armed' : False, 'armed_bypass' : False, 'alarm' : False, 'tamper' : False, 'chime' : False, 'trouble_led' : False},
+	   'system' : {'fire_key_alarm' : False, 'aux_key_alarm' : False, 'panic_key_alarm' : False, '2wire_alarm' : False, 'battery_trouble' : False, 'ac_trouble' : False, 'system_bell_trouble' : False, 'system_tamper' : False, 'fire_trouble' : False}
+}
 
-evl_LedBitmask = {
+EVL_ARMMODES = {
+    0 : 'Away',
+    1 : 'Stay',
+    2 : 'Zero Entry Away',
+    3 : 'Zero Entry Stay'
+}
+
+EVL_LEDBITMASK = {
     0x80 : "Backlight",
     0x40 : "Fire",
     0x20 : "Program",
@@ -28,8 +29,7 @@ evl_LedBitmask = {
     0x01 : "Ready"
     }
 
-
-evl_VerboseTroubleBitmask = {
+EVL_VERBOSETROUBLEBITMASK = {
     0x80 : "Loss of Time",
     0x40 : "Zone Low Battery",
     0x20 : "Zone Tamper",
@@ -40,7 +40,7 @@ evl_VerboseTroubleBitmask = {
     0x01 : "Service is Required"
     }
 
-evl_ResponseTypes = {
+EVL_RESPONSETYPES = {
     500 : {'name' : 'Command Acknowledge {0}', 'description' : 'A command has been received successfully.'},
     501 : {'name' : 'Command Error', 'description' : 'A command has been received with a bad checksum.'},
     502 : {'name' : 'System Error {0}', 'description' : 'An error has been detected.'},
@@ -93,7 +93,7 @@ evl_ResponseTypes = {
     701 : {'type' : 'partition', 'name' : 'Partition {0} Special Closing', 'description' : 'A partition has been armed by one of the following methods: Quick Arm, Auto Arm, Keyswitch, DLS software, Wireless Key.', 'status' : {'armed' : True, 'exit_delay' : False}},
     702 : {'type' : 'partition', 'name' : 'Partition {0} Partial Closing', 'description' : 'A partition has been armed but one or more zones have been bypassed.', 'status' : {'armed' : True, 'exit_delay' : False}},
     750 : {'type' : 'partition', 'name' : 'Partition {0} User {1} Opening', 'description' : 'A partition has been disarmed by a user.', 'handler' : 'partition', 'status' : {'armed' : False, 'entry_delay' : False}},
-    751 : {'type' : 'partition', 'name' : 'Partition {0} Special Opening', 'description' : 'A partition has been disarmed by one of the following methods: Keyswitch, DLS software, Wireless Key.',  'status' : {'armed' : False, 'entry_delay' : False}},
+    751 : {'type' : 'partition', 'name' : 'Partition {0} Special Opening', 'description' : 'A partition has been disarmed by one of the following methods: Keyswitch, DLS software, Wireless Key.', 'status' : {'armed' : False, 'entry_delay' : False}},
     800 : {'type' : 'system', 'name' : 'Panel Battery Trouble', 'description' : 'The panel has a low battery.', 'status' : {'battery_trouble' : True}},
     801 : {'type' : 'system', 'name' : 'Panel Battery Trouble Restore', 'description' : 'The panel''s low battery has been restored.', 'status' : {'battery_trouble' : False}},
     802 : {'type' : 'system', 'name' : 'Panel AC Trouble', 'description' : 'AC power to the panel has been removed.', 'status' : {'ac_trouble' : True}},
@@ -112,5 +112,5 @@ evl_ResponseTypes = {
     900 : {'name' : 'Code Required', 'description' : 'This command will tell the API to enter an access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'},
     912 : {'name' : 'Command Output Pressed Partition {0[0]} Command {0[1]}', 'description' : 'This command will tell the API to enter an access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'},
     921 : {'name' : 'Master Code Required', 'description' : 'This command will tell the API to enter a master access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'},
-    922 : {'name' : 'Installers Code Required', 'description' : 'This command will tell the API to enter an installers access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'},    
-  }
+    922 : {'name' : 'Installers Code Required', 'description' : 'This command will tell the API to enter an installers access code. Once entered, the 200 command will be sent to perform the required action. The code should be entered within the window time of the panel.'}
+}
