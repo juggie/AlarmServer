@@ -14,14 +14,13 @@ import glob
 import importlib
 
 #alarm server modules
-from core.config import config
+from core.config import Config
 from core.state import state
 from core import logger
 from core import httpslistener
 from core import envisalink
 from core import envisalinkproxy
 
-#TODO: move elsewhere
 import tornado.ioloop
 
 def main(argv):
@@ -42,11 +41,11 @@ def main(argv):
             conffile = arg
 
     #load config
-    config.load(conffile)
+    Config.load(conffile)
 
     #start logger
-    if config.LOGTOFILE:
-        logger.start(config.LOGFILE)
+    if Config.LOGTOFILE:
+        logger.start(Config.LOGFILE)
     else:
         logger.start()
 
@@ -64,11 +63,11 @@ def main(argv):
     alarmproxy = envisalinkproxy.Proxy()
 
     #start https server
-    if config.HTTPS:
+    if Config.HTTPS:
         httpsserver = httpslistener.start()
 
     #start http server
-    if config.HTTP:
+    if Config.HTTP:
         httpserver = httpslistener.start(https=False)
     #pylint: enable=W0612
 

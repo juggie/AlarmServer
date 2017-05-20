@@ -4,7 +4,7 @@ from tornado import gen
 from tornado.tcpserver import TCPServer
 from tornado.iostream import IOStream, StreamClosedError
 
-from .config import config
+from .config import Config
 from .events import events
 from .envisalink import get_checksum
 
@@ -12,10 +12,10 @@ from .envisalink import get_checksum
 
 class Proxy(object):
     def __init__(self):
-        if config.ENABLEPROXY == True:
+        if Config.ENABLEPROXY == True:
             logger.debug('Staring Envisalink Proxy')
             proxy = ProxyServer()
-            proxy.listen(config.ENVISALINKPROXYPORT)
+            proxy.listen(Config.ENVISALINKPROXYPORT)
 
 class ProxyServer(TCPServer):
     def __init__(self, io_loop=None, ssl_options=None, **kwargs):
@@ -62,7 +62,7 @@ class ProxyConnection(object):
                 if self.authenticated == True:
                     events.put('envisalink', None, line) 
                 else:
-                    if line.strip() == ('005' + config.ENVISALINKPROXYPASS + get_checksum('005', config.ENVISALINKPROXYPASS)):
+                    if line.strip() == ('005' + Config.ENVISALINKPROXYPASS + get_checksum('005', Config.ENVISALINKPROXYPASS)):
                         logger.info('Proxy User Authenticated')
                         self.authenticated = True
                         self.send_command('5051')

@@ -14,7 +14,7 @@ from .envisalinkdefs import EVL_DEFAULTS
 from .envisalinkdefs import EVL_ARMMODES
 
 from . import logger
-from .config import config
+from .config import Config
 from .events import events
 
 def get_message_type(code):
@@ -66,7 +66,7 @@ class Client(object):
 
     def check_connection(self):
         """Check the envisalink connection with a ping to make sure it's still alive"""
-        if (self._last_activity + config.ENVISALINKKEEPALIVE) < time.time():
+        if (self._last_activity + Config.ENVISALINKKEEPALIVE) < time.time():
             events.put('alarm_update', 'ping')
 
     @gen.coroutine
@@ -77,10 +77,10 @@ class Client(object):
             yield gen.sleep(self._retrydelay)
 
         while self._connection is None:
-            logger.debug('Connecting to {}:{}'.format(config.ENVISALINKHOST, config.ENVISALINKPORT))
+            logger.debug('Connecting to {}:{}'.format(Config.ENVISALINKHOST, Config.ENVISALINKPORT))
             try:
-                self._connection = yield self.tcpclient.connect(config.ENVISALINKHOST,\
-                    config.ENVISALINKPORT)
+                self._connection = yield self.tcpclient.connect(Config.ENVISALINKHOST,\
+                    Config.ENVISALINKPORT)
                 self._connection.set_close_callback(self.handle_close)
             except StreamClosedError:
                 # Failed to connect, but got no connection object so we will loop here
@@ -92,12 +92,12 @@ class Client(object):
                 # will retry, if not, will fail
                 if reconnect:
                     logger.warning('Connection failed, unable to resolve hostname %s, '\
-                        'retrying in %s seconds' % (config.ENVISALINKHOST, str(self._retrydelay)))
+                        'retrying in %s seconds' % (Config.ENVISALINKHOST, str(self._retrydelay)))
                     yield gen.sleep(self._retrydelay)
                     continue
                 else:
                     logger.warning('Connection failed, unable to resolve hostname %s. '\
-                        'Exiting due to incorrect hostname.' % config.ENVISALINKHOST)
+                        'Exiting due to incorrect hostname.' % Config.ENVISALINKHOST)
                     sys.exit(0)
 
             try:
@@ -108,14 +108,14 @@ class Client(object):
                 # and let handle_close deal with this
                 return
 
-            logger.debug("Connected to %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
+            logger.debug("Connected to %s:%i" % (Config.ENVISALINKHOST, Config.ENVISALINKPORT))
             self.handle_line(line.decode())
 
     @gen.coroutine
     def handle_close(self):
         """Handle connection closed"""
         self._connection = None
-        logger.info("Disconnected from %s:%i" % (config.ENVISALINKHOST, config.ENVISALINKPORT))
+        logger.info("Disconnected from %s:%i" % (Config.ENVISALINKHOST, Config.ENVISALINKPORT))
         self.do_connect(True)
 
     @gen.coroutine
@@ -142,7 +142,7 @@ class Client(object):
             return
 
         envis_input = rawinput.strip()
-        if config.ENVISALINKLOGRAW:
+        if Config.ENVISALINKLOGRAW:
             logger.debug('RX RAW < "' + str(envis_input) + '"')
 
         if re.match(r'^\d\d:\d\d:\d\d ', envis_input):
@@ -198,7 +198,7 @@ class Client(object):
             if event['type'] == 'partition':
                 # If parameters includes extra digits then this next line would fail
                 # without looking at just the first digit which is the partition number
-                if int(parameters[0]) in config.PARTITIONNAMES:
+                if int(parameters[0]) in Config.PARTITIONNAMES:
                     # After partition number can be either a usercode
                     # or for event 652 a type of arm mode (single digit)
                     # Usercode is always 4 digits padded with zeros
@@ -208,24 +208,24 @@ class Client(object):
                             usercode = int(parameters[1:5])
                         except:
                             usercode = 0
-                        if int(usercode) in config.ALARMUSERNAMES:
-                            alarmusername = config.ALARMUSERNAMES[int(usercode)]
+                        if int(usercode) in Config.ALARMUSERNAMES:
+                            alarmusername = Config.ALARMUSERNAMES[int(usercode)]
                         else:
                             # Didn't find a username, use the code instead
                             alarmusername = usercode
                         return event['name'].format(\
-                            str(config.PARTITIONNAMES[int(parameters[0])]), str(alarmusername))
+                            str(Config.PARTITIONNAMES[int(parameters[0])]), str(alarmusername))
                     elif len(parameters) == 2:
                         # We have an arm mode instead, get it's friendly name
                         armmode = EVL_ARMMODES[int(parameters[1])]
                         return event['name'].format(\
-                            str(config.PARTITIONNAMES[int(parameters[0])]), str(armmode))
+                            str(Config.PARTITIONNAMES[int(parameters[0])]), str(armmode))
                     else:
-                        return event['name'].format(str(config.PARTITIONNAMES[int(parameters)]))
+                        return event['name'].format(str(Config.PARTITIONNAMES[int(parameters)]))
             elif event['type'] == 'zone':
-                if int(parameters) in config.ZONENAMES:
-                    if config.ZONENAMES[int(parameters)] != False:
-                        return event['name'].format(str(config.ZONENAMES[int(parameters)]))
+                if int(parameters) in Config.ZONENAMES:
+                    if Config.ZONENAMES[int(parameters)] != False:
+                        return event['name'].format(str(Config.ZONENAMES[int(parameters)]))
 
         return event['name'].format(str(parameters))
 
@@ -233,7 +233,7 @@ class Client(object):
     def handle_login(self, code, parameters, event, message):
         """Handle envisalink login"""
         if parameters == '3':
-            self.send_command('005', config.ENVISALINKPASS)
+            self.send_command('005', Config.ENVISALINKPASS)
         if parameters == '1':
             self.send_command('001')
         if parameters == '0':
@@ -253,8 +253,8 @@ class Client(object):
         except IndexError:
             default_status = {}
 
-        if (event['type'] == 'zone' and parameters in config.ZONENAMES) or\
-            (event['type'] == 'partition' and parameters in config.PARTITIONNAMES):
+        if (event['type'] == 'zone' and parameters in Config.ZONENAMES) or\
+            (event['type'] == 'partition' and parameters in Config.PARTITIONNAMES):
             events.put('alarm', event['type'], parameters, code, event, message, default_status)
         elif event['type'] == 'zone' or event['type'] == 'partition':
             logger.debug('Ignoring unnamed %s %s' % (event['type'], parameters))
@@ -286,7 +286,7 @@ class Client(object):
             if 'alarmcode' in parameters:
                 self.send_command('040', partition + str(parameters['alarmcode']))
             else:
-                self.send_command('040', partition + str(config.ALARMCODE))
+                self.send_command('040', partition + str(Config.ALARMCODE))
         elif type == 'refresh':
             self.send_command('001')
         elif type == 'ping':

@@ -1,5 +1,5 @@
 import base64, hashlib
-from .config import config
+from .config import Config
 from . import logger
 
 class InvalidLogin(Exception):
@@ -9,15 +9,15 @@ def require_basic_auth(handler_class):
     def wrap_execute(handler_execute):
         def require_basic_auth(handler, kwargs):
             try:
-                if config.WEBAUTHUSER == False and config.WEBAUTHPASS == False:
+                if Config.WEBAUTHUSER == False and Config.WEBAUTHPASS == False:
                     return True
-                elif config.WEBAUTHUSER == False or config.WEBAUTHPASS == False:
+                elif Config.WEBAUTHUSER == False or Config.WEBAUTHPASS == False:
                     logger.debug('Auth disabled as either user was set w/o pass, or pass was set w/o user')
                     return True
 
                 auth_header = handler.request.headers.get('Authorization')
                 username, password = base64.decodestring(auth_header[6:]).split(':', 2)
-                if username == config.WEBAUTHUSER and hashlib.sha1(password).hexdigest() == config.WEBAUTHPASS:
+                if username == Config.WEBAUTHUSER and hashlib.sha1(password).hexdigest() == Config.WEBAUTHPASS:
                     return True
                 else:
                     raise InvalidLogin

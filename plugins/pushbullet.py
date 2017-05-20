@@ -1,36 +1,51 @@
-import http.client, urllib.request, urllib.parse, urllib.error, json
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+"""IFTTT Maker plugin"""
+import urllib.request
+import urllib.parse
+import urllib.error
+import json
+from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 
 from core import logger
-from core.config import config
+from core.config import Config
 from core.events import events
 
 def init():
-    config.PUSHBULLET_ENABLE = config.read_config_var('pushbullet', 'enable', False, 'bool') #todo fix me
-    if config.PUSHBULLET_ENABLE == True:
-        config.PUSHBULLET_USERTOKEN = config.read_config_var('pushbullet', 'usertoken', False, 'str')
-        if config.PUSHBULLET_USERTOKEN != False:
-            config.PUSHBULLET_IGNOREZONES = config.read_config_var('pushbullet', 'ignorezones', [], 'listint')
-            config.PUSHBULLET_IGNOREPARTITIONS = config.read_config_var('pushbullet', 'ignorepartitions', [], 'listint')
-            logger.debug('PUSHBULLET Enabled - Partitions Ignored: %s - Zones Ignored: %s' 
-                % (",".join([str (i) for i in config.PUSHBULLET_IGNOREPARTITIONS]), ",".join([str(i) for i in config.PUSHBULLET_IGNOREZONES])))
-            events.register('statechange', sendNotification, config.PUSHBULLET_IGNOREPARTITIONS, config.PUSHBULLET_IGNOREZONES)
+    """Init function for pushbullet plugin"""
+    Config.PUSHBULLET_ENABLE = \
+        Config.read_config_var('pushbullet', 'enable', False, 'bool')
+    if Config.PUSHBULLET_ENABLE:
+        Config.PUSHBULLET_USERTOKEN = \
+            Config.read_config_var('pushbullet', 'usertoken', False, 'str')
+        if Config.PUSHBULLET_USERTOKEN != False:
+            Config.PUSHBULLET_IGNOREZONES = \
+                Config.read_config_var('pushbullet', 'ignorezones', [], 'listint')
+            Config.PUSHBULLET_IGNOREPARTITIONS = \
+                Config.read_config_var('pushbullet', 'ignorepartitions', [], 'listint')
+            logger.debug('PUSHBULLET Enabled - Partitions Ignored: %s - Zones Ignored: %s' \
+                % (",".join([str(i) for i in Config.PUSHBULLET_IGNOREPARTITIONS]), \
+                ",".join([str(i) for i in Config.PUSHBULLET_IGNOREZONES])))
+            events.register('statechange', send_notification, \
+                Config.PUSHBULLET_IGNOREPARTITIONS, Config.PUSHBULLET_IGNOREZONES)
             pushbulletRequest('login')
 
-def sendNotification(eventType, type, parameters, code, event, message, defaultStatus):
-	pushbulletRequest('notify', message)
+def send_notification(eventType, type, parameters, code, event, message, defaultStatus):
+    """Send pushbullet notification"""
+    pushbulletRequest('notify', message)
 
 @gen.coroutine
-def pushbulletRequest(type, message = None):
+def pushbulletRequest(type, message=None):
+    """Make an pushbullet request"""
     http_client = AsyncHTTPClient()
     if type == 'login':
-        res = yield http_client.fetch("https://api.pushbullet.com/v2/users/me", method='GET', headers={"Access-Token": config.PUSHBULLET_USERTOKEN})
+        res = yield http_client.fetch("https://api.pushbullet.com/v2/users/me", method='GET', \
+            headers={"Access-Token": Config.PUSHBULLET_USERTOKEN})
         userdetails = json.loads(res.body)
         #todo add code to handle login error and disable plugin
         logger.debug('Pushover enabled - User: %(name)s Email: %(email)s' % userdetails)
     elif type == 'notify':
-        body = urllib.parse.urlencode({"body": message,"title":"AlarmServer","type":"note"})
-        res = yield http_client.fetch("https://api.pushbullet.com/v2/pushes", method='POST', headers={"Access-Token": config.PUSHBULLET_USERTOKEN}, body=body)
+        body = urllib.parse.urlencode({"body": message, "title":"AlarmServer", "type":"note"})
+        res = yield http_client.fetch("https://api.pushbullet.com/v2/pushes", method='POST', \
+            headers={"Access-Token": Config.PUSHBULLET_USERTOKEN}, body=body)
     else:
         logger.error('Unsupported pushbullet request')
