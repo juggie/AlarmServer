@@ -1,4 +1,6 @@
 """Envisalink module"""
+#pylint: disable=R0201
+
 import time
 import sys
 import re
@@ -125,7 +127,6 @@ class Client(object):
             to_send = code+data+'\r\n'
 
         try:
-            print(type(to_send))
             yield self._connection.write(to_send.encode('ascii'))
             logger.debug('TX > '+to_send[:-1])
         except StreamClosedError:

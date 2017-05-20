@@ -65,9 +65,10 @@ def info(message):
 
 def write(level, message):
     """Write a message to log"""
-    #pylint: disable=unused-argument
+    #pylint: disable=unused-variable
     (frame, filename, line_number, function_name, lines, index) = \
         inspect.getouterframes(inspect.currentframe())[2]
+    #pylint: enable=unused-variable
     if filename == __file__:
         (frame, filename, line_number, function_name, lines, index) = \
             inspect.getouterframes(inspect.currentframe())[3]
