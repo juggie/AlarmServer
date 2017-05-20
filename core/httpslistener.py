@@ -7,11 +7,11 @@ import tornado.web
 import tornado.httpserver
 
 #alarm server modules
-from config import config
-from state import state
-from events import events
-from httpslistener_auth import require_basic_auth
-import logger
+from .config import config
+from .state import state
+from .events import events
+from .httpslistener_auth import require_basic_auth
+from . import logger
 
 @require_basic_auth
 class ApiAlarmHandler(tornado.web.RequestHandler):
@@ -57,13 +57,16 @@ class AuthStaticFileHandler(tornado.web.StaticFileHandler):
         return super(AuthStaticFileHandler, self).get(filename)
 
 def start(https = True):
-    logger.info("%s Server started on port: %s" % (('HTTPS',config.HTTPSPORT) if https == True else ('HTTP', config.HTTPPORT))) 
-    ext_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../ext')
-    return tornado.httpserver.HTTPServer(tornado.web.Application([
-        (r'/api/alarm/(arm|stayarm|armwithcode|disarm)', ApiAlarmHandler),
-        (r'/api/(refresh|pgm)', ApiAlarmHandler),
-        (r'/api/config/eventtimeago', ApiEventTimeAgoHandler),
-        (r'/api', ApiHandler),
-        (r'/img/(.*)', AuthStaticFileHandler, {'path': ext_path}),
-        (r'/(.*)', AuthStaticFileHandler, {'default_filename' : 'index.html', 'path': ext_path}),
-    ]),ssl_options={"certfile": config.CERTFILE, "keyfile" : config.KEYFILE} if https == True else None).listen(config.HTTPSPORT if https == True else config.HTTPPORT)
+    if https == True and (not config.CERTFILE or not config.KEYFILE):
+        logger.error("Unable to start HTTPS server without certfile and keyfile")
+    else:
+        logger.info("%s Server started on port: %s" % (('HTTPS',config.HTTPSPORT) if https == True else ('HTTP', config.HTTPPORT))) 
+        ext_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../ext')
+        return tornado.httpserver.HTTPServer(tornado.web.Application([
+            (r'/api/alarm/(arm|stayarm|armwithcode|disarm)', ApiAlarmHandler),
+            (r'/api/(refresh|pgm)', ApiAlarmHandler),
+            (r'/api/config/eventtimeago', ApiEventTimeAgoHandler),
+            (r'/api', ApiHandler),
+            (r'/img/(.*)', AuthStaticFileHandler, {'path': ext_path}),
+            (r'/(.*)', AuthStaticFileHandler, {'default_filename' : 'index.html', 'path': ext_path}),
+        ]),ssl_options={"certfile": config.CERTFILE, "keyfile" : config.KEYFILE} if https == True else None).listen(config.HTTPSPORT if https == True else config.HTTPPORT)

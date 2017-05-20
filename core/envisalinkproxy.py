@@ -1,12 +1,12 @@
-import logger
+from . import logger
 
 from tornado import gen
 from tornado.tcpserver import TCPServer
 from tornado.iostream import IOStream, StreamClosedError
 
-from config import config
-from events import events
-from envisalink import get_checksum
+from .config import config
+from .events import events
+from .envisalink import get_checksum
 
 #TODO: handle exceptions
 
@@ -35,7 +35,7 @@ class ProxyServer(TCPServer):
     #zone/parameters not used, should fix this to not be passed
     @gen.coroutine
     def proxy_event(self, zone, parameters, input):
-        for s,k in self.connections.iteritems():
+        for s,k in list(self.connections.items()):
             yield k.write(input)
 
 class ProxyConnection(object):

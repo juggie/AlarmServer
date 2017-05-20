@@ -1,4 +1,4 @@
-import httplib, urllib, json
+import http.client, urllib.request, urllib.parse, urllib.error, json
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado import gen
 
@@ -28,7 +28,7 @@ def iftttMakerRequest(eventType, message = None):
     http_client = AsyncHTTPClient()
     if iftttMakerRequestType == 'notify':
         # Build event Json body
-        body = urllib.urlencode({'value1': message})
+        body = urllib.parse.urlencode({'value1': message})
         url = 'https://maker.ifttt.com/trigger/' + config.IFTTT_MAKER_EVENT_NAME + '/with/key/' + config.IFTTT_MAKER_KEY
 
         logger.debug('IFTTT_MAKER: Pushing event: ' + url + ' with body: ' + body)

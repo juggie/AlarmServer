@@ -1,4 +1,4 @@
-import ConfigParser
+import configparser
 from core import logger
 
 MAXPARTITIONS=16
@@ -9,7 +9,7 @@ class config():
     @staticmethod
     def load(configfile):
         logger.debug('Loading config file: %s' % configfile)
-        config._config = ConfigParser.ConfigParser()
+        config._config = configparser.ConfigParser()
 
         if config._config.read(configfile) == []:
             raise RuntimeError('Unable to load config file: %s' % configfile)
@@ -74,6 +74,6 @@ class config():
                 return config._config.get(section,variable).split(",")
             elif type == 'listint':
                 return [int (i) for i in config._config.get(section,variable).split(",")]
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             config.defaulting(section, variable, default, quiet)
             return default

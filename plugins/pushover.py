@@ -1,4 +1,4 @@
-import httplib, urllib, json
+import http.client, urllib.request, urllib.parse, urllib.error, json
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado import gen
 
@@ -22,7 +22,7 @@ def init():
 @gen.coroutine
 def sendNotification(eventType, type, parameters, code, event, message, defaultStatus):
     http_client = AsyncHTTPClient()
-    body = urllib.urlencode({
+    body = urllib.parse.urlencode({
         "token": ALARMSERVER_PUSHOVER_TOKEN,
         "user": config.PUSHOVER_USERTOKEN,
         "message": str(message)})

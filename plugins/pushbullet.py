@@ -1,4 +1,4 @@
-import httplib, urllib, json
+import http.client, urllib.request, urllib.parse, urllib.error, json
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado import gen
 
@@ -30,7 +30,7 @@ def pushbulletRequest(type, message = None):
         #todo add code to handle login error and disable plugin
         logger.debug('Pushover enabled - User: %(name)s Email: %(email)s' % userdetails)
     elif type == 'notify':
-        body = urllib.urlencode({"body": message,"title":"AlarmServer","type":"note"})
+        body = urllib.parse.urlencode({"body": message,"title":"AlarmServer","type":"note"})
         res = yield http_client.fetch("https://api.pushbullet.com/v2/pushes", method='POST', headers={"Access-Token": config.PUSHBULLET_USERTOKEN}, body=body)
     else:
         logger.error('Unsupported pushbullet request')

@@ -1,5 +1,6 @@
-import logger, base64, hashlib
-from config import config
+import base64, hashlib
+from .config import config
+from . import logger
 
 class InvalidLogin(Exception):
     pass

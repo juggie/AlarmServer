@@ -1,9 +1,9 @@
 import datetime
 
 #alarmserver modules
-import logger
-from config import config
-from events import events
+from . import logger
+from .config import config
+from .events import events
 
 class state():
     logger.debug('State Module Loaded')

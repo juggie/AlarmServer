@@ -1,31 +1,33 @@
-import time, datetime, sys, re
+import time, sys, re
 from tornado import gen
 from tornado.tcpclient import TCPClient
-from tornado.iostream import IOStream, StreamClosedError
+from tornado.iostream import StreamClosedError
 from socket import gaierror
-from envisalinkdefs import evl_ResponseTypes
-from envisalinkdefs import evl_Defaults
-from envisalinkdefs import evl_ArmModes
+from .envisalinkdefs import evl_ResponseTypes
+from .envisalinkdefs import evl_Defaults
+from .envisalinkdefs import evl_ArmModes
 
 #alarmserver logger
-import logger
+from . import logger
 import tornado.ioloop
 
 #import config
-from config import config
-from events import events
+from .config import config
+from .events import events
 
 def getMessageType(code):
     return evl_ResponseTypes[code]
 
 def to_chars(string):
     chars = []
+    print(string)
     for char in string:
+        print(char)
         chars.append(ord(char))
-    return chars
+    return(chars)
 
 def get_checksum(code, data):
-    return ("%02X" % sum(to_chars(code)+to_chars(data)))[-2:]
+    return("%02X" % sum(to_chars(code)+to_chars(data)))[-2:]
 
 class Client(object):
     def __init__(self):
@@ -113,7 +115,7 @@ class Client(object):
             to_send = code+data+'\r\n'
 
         try:
-            res = yield self._connection.write(to_send)
+            yield self._connection.write(to_send)
             logger.debug('TX > '+to_send[:-1])
         except StreamClosedError:
             #we don't need to handle this, the callback has been set for closed connections.
@@ -126,32 +128,32 @@ class Client(object):
         if rawinput == '':
             return
 
-        input = rawinput.strip()
+        envis_input = rawinput.strip()
         if config.ENVISALINKLOGRAW == True:
-            logger.debug('RX RAW < "' + str(input) + '"')
+            logger.debug('RX RAW < "' + str(envis_input) + '"')
 
-        if re.match(r'^\d\d:\d\d:\d\d ',input):
-            evltime = input[:8]
-            input = input[9:]
+        if re.match(b'^\d\d:\d\d:\d\d ',envis_input):
+            evltime = envis_input[:8]
+            envis_input = envis_input[9:]
 
-        if not re.match(r'^[0-9a-fA-F]{5,}$', input):
-            logger.warning('Received invalid TPI message: ' + repr(rawinput));
+        if not re.match(b'^[0-9a-fA-F]{5,}$', envis_input):
+            logger.warning('Received invalid TPI message: ' + repr(rawinput))
             return
 
-        code = int(input[:3])
-        parameters = input[3:][:-2]
+        code = int(envis_input[:3])
+        parameters = envis_input[3:][:-2]
         try:
             event = getMessageType(int(code))
         except KeyError:
             logger.warning('Received unknown TPI code: "%s", parameters: "%s"' %
-                           (input[:3], parameters))
+                           (envis_input[:3], parameters))
             return
 
-        rcksum = int(input[-2:], 16)
-        ccksum = int(get_checksum(input[:3],parameters), 16)
+        rcksum = int(envis_input[-2:], 16)
+        ccksum = int(get_checksum(envis_input[:3],parameters), 16)
         if rcksum != ccksum:
             logger.warning('Received invalid TPI checksum %02X vs %02X: "%s"' %
-                           (rcksum, ccksum, input))
+                           (rcksum, ccksum, envis_input))
             return
 
         message = self.format_event(event, parameters)
