@@ -1,11 +1,11 @@
 """This is the logger for alarmserver"""
-import logging
 import inspect
-import sys
+import logging
 import os
+import sys
 from queue import Queue
 
-#set the root path of our scrippt
+#set the root path of our script
 ROOTPATH = os.path.dirname(os.path.abspath(sys.modules['__main__'].__file__)) + '/'
 
 class DispatchingFormatter: # pylint: disable=too-few-public-methods

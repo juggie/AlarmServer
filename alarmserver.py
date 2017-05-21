@@ -69,7 +69,7 @@ def main(argv):
         httpserver = httpslistener.start(config, https=False)
     #pylint: enable=W0612
 
-    #load plugins - TODO: make this way better
+    #load plugins
     currpath = os.path.dirname(os.path.abspath(__file__))
     plugins = glob.glob(currpath+"/plugins/*.py")
     for plug in plugins:
@@ -77,7 +77,7 @@ def main(argv):
             continue
         base = os.path.basename(plug)
         name = os.path.splitext(base)[0]
-        getattr(importlib.import_module("plugins.{}".format(name)), 'init')(config)
+        getattr(importlib.import_module("plugins.{}".format(name)), name)(config)
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()

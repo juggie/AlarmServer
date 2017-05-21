@@ -1,4 +1,5 @@
 """Envisalink Proxy"""
+#pylint: disable=R0903
 from tornado import gen
 from tornado.tcpserver import TCPServer
 from tornado.iostream import StreamClosedError
@@ -69,7 +70,9 @@ class ProxyConnection(object):
                 if self.authenticated:
                     Events.put('envisalink', None, line)
                 else:
-                    if line.strip() == ('005' + self.config.envisalinkproxypass + get_checksum('005', self.config.envisalinkproxypass)):
+                    if line.strip() == '005{}{}'.format(
+                            self.config.envisalinkproxypass,
+                            get_checksum('005', self.config.envisalinkproxypass)):
                         logger.info('Proxy User Authenticated')
                         self.authenticated = True
                         self.send_command('5051')
