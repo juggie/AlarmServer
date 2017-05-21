@@ -10,7 +10,7 @@ from tornado import gen
 from core import logger
 from core.events import Events
 
-class ifttt_maker(object):
+class Iftttmaker(object):
     """Ifttt maker plugin class"""
     def __init__(self, config):
         """Init function for IFTTT plugin"""
@@ -42,14 +42,13 @@ class ifttt_maker(object):
     @gen.coroutine
     def ifttt_maker_request(self, event_type, message=None):
         """Make an IFTTT maker request"""
-        http_client = AsyncHTTPClient()
         if event_type == 'notify':
             # Build event Json body
             body = urlparse.urlencode({'value1': message})
             url = 'https://maker.ifttt.com/trigger/{}/with/key/{}'.format(
                 self.config.IFTTT_MAKER_EVENT_NAME, self.config.IFTTT_MAKER_KEY)
             logger.debug('IFTTT_MAKER: Pushing event: ' + url + ' with body: ' + body)
-            res = yield http_client.fetch(url, method='POST', body=body)
+            res = yield AsyncHTTPClient().fetch(url, method='POST', body=body)
 
             # Check result
             if res.code == 200:

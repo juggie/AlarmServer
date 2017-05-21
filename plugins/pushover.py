@@ -10,7 +10,7 @@ from tornado import gen
 from core import logger
 from core.events import Events
 
-class pushover(object):
+class Pushover(object):
     """Pushover plugin class"""
     def __init__(self, config):
         """Init function for pushover plugin"""
@@ -33,13 +33,12 @@ class pushover(object):
     @gen.coroutine
     def send_notification(self, event_type, type, parameters, code, event, message, default_status):
         """Send pushover notificiation"""
-        http_client = AsyncHTTPClient()
         body = urlparse.urlencode({
             "token": self.pushover_token,
             "user": self.config.PUSHOVER_USERTOKEN,
             "message": str(message)})
-        yield http_client.fetch("https://api.pushover.net/1/messages.json",
-                                method='POST',
-                                headers={"Content-type": "application/x-www-form-urlencoded"},
-                                body=body)
+        yield AsyncHTTPClient().fetch("https://api.pushover.net/1/messages.json",
+                                      method='POST',
+                                      headers={"Content-type": "application/x-www-form-urlencoded"},
+                                      body=body)
         logger.debug('Pushover notification sent')

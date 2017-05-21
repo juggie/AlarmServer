@@ -12,7 +12,7 @@ from tornado import gen
 from core import logger
 from core.events import Events
 
-class pushbullet(object):
+class Pushbullet(object):
     def __init__(self, config):
         """Init function for pushbullet plugin"""
         self.config = config
@@ -39,9 +39,8 @@ class pushbullet(object):
     @gen.coroutine
     def pushbulletRequest(self, type, message=None):
         """Make an pushbullet request"""
-        http_client = AsyncHTTPClient()
         if type == 'login':
-            res = yield http_client.fetch("https://api.pushbullet.com/v2/users/me", method='GET', \
+            res = yield AsyncHTTPClient().fetch("https://api.pushbullet.com/v2/users/me", method='GET', \
                 headers={"Access-Token": self.config.PUSHBULLET_USERTOKEN})
             userdetails = json.loads(res.body)
             #todo add code to handle login error and disable plugin

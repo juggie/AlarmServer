@@ -77,7 +77,7 @@ def main(argv):
             continue
         base = os.path.basename(plug)
         name = os.path.splitext(base)[0]
-        getattr(importlib.import_module("plugins.{}".format(name)), name)(config)
+        getattr(importlib.import_module("plugins.{}".format(name)), name.title())(config)
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()
