@@ -1,6 +1,9 @@
 """Config Module"""
 #pylint: disable=R0901,R0904
-import configparser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 from core import logger
 
 class Config(configparser.ConfigParser):
