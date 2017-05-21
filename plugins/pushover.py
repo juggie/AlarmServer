@@ -6,7 +6,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 
 from core import logger
-from core.events import events
+from core.events import Events
 
 ALARMSERVER_PUSHOVER_TOKEN = "qo0nwMNdX56KJl0Avd4NHE2onO4Xff"
 
@@ -16,18 +16,17 @@ def init(config):
     if config.PUSHOVER_ENABLE:
         config.PUSHOVER_USERTOKEN = config.get_val('pushover', 'usertoken', False, 'str')
         if config.PUSHOVER_USERTOKEN != False:
-            config.PUSHOVER_IGNOREZONES = \
-                config.get_val('pushover', 'ignorezones', [], 'listint')
-            config.PUSHOVER_IGNOREPARTITIONS = \
-                config.get_val('pushover', 'ignorepartitions', [], 'listint')
-            logger.debug('Pushover Enabled - Partitions Ignored: %s - Zones Ignored: %s' \
-                % (",".join([str(i) for i in config.PUSHOVER_IGNOREPARTITIONS]), \
-                ",".join([str(i) for i in config.PUSHOVER_IGNOREZONES])))
-            events.register('statechange', send_notification, config.PUSHOVER_IGNOREPARTITIONS, \
-                config.PUSHOVER_IGNOREZONES)
+            config.PUSHOVER_IGNOREZONES = config.get_val('pushover', 'ignorezones', [], 'listint')
+            config.PUSHOVER_IGNOREPARTITIONS = config.get_val('pushover',
+                                                              'ignorepartitions', [], 'listint')
+            logger.debug('Pushover Enabled - Partitions Ignored: %s - Zones Ignored: %s'
+                         % (",".join([str(i) for i in config.PUSHOVER_IGNOREPARTITIONS]),
+                            ",".join([str(i) for i in config.PUSHOVER_IGNOREZONES])))
+            Events.register('statechange', send_notification,
+                            config.PUSHOVER_IGNOREPARTITIONS, config.PUSHOVER_IGNOREZONES)
 
 @gen.coroutine
-def send_notification(config, eventType, type, parameters, code, event, message, defaultStatus):
+def send_notification(event_type, type, parameters, code, event, message, default_status):
     """Send pushover notificiation"""
     http_client = AsyncHTTPClient()
     body = urllib.parse.urlencode({

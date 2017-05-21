@@ -4,7 +4,7 @@ import datetime
 
 #alarmserver modules
 from . import logger
-from .events import events
+from .events import Events
 
 class State():
     """State class"""
@@ -15,7 +15,7 @@ class State():
         """Init"""
         State.config = config
         State.state = {}
-        events.register('alarm', State.update)
+        Events.register('alarm', State.update)
 
     @staticmethod
     def get_dict():
@@ -58,7 +58,7 @@ class State():
                 logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'],
                                                                                   parameters))
             else:
-                events.put('statechange', type, parameters, code, event, message, default_status)
+                Events.put('statechange', type, parameters, code, event, message, default_status)
 
         #write event
         State.state[type][parameters]['lastevents'].append({

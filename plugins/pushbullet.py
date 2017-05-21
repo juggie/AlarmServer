@@ -7,7 +7,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 
 from core import logger
-from core.events import events
+from core.events import Events
 
 def init(config):
     """Init function for pushbullet plugin"""
@@ -24,11 +24,11 @@ def init(config):
             logger.debug('PUSHBULLET Enabled - Partitions Ignored: %s - Zones Ignored: %s' \
                 % (",".join([str(i) for i in config.PUSHBULLET_IGNOREPARTITIONS]), \
                 ",".join([str(i) for i in config.PUSHBULLET_IGNOREZONES])))
-            events.register('statechange', send_notification, \
+            Events.register('statechange', send_notification, \
                 config.PUSHBULLET_IGNOREPARTITIONS, config.PUSHBULLET_IGNOREZONES)
             pushbulletRequest('login')
 
-def send_notification(config, eventType, type, parameters, code, event, message, defaultStatus):
+def send_notification(eventType, type, parameters, code, event, message, defaultStatus):
     """Send pushbullet notification"""
     pushbulletRequest('notify', message)
 

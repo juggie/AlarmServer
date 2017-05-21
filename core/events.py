@@ -1,32 +1,40 @@
+"""Alarmserver events"""
+#pylint: disable=W0102
 from . import logger
 
-class events():
+class Events():
+    """Events class"""
     @staticmethod
-    def register(eventType, callback, partitionFilter = [], zoneFilter = []):
+    def register(event_type, callback, partition_filter=[], zone_filter=[]):
+        """Register event"""
         #check to see if our dict exists
         try:
-            events.listeners
+            Events.listeners
         except AttributeError:
-            events.listeners = {}
+            Events.listeners = {}
 
         #check to see if our set exists
         try:
-            events.listeners[eventType]
+            Events.listeners[event_type]
         except KeyError:
-            events.listeners[eventType] = []
+            Events.listeners[event_type] = []
 
-        events.listeners[eventType].append({'callback' : callback, 'partitionFilter' : partitionFilter, 'zoneFilter' : zoneFilter})
-        logger.debug('Registered Callback for: %s' % eventType)
+        Events.listeners[event_type].append({'callback' : callback,
+                                             'partition_filter' : partition_filter,
+                                             'zone_filter' : zone_filter})
+        logger.debug('Registered Callback for: %s' % event_type)
 
     @staticmethod
-    def put(eventType, type = None, parameters = None, *args):
+    def put(event_type, type=None, parameters=None, *args):
+        """Put an event"""
         try:
-            for c in events.listeners[eventType]:
-                if ((type == 'partition' and parameters not in c['partitionFilter']) 
-                        or (type == 'zone' and parameters not in c['zoneFilter']) 
+            for connection in Events.listeners[event_type]:
+                if ((type == 'partition' and parameters not in connection['partition_filter'])
+                        or (type == 'zone' and parameters not in connection['zone_filter'])
                         or (type not in ['partition', 'zone'])):
-                    c['callback'](eventType, type, parameters, *args)
+                    connection['callback'](event_type, type, parameters, *args)
                 else:
-                    logger.debug('Event type: %s/%s parameters: %s Filtered' % (eventType, type, parameters))
+                    logger.debug('Event type: %s/%s parameters: %s Filtered' %
+                                 (event_type, type, parameters))
         except KeyError:
-            logger.debug('No handler registered for: %s' % eventType)
+            logger.debug('No handler registered for: %s' % event_type)

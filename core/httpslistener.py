@@ -10,7 +10,7 @@ import tornado.httpserver
 
 #alarm server modules
 from .state import State
-from .events import events
+from .events import Events
 from .httpslistener_auth import require_basic_auth
 from . import logger
 
@@ -45,7 +45,7 @@ class ApiAlarmHandler(tornado.web.RequestHandler):
             response = {'response' : 'Request to trigger PGM'}
 
         #send event for our request
-        events.put('alarm_update', request, parameters)
+        Events.put('alarm_update', request, parameters)
         self.write(response)
 
 @require_basic_auth

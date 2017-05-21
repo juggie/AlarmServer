@@ -14,7 +14,7 @@ from .envisalinkdefs import EVL_DEFAULTS
 from .envisalinkdefs import EVL_ARMMODES
 
 from . import logger
-from .events import events
+from .events import Events
 
 
 def get_message_type(code):
@@ -45,10 +45,10 @@ class Client(object):
         self.config = config
 
         # Register events for alarmserver requests -> envisalink
-        events.register('alarm_update', self.request_action)
+        Events.register('alarm_update', self.request_action)
 
         # Register events for envisalink proxy
-        events.register('envisalink', self.envisalink_proxy)
+        Events.register('envisalink', self.envisalink_proxy)
 
         # Create TCP Client
         self.tcpclient = TCPClient()
@@ -74,7 +74,7 @@ class Client(object):
     def check_connection(self):
         """Check the envisalink connection with a ping to make sure it's still alive"""
         if (self._last_activity + self.config.envisalinkkeepalive) < time.time():
-            events.put('alarm_update', 'ping')
+            Events.put('alarm_update', 'ping')
 
     @gen.coroutine
     def do_connect(self, reconnect=False):
@@ -198,7 +198,7 @@ class Client(object):
         try:
             func = getattr(self, handler)
             if handler != 'handle_login':
-                events.put('proxy', None, rawinput)
+                Events.put('proxy', None, rawinput)
         except AttributeError:
             raise Exception("Handler function doesn't exist")
 
@@ -277,7 +277,7 @@ class Client(object):
 
         if (event['type'] == 'zone' and parameters in self.config.zonenames) or\
                 (event['type'] == 'partition' and parameters in self.config.partitionnames):
-            events.put('alarm', event['type'], parameters,
+            Events.put('alarm', event['type'], parameters,
                        code, event, message, default_status)
         elif event['type'] == 'zone' or event['type'] == 'partition':
             logger.debug('Ignoring unnamed %s %s' %

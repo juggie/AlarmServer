@@ -6,7 +6,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 
 from core import logger
-from core.events import events
+from core.events import Events
 
 def init(config):
     """Init function for IFTTT plugin"""
@@ -27,10 +27,10 @@ def init(config):
             logger.debug('IFTTT_MAKER Enabled - Partitions Ignored: %s - Zones Ignored: %s' \
                 % (",".join([str(i) for i in config.IFTTT_MAKER_IGNOREPARTITIONS]), \
                 ",".join([str(i) for i in config.IFTTT_MAKER_IGNOREZONES])))
-            events.register('statechange', send_notification, config.IFTTT_MAKER_IGNOREPARTITIONS, \
+            Events.register('statechange', send_notification, config.IFTTT_MAKER_IGNOREPARTITIONS, \
                 config.IFTTT_MAKER_IGNOREZONES)
 
-def send_notification(config, eventType, type, parameters, code, event, message, defaultStatus): #pylint: disable=W0613
+def send_notification(eventType, type, parameters, code, event, message, defaultStatus): #pylint: disable=W0613
     """Send IFTTT notification"""
     ifttt_maker_request('notify', message)
 

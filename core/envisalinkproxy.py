@@ -1,46 +1,49 @@
-from . import logger
-
+"""Envisalink Proxy"""
 from tornado import gen
 from tornado.tcpserver import TCPServer
-from tornado.iostream import IOStream, StreamClosedError
+from tornado.iostream import StreamClosedError
 
-from .config import Config
-from .events import events
+from . import logger
+from .events import Events
 from .envisalink import get_checksum
 
-#TODO: handle exceptions
-
 class Proxy(object):
+    """Proxy"""
     def __init__(self, config):
         self.config = config
         if self.config.enableproxy:
             logger.debug('Staring Envisalink Proxy')
-            proxy = ProxyServer()
+            proxy = ProxyServer(self.config)
             proxy.listen(self.config.envisalinkproxyport)
 
 class ProxyServer(TCPServer):
-    def __init__(self, io_loop=None, ssl_options=None, **kwargs):
+    """ProxyServer"""
+    def __init__(self, config, io_loop=None, ssl_options=None, **kwargs):
         TCPServer.__init__(self, io_loop=io_loop, ssl_options=ssl_options, **kwargs)
+        self.config = config
         self.connections = {}
-        events.register('proxy', self.proxy_event)
+        Events.register('proxy', self.proxy_event)
 
     @gen.coroutine
     def handle_stream(self, stream, address):
-        connection = ProxyConnection(stream, address)
+        connection = ProxyConnection(self.config, stream, address)
         fromaddr = "%s:%s" % (address[0], address[1])
         logger.debug('Proxy Connection from: %s' % fromaddr)
-        self.connections[fromaddr]=stream
+        self.connections[fromaddr] = stream
         yield connection.on_connect()
         del self.connections[fromaddr]
 
     #zone/parameters not used, should fix this to not be passed
     @gen.coroutine
     def proxy_event(self, zone, parameters, input):
-        for s,k in list(self.connections.items()):
+        """Proxy Event"""
+        for s, k in list(self.connections.items()):
             yield k.write(input)
 
 class ProxyConnection(object):
-    def __init__(self, stream, address):
+    """ProxyConnection Class"""
+    def __init__(self, config, stream, address):
+        self.config = config
         self.authenticated = False
         self.stream = stream
         self.address = address
@@ -49,19 +52,22 @@ class ProxyConnection(object):
 
     @gen.coroutine
     def on_connect(self):
+        """On Connect Event"""
         yield self.dispatch_client()
 
     @gen.coroutine
     def on_disconnect(self):
+        """On Disconnect Event"""
         logger.debug('Client: %s:%s disconnected' % (self.address[0], self.address[1]))
-        
+
     @gen.coroutine
     def dispatch_client(self):
+        """Dispatch Client"""
         try:
             while True:
                 line = yield self.stream.read_until(b'\r\n')
-                if self.authenticated == True:
-                    events.put('envisalink', None, line) 
+                if self.authenticated:
+                    Events.put('envisalink', None, line)
                 else:
                     if line.strip() == ('005' + self.config.envisalinkproxypass + get_checksum('005', self.config.envisalinkproxypass)):
                         logger.info('Proxy User Authenticated')
@@ -76,8 +82,9 @@ class ProxyConnection(object):
             pass
 
     @gen.coroutine
-    def send_command(self, data, checksum = True):
-        if checksum == True:
+    def send_command(self, data, checksum=True):
+        """Send envisalink command"""
+        if checksum:
             to_send = data+get_checksum(data, '')+'\r\n'
         else:
             to_send = data+'\r\n'
