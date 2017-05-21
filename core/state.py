@@ -1,60 +1,73 @@
+"""Alarmserver state machine"""
+#pylint: disable=R0201
 import datetime
 
 #alarmserver modules
 from . import logger
 from .events import events
 
-class state():
+class State():
+    """State class"""
     logger.debug('State Module Loaded')
 
     @staticmethod
     def init(config):
-        state.config = config
-        state.state = {}
-        events.register('alarm', state.update)
+        """Init"""
+        State.config = config
+        State.state = {}
+        events.register('alarm', State.update)
 
     @staticmethod
-    def getDict():
-        return state.state
+    def get_dict():
+        """Return dict of state"""
+        return State.state
 
     @staticmethod
-    def setVersion(version):
-        state.state['version'] = version
+    def set_version(version):
+        """Set version"""
+        State.state['version'] = version
 
     @staticmethod
-    def update(eventType, type, parameters, code, event, message, defaultStatus):
-        if not type in state.state: state.state[type] = {'lastevents' : []}
+    def update(event_type, type, parameters, code, event, message, default_status):
+        """Update state machine"""
+        if not type in State.state:
+            State.state[type] = {'lastevents' : []}
 
         #keep the last state
         try:
-            prev_status = state.state[type][parameters]['status']
-        except (IndexError,KeyError):
+            prev_status = State.state[type][parameters]['status']
+        except (IndexError, KeyError):
             #if we are here, we've never seen this event type, parameter combination before
             prev_status = None
 
         # if this event has never generated 'state' before, populate the defaults
-        if not parameters in state.state[type]:
-             state.state[type][parameters] = {'name' : state.config.zonenames[parameters] if type == 'zone' else state.config.partitionnames[parameters], 'lastevents' : [], 'status' : defaultStatus}
+        if not parameters in State.state[type]:
+            State.state[type][parameters] = {
+                'name' : State.config.zonenames[parameters]
+                         if type == 'zone' else State.config.partitionnames[parameters],
+                'lastevents' : [], 'status' : default_status}
 
         #update the state
-        state.state[type][parameters]['status'] = dict(state.state[type][parameters]['status'], **event['status'])
+        State.state[type][parameters]['status'] = dict(State.state[type][parameters]['status'],
+                                                       **event['status'])
 
         #if this is the first event in this zone/partition we've seen, don't do anything here.
         if prev_status != None:
             #if we've seen this before, check if it's changed
-            if prev_status == state.state[type][parameters]['status']:
-                logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'], parameters))
+            if prev_status == State.state[type][parameters]['status']:
+                logger.debug('Discarded event. State not changed. ({} {})'.format(event['type'],
+                                                                                  parameters))
             else:
-                events.put('statechange', type, parameters, code, event, message, defaultStatus)
+                events.put('statechange', type, parameters, code, event, message, default_status)
 
         #write event
-        state.state[type][parameters]['lastevents'].append({  
-                  'datetime' : str(datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")), 
-                  'code'     : code,
-                  'message'  : message})
+        State.state[type][parameters]['lastevents'].append({
+            'datetime' : str(datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")),
+            'code'     : code,
+            'message'  : message})
 
         #write to all events
-        state.state[type]['lastevents'].append({  
-                  'datetime' : str(datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")), 
-                  'code'     : code,
-                  'message'  : message})
+        State.state[type]['lastevents'].append({
+            'datetime' : str(datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")),
+            'code'     : code,
+            'message'  : message})

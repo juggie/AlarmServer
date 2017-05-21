@@ -1,25 +1,37 @@
-import base64, hashlib
+"""http auth wrappers"""
+#pylint: disable=W0621,W0212
+
+import base64
+import hashlib
 from functools import wraps
 from . import logger
 
 class InvalidLogin(Exception):
+    """Invalid Login Exception"""
     pass
 
 def require_basic_auth(handler_class):
+    """Require basic auth wrapper"""
     def wrap_execute(handler_execute):
+        """Wrap execute"""
         @wraps(handler_execute)
+        #pylint: disable=W0613
         def require_basic_auth(handler, kwargs):
+            """Require basic auth wrapper"""
+        #pylint: enable=W0613
             config = handler.config
             try:
-                if config.webauthuser == False and config.webauthpass == False:
+                if not config.webauthuser and not config.webauthpass:
                     return True
-                elif config.webauthuser == False or config.webauthpass == False:
-                    logger.debug('Auth disabled as either user was set w/o pass, or pass was set w/o user')
+                elif not config.webauthuser or not config.webauthpass:
+                    logger.debug('Auth disabled as either user was set w/o pass,'
+                                 'or pass was set w/o user')
                     return True
 
                 auth_header = handler.request.headers.get('Authorization')
-                username, password = base64.decodestring(auth_header[6:]).split(':', 2)
-                if username == config.webauthuser and hashlib.sha1(password).hexdigest() == config.webauthpass:
+                username, password = base64.decodebytes(auth_header[6:]).split(':', 2)
+                if (username == config.webauthuser and
+                        hashlib.sha1(password).hexdigest() == config.webauthpass):
                     return True
                 else:
                     raise InvalidLogin
@@ -38,4 +50,3 @@ def require_basic_auth(handler_class):
 
     handler_class._execute = wrap_execute(handler_class._execute)
     return handler_class
-

@@ -30,7 +30,7 @@ def init(config):
             events.register('statechange', send_notification, config.IFTTT_MAKER_IGNOREPARTITIONS, \
                 config.IFTTT_MAKER_IGNOREZONES)
 
-def send_notification(eventType, type, parameters, code, event, message, defaultStatus): #pylint: disable=W0613
+def send_notification(config, eventType, type, parameters, code, event, message, defaultStatus): #pylint: disable=W0613
     """Send IFTTT notification"""
     ifttt_maker_request('notify', message)
 

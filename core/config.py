@@ -1,4 +1,5 @@
 """Config Module"""
+#pylint: disable=R0901,R0904
 import configparser
 from core import logger
 
@@ -31,23 +32,9 @@ class Config(configparser.ConfigParser):
 
         # If the variable is empty, return the default
         if ret == "":
-            return default
-        else:
-            return ret
+            ret = default
 
-    """def get_val(self, section, option, None, boolean=False):
-        try:
-            if boolean:
-                val = self.getboolean(section, option)
-            else:
-                val = self.get(section, option)
-            #logger.debug('Config option '+ str(option) + ' set in ['+\
-            #    str(section)+'] to: \''+str(val)+'\'')
-            return val
-        except (configparser.NoSectionError, configparser.NoOptionError):
-            #logger.debug('Config option '+ str(option) + ' not set in ['+\
-            #    str(section)+'] defaulting to: \''+str(fallback)+'\'')
-            return fallback"""
+        return ret
 
     # LOGGING
     @property

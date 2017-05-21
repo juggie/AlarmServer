@@ -28,7 +28,7 @@ def init(config):
                 config.PUSHBULLET_IGNOREPARTITIONS, config.PUSHBULLET_IGNOREZONES)
             pushbulletRequest('login')
 
-def send_notification(eventType, type, parameters, code, event, message, defaultStatus):
+def send_notification(config, eventType, type, parameters, code, event, message, defaultStatus):
     """Send pushbullet notification"""
     pushbulletRequest('notify', message)
 

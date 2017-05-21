@@ -15,7 +15,7 @@ import importlib
 
 #alarm server modules
 from core.config import Config
-from core.state import state
+from core.state import State
 from core import logger
 from core import httpslistener
 from core import envisalink
@@ -34,7 +34,7 @@ def main(argv):
     except getopt.GetoptError:
         sys.exit(2)
 
-    if len(opts) > 0:
+    if opts:
         for opt, arg in opts:
             if opt in ("-c", "--config"):
                 config = Config(arg)
@@ -48,10 +48,10 @@ def main(argv):
         logger.start()
 
     #enable the state
-    state.init(config)
+    State.init(config)
 
     #set version
-    state.setVersion(0.3)
+    State.set_version(0.3)
 
     #pylint: disable=W0612
     #start envisalink client

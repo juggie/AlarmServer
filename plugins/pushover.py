@@ -27,7 +27,7 @@ def init(config):
                 config.PUSHOVER_IGNOREZONES)
 
 @gen.coroutine
-def send_notification(eventType, type, parameters, code, event, message, defaultStatus):
+def send_notification(config, eventType, type, parameters, code, event, message, defaultStatus):
     """Send pushover notificiation"""
     http_client = AsyncHTTPClient()
     body = urllib.parse.urlencode({
