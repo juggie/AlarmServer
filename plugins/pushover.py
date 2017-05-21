@@ -1,7 +1,11 @@
 """Pushover module"""
-import urllib.request
-import urllib.parse
-import urllib.error
+try:
+    from urllib.request import urlopen
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+    from urllib import urlopen
+
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 
