@@ -1,10 +1,8 @@
 """Pushover module"""
 try:
-    from urllib.request import urlopen
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
-    from urllib import urlopen
 
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
@@ -36,7 +34,7 @@ class pushover(object):
     def send_notification(self, event_type, type, parameters, code, event, message, default_status):
         """Send pushover notificiation"""
         http_client = AsyncHTTPClient()
-        body = urllib.parse.urlencode({
+        body = urlparse.urlencode({
             "token": self.pushover_token,
             "user": self.config.PUSHOVER_USERTOKEN,
             "message": str(message)})

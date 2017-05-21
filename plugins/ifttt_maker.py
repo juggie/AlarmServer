@@ -1,10 +1,8 @@
 """IFTTT Maker plugin"""
 try:
-    from urllib.request import urlopen
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
-    from urllib import urlopen
 
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
@@ -47,7 +45,7 @@ class ifttt_maker(object):
         http_client = AsyncHTTPClient()
         if event_type == 'notify':
             # Build event Json body
-            body = urllib.parse.urlencode({'value1': message})
+            body = urlparse.urlencode({'value1': message})
             url = 'https://maker.ifttt.com/trigger/{}/with/key/{}'.format(
                 self.config.IFTTT_MAKER_EVENT_NAME, self.config.IFTTT_MAKER_KEY)
             logger.debug('IFTTT_MAKER: Pushing event: ' + url + ' with body: ' + body)

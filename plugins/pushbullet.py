@@ -2,11 +2,9 @@
 import json
 
 try:
-    from urllib.request import urlopen
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
-    from urllib import urlopen
 
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
@@ -49,7 +47,7 @@ class pushbullet(object):
             #todo add code to handle login error and disable plugin
             logger.debug('Pushover enabled - User: %(name)s Email: %(email)s' % userdetails)
         elif type == 'notify':
-            body = urllib.parse.urlencode({"body": message, "title":"AlarmServer", "type":"note"})
+            body = urlparse.urlencode({"body": message, "title":"AlarmServer", "type":"note"})
             res = yield http_client.fetch("https://api.pushbullet.com/v2/pushes", method='POST', \
                 headers={"Access-Token": self.config.PUSHBULLET_USERTOKEN}, body=body)
         else:
