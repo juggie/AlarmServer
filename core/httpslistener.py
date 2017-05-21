@@ -15,6 +15,8 @@ from . import logger
 
 @require_basic_auth
 class ApiAlarmHandler(tornado.web.RequestHandler):
+    def initialize(self, config):
+        self.config = config
     def get(self, request):
         parameters = {}
         parameters['alarmcode'] = self.get_argument('alarmcode', None)
@@ -40,33 +42,39 @@ class ApiAlarmHandler(tornado.web.RequestHandler):
 
 @require_basic_auth
 class ApiEventTimeAgoHandler(tornado.web.RequestHandler):
+    def initialize(self, config):
+        self.config = config
     def get(self):
         self.write({'eventtimeago' : Config.EVENTTIMEAGO})
 
 @require_basic_auth
 class ApiHandler(tornado.web.RequestHandler):
+    def initialize(self, config):
+        self.config = config
     def get(self):
         self.write(state.getDict())
 
 @require_basic_auth
 class AuthStaticFileHandler(tornado.web.StaticFileHandler):
+    def initialize(self, config):
+        self.config = config
     def set_extra_headers(self, path):
         # Disable cache
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
     def get(self, filename):
         return super(AuthStaticFileHandler, self).get(filename)
 
-def start(https = True):
-    if https == True and (not Config.CERTFILE or not Config.KEYFILE):
+def start(config, https = True):
+    if https == True and (not config.certfile or not config.keyfile):
         logger.error("Unable to start HTTPS server without certfile and keyfile")
     else:
-        logger.info("%s Server started on port: %s" % (('HTTPS',Config.HTTPSPORT) if https == True else ('HTTP', Config.HTTPPORT))) 
+        logger.info("%s Server started on port: %s" % (('HTTPS',config.httpsport) if https == True else ('HTTP', config.httpport))) 
         ext_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../ext')
         return tornado.httpserver.HTTPServer(tornado.web.Application([
-            (r'/api/alarm/(arm|stayarm|armwithcode|disarm)', ApiAlarmHandler),
-            (r'/api/(refresh|pgm)', ApiAlarmHandler),
-            (r'/api/Config/eventtimeago', ApiEventTimeAgoHandler),
-            (r'/api', ApiHandler),
-            (r'/img/(.*)', AuthStaticFileHandler, {'path': ext_path}),
-            (r'/(.*)', AuthStaticFileHandler, {'default_filename' : 'index.html', 'path': ext_path}),
-        ]),ssl_options={"certfile": Config.CERTFILE, "keyfile" : Config.KEYFILE} if https == True else None).listen(Config.HTTPSPORT if https == True else Config.HTTPPORT)
+            (r'/api/alarm/(arm|stayarm|armwithcode|disarm)', ApiAlarmHandler, {'config' : config}),
+            (r'/api/(refresh|pgm)', ApiAlarmHandler, {'config' : config}),
+            (r'/api/Config/eventtimeago', ApiEventTimeAgoHandler, {'config' : config}),
+            (r'/api', ApiHandler, {'config' : config}),
+            (r'/img/(.*)', AuthStaticFileHandler, {'path': ext_path, 'config' : config}),
+            (r'/(.*)', AuthStaticFileHandler, {'default_filename' : 'index.html', 'path': ext_path, 'config' : config}),
+        ]),ssl_options={"certfile": config.certfile, "keyfile" : config.keyfile} if https == True else None).listen(config.httpsport if https == True else config.httpport)

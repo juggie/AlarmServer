@@ -27,48 +27,46 @@ def main(argv):
     """Alarmserver entrypoint"""
     logger.info('Alarm Server Starting')
 
-    #set default config
-    conffile = 'alarmserver.cfg'
-
     try:
         #pylint: disable=W0612
         opts, args = getopt.getopt(argv, "c:", ["config="])
         #pylint: enable=W0612
     except getopt.GetoptError:
         sys.exit(2)
-    for opt, arg in opts:
-        if opt in ("-c", "--config"):
-            conffile = arg
 
-    #load config
-    Config.load(conffile)
+    if len(opts) > 0:
+        for opt, arg in opts:
+            if opt in ("-c", "--config"):
+                config = Config(arg)
+    else:
+        config = Config()
 
     #start logger
-    if Config.LOGTOFILE:
-        logger.start(Config.LOGFILE)
+    if config.logfile:
+        logger.start(config.logfile)
     else:
         logger.start()
 
     #enable the state
-    state.init()
+    state.init(config)
 
     #set version
     state.setVersion(0.3)
 
     #pylint: disable=W0612
     #start envisalink client
-    alarmclient = envisalink.Client()
+    alarmclient = envisalink.Client(config)
 
     #start envisalink proxy
-    alarmproxy = envisalinkproxy.Proxy()
+    alarmproxy = envisalinkproxy.Proxy(config)
 
     #start https server
-    if Config.HTTPS:
-        httpsserver = httpslistener.start()
+    if config.https:
+        httpsserver = httpslistener.start(config)
 
     #start http server
-    if Config.HTTP:
-        httpserver = httpslistener.start(https=False)
+    if config.http:
+        httpserver = httpslistener.start(config, https=False)
     #pylint: enable=W0612
 
     #load plugins - TODO: make this way better
@@ -79,7 +77,7 @@ def main(argv):
             continue
         base = os.path.basename(plug)
         name = os.path.splitext(base)[0]
-        getattr(importlib.import_module("plugins.{}".format(name)), 'init')()
+        getattr(importlib.import_module("plugins.{}".format(name)), 'init')(config)
 
     #start tornado ioloop
     tornado.ioloop.IOLoop.instance().start()

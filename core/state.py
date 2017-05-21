@@ -2,14 +2,14 @@ import datetime
 
 #alarmserver modules
 from . import logger
-from .config import Config
 from .events import events
 
 class state():
     logger.debug('State Module Loaded')
 
     @staticmethod
-    def init():
+    def init(config):
+        state.config = config
         state.state = {}
         events.register('alarm', state.update)
 
@@ -34,7 +34,7 @@ class state():
 
         # if this event has never generated 'state' before, populate the defaults
         if not parameters in state.state[type]:
-             state.state[type][parameters] = {'name' : Config.ZONENAMES[parameters] if type == 'zone' else Config.PARTITIONNAMES[parameters], 'lastevents' : [], 'status' : defaultStatus}
+             state.state[type][parameters] = {'name' : state.config.zonenames[parameters] if type == 'zone' else state.config.partitionnames[parameters], 'lastevents' : [], 'status' : defaultStatus}
 
         #update the state
         state.state[type][parameters]['status'] = dict(state.state[type][parameters]['status'], **event['status'])

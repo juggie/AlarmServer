@@ -11,11 +11,12 @@ from .envisalink import get_checksum
 #TODO: handle exceptions
 
 class Proxy(object):
-    def __init__(self):
-        if Config.ENABLEPROXY == True:
+    def __init__(self, config):
+        self.config = config
+        if self.config.enableproxy:
             logger.debug('Staring Envisalink Proxy')
             proxy = ProxyServer()
-            proxy.listen(Config.ENVISALINKPROXYPORT)
+            proxy.listen(self.config.envisalinkproxyport)
 
 class ProxyServer(TCPServer):
     def __init__(self, io_loop=None, ssl_options=None, **kwargs):
@@ -62,7 +63,7 @@ class ProxyConnection(object):
                 if self.authenticated == True:
                     events.put('envisalink', None, line) 
                 else:
-                    if line.strip() == ('005' + Config.ENVISALINKPROXYPASS + get_checksum('005', Config.ENVISALINKPROXYPASS)):
+                    if line.strip() == ('005' + self.config.envisalinkproxypass + get_checksum('005', self.config.envisalinkproxypass)):
                         logger.info('Proxy User Authenticated')
                         self.authenticated = True
                         self.send_command('5051')

@@ -6,30 +6,29 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 
 from core import logger
-from core.config import Config
 from core.events import events
 
-def init():
+def init(config):
     """Init function for IFTTT plugin"""
     ifttt_maker_config_session_name = 'ifttt_maker'
 
-    Config.IFTTT_MAKER_ENABLE = \
-        Config.read_config_var(ifttt_maker_config_session_name, 'enable', False, 'bool')
-    if Config.IFTTT_MAKER_ENABLE:
-        Config.IFTTT_MAKER_KEY = \
-            Config.read_config_var(ifttt_maker_config_session_name, 'key', False, 'str')
-        Config.IFTTT_MAKER_EVENT_NAME = \
-            Config.read_config_var(ifttt_maker_config_session_name, 'eventName', False, 'str')
-        if Config.IFTTT_MAKER_KEY != False:
-            Config.IFTTT_MAKER_IGNOREZONES = Config.read_config_var( \
+    config.IFTTT_MAKER_ENABLE = \
+        config.get_val(ifttt_maker_config_session_name, 'enable', False, 'bool')
+    if config.IFTTT_MAKER_ENABLE:
+        config.IFTTT_MAKER_KEY = \
+            config.get_val(ifttt_maker_config_session_name, 'key', False, 'str')
+        config.IFTTT_MAKER_EVENT_NAME = \
+            config.get_val(ifttt_maker_config_session_name, 'eventName', False, 'str')
+        if config.IFTTT_MAKER_KEY != False:
+            config.IFTTT_MAKER_IGNOREZONES = config.get_val( \
                 ifttt_maker_config_session_name, 'ignorezones', [], 'listint')
-            Config.IFTTT_MAKER_IGNOREPARTITIONS = Config.read_config_var( \
+            config.IFTTT_MAKER_IGNOREPARTITIONS = config.get_val( \
                 ifttt_maker_config_session_name, 'ignorepartitions', [], 'listint')
             logger.debug('IFTTT_MAKER Enabled - Partitions Ignored: %s - Zones Ignored: %s' \
-                % (",".join([str(i) for i in Config.IFTTT_MAKER_IGNOREPARTITIONS]), \
-                ",".join([str(i) for i in Config.IFTTT_MAKER_IGNOREZONES])))
-            events.register('statechange', send_notification, Config.IFTTT_MAKER_IGNOREPARTITIONS, \
-                Config.IFTTT_MAKER_IGNOREZONES)
+                % (",".join([str(i) for i in config.IFTTT_MAKER_IGNOREPARTITIONS]), \
+                ",".join([str(i) for i in config.IFTTT_MAKER_IGNOREZONES])))
+            events.register('statechange', send_notification, config.IFTTT_MAKER_IGNOREPARTITIONS, \
+                config.IFTTT_MAKER_IGNOREZONES)
 
 def send_notification(eventType, type, parameters, code, event, message, defaultStatus): #pylint: disable=W0613
     """Send IFTTT notification"""
@@ -42,8 +41,8 @@ def ifttt_maker_request(eventType, message=None):
     if iftttMakerRequestType == 'notify':
         # Build event Json body
         body = urllib.parse.urlencode({'value1': message})
-        url = 'https://maker.ifttt.com/trigger/' + Config.IFTTT_MAKER_EVENT_NAME + \
-            '/with/key/' + Config.IFTTT_MAKER_KEY
+        url = 'https://maker.ifttt.com/trigger/' + config.IFTTT_MAKER_EVENT_NAME + \
+            '/with/key/' + config.IFTTT_MAKER_KEY
 
         logger.debug('IFTTT_MAKER: Pushing event: ' + url + ' with body: ' + body)
         res = yield http_client.fetch(url, method='POST', body=body)
