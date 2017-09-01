@@ -11,17 +11,6 @@ Please see the alarmserver-example.cfg and rename to alarmserver.cfg and
 customize to requirements.
 
 
-Web Interface
--------------
-The web interface uses a responsive design which limits the scrolling on both desktop and mobile.
-
-### Desktop ###
-![Desktop](http://gschrader.github.io/Alarm-Server-Launcher/desktop.png)
-
-### Mobile ###
-![Mobile](http://gschrader.github.io/Alarm-Server-Launcher/mobile.png)
-
-
 OpenSSL Certificate Howto
 -------------------
 
@@ -40,10 +29,6 @@ Dependencies:
 On windows, pyOpenSSL is required.
 http://pypi.python.org/pypi/pyOpenSSL
 
-
-Launchers
----------
-* [MacOSX](https://github.com/gschrader/Alarm-Server-Launcher)
 
 REST API Info
 -------------
