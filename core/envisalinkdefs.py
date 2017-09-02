@@ -7,7 +7,7 @@
 evl_Defaults = {
 	'zone' : {'open' : False, 'fault' : False, 'alarm' : False, 'tamper' : False},
 	'partition' : {'ready' : False, 'trouble' : False, 'exit_delay' : False, 'entry_delay' : False, 'armed' : False, 'armed_bypass' : False, 'alarm' : False, 'tamper' : False, 'chime' : False, 'trouble_led' : False},
-	'system' : {'fire_key_alarm' : False, 'aux_key_alarm' : False, 'panic_key_alarm' : False, '2wire_alarm' : False, 'battery_trouble' : False, 'ac_trouble' : False, 'system_bell_trouble' : False, 'system_tamper' : False, 'fire_trouble' : False}
+        'system' : {'fire_key_alarm' : False, 'aux_key_alarm' : False, 'panic_key_alarm' : False, '2wire_alarm' : False, 'battery_trouble' : False, 'ac_trouble' : False, 'system_bell_trouble' : False, 'system_tamper' : False, 'fire_trouble' : False, 'ftc_trouble' : False}
 	}
 
 evl_ArmModes = {
@@ -100,7 +100,8 @@ evl_ResponseTypes = {
     803 : {'type' : 'system', 'name' : 'Panel AC Restore', 'description' : 'AC power to the panel has been restored.', 'status' : {'ac_trouble' : False}},
     806 : {'type' : 'system', 'name' : 'System Bell Trouble', 'description' : 'An open circuit has been detected across the bell terminals.', 'status' : {'system_bell_trouble' : True}},
     807 : {'type' : 'system', 'name' : 'System Bell Trouble Restoral', 'description' : 'The bell trouble has been restored.', 'status' : {'system_bell_trouble' : False}},
-    814 : {'name' : 'FTC Trouble', 'description' : 'The panel has failed to communicate successfully to the monitoring station.'},
+    814 : {'name' : 'FTC Trouble', 'description' : 'The panel has failed to communicate successfully to the monitoring station.', 'status' : {'ftc_trouble' : True}},
+    815 : {'name' : 'FTC Trouble Restore', 'description' : 'The panel has resumed communications with the monitoring station.', 'status' : {'ftc_trouble' : False}},
     816 : {'name' : 'Buffer Near Full', 'description' : 'Sent when the panel''s Event Buffer is 75% full from when it was last uploaded to DLS.'},
     829 : {'type' : 'system', 'name' : 'General System Tamper', 'description' : 'A tamper has occurred with one of the following modules: Zone Expander, PC5132, PC5204, PC5208, PC5400, PC59XX, LINKS 2X50, PC5108L, PC5100, PC5200.', 'status' : {'system_tamper' : True}},
     830 : {'type' : 'system', 'name' : 'General System Tamper Restore', 'description' : 'A general system Tamper has been restored.', 'status' : {'system_tamper' : False}},
