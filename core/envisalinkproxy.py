@@ -20,7 +20,7 @@ class Proxy(object):
 class ProxyServer(TCPServer):
     """ProxyServer"""
     def __init__(self, config, io_loop=None, ssl_options=None, **kwargs):
-        TCPServer.__init__(self, io_loop=io_loop, ssl_options=ssl_options, **kwargs)
+        TCPServer.__init__(self, ssl_options=ssl_options, **kwargs)
         self.config = config
         self.connections = {}
         Events.register('proxy', self.proxy_event)
@@ -39,7 +39,7 @@ class ProxyServer(TCPServer):
     def proxy_event(self, zone, parameters, input):
         """Proxy Event"""
         for s, k in list(self.connections.items()):
-            yield k.write(input)
+            yield k.write(input.encode('ascii'))
 
 class ProxyConnection(object):
     """ProxyConnection Class"""
@@ -70,7 +70,7 @@ class ProxyConnection(object):
                 if self.authenticated:
                     Events.put('envisalink', None, line)
                 else:
-                    if line.strip() == '005{}{}'.format(
+                    if line.strip().decode() == '005{}{}'.format(
                             self.config.envisalinkproxypass,
                             get_checksum('005', self.config.envisalinkproxypass)):
                         logger.info('Proxy User Authenticated')
@@ -92,4 +92,4 @@ class ProxyConnection(object):
         else:
             to_send = data+'\r\n'
         logger.debug('PROXY < %s' % to_send.strip())
-        yield self.stream.write(to_send)
+        yield self.stream.write(to_send.encode('ascii'))

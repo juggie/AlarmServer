@@ -67,8 +67,9 @@ class ApiHandler(tornado.web.RequestHandler):
 @require_basic_auth
 class AuthStaticFileHandler(tornado.web.StaticFileHandler):
     """Tornado API Static File Handler"""
-    def initialize(self, config):
+    def initialize(self, config, **kwargs):
         self.config = config
+        super().initialize(**kwargs)
     def set_extra_headers(self, path):
         # Disable cache
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -85,14 +86,14 @@ def start(config, https=True):
         ext_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../ext')
         return tornado.httpserver.HTTPServer(
             tornado.web.Application([
-                (r'/api/alarm/(arm|stayarm|armwithcode|disarm)', ApiAlarmHandler,
-                 {'config' : config}),
-                (r'/api/(refresh|pgm)', ApiAlarmHandler, {'config' : config}),
-                (r'/api/Config/eventtimeago', ApiEventTimeAgoHandler, {'config' : config}),
-                (r'/api', ApiHandler, {'config' : config}),
-                (r'/img/(.*)', AuthStaticFileHandler, {'path': ext_path, 'config' : config}),
-                (r'/(.*)', AuthStaticFileHandler, {'default_filename' : 'index.html',
-                                                   'path': ext_path, 'config' : config}),
+                (r'/api/alarm/(arm|stayarm|armwithcode|disarm)', ApiAlarmHandler, 
+                 {'config': config}),
+                (r'/api/(refresh|pgm)', ApiAlarmHandler, {'config': config}),
+                (r'/api/Config/eventtimeago', ApiEventTimeAgoHandler, {'config': config}),
+                (r'/api', ApiHandler, {'config': config}),
+                (r'/img/(.*)', AuthStaticFileHandler, {'path': ext_path, 'config': config}),
+                (r'/(.*)', AuthStaticFileHandler, dict(default_filename='index.html',
+                                                       path=ext_path, config=config)),
                 ]),
             ssl_options={"certfile": config.certfile, "keyfile" : config.keyfile}
             if https else None).listen(config.httpsport if https else config.httpport)
