@@ -326,7 +326,7 @@ class Client(object):
         """Envisalink proxy"""
         try:
             yield self._connection.write(parameters)
-            logger.debug('PROXY > ' + parameters.strip())
+            logger.debug('PROXY > ' + parameters.strip().decode())
         except StreamClosedError:
             # we don't need to handle this, the callback has been set for
             # closed connections.
