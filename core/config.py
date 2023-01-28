@@ -6,7 +6,7 @@ except ImportError:
     import ConfigParser as configparser
 from core import logger
 
-class Config(configparser.ConfigParser):
+class Config(configparser.RawConfigParser):
     """Config class"""
     def __init__(self, configfile='alarmserver.cfg', maxpartitions=16,
                  maxzones=128, maxalarmusers=47):

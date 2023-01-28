@@ -1,6 +1,7 @@
 """IFTTT Maker plugin"""
 try:
     from urllib.parse import urlparse
+    import urllib
 except ImportError:
     from urlparse import urlparse
 
