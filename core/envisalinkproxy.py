@@ -19,8 +19,8 @@ class Proxy(object):
 
 class ProxyServer(TCPServer):
     """ProxyServer"""
-    def __init__(self, config, io_loop=None, ssl_options=None, **kwargs):
-        TCPServer.__init__(self, io_loop=io_loop, ssl_options=ssl_options, **kwargs)
+    def __init__(self, config, ssl_options=None, **kwargs):
+        TCPServer.__init__(self, ssl_options=ssl_options, **kwargs)
         self.config = config
         self.connections = {}
         Events.register('proxy', self.proxy_event)
